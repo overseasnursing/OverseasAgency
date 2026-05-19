@@ -1,8 +1,6 @@
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
-
-const COOKIE_NAME = 'admin_session'
-const SESSION_TTL  = 60 * 60 * 24 * 7 // 7 days in seconds
+import { COOKIE_NAME, SESSION_TTL } from '@/lib/admin-auth-edge'
 
 function getSecret(): string {
   const s = process.env.ADMIN_SESSION_SECRET
@@ -67,4 +65,4 @@ export async function requireAdmin(): Promise<string> {
   return email
 }
 
-export { COOKIE_NAME, SESSION_TTL }
+export { COOKIE_NAME, SESSION_TTL } from '@/lib/admin-auth-edge'

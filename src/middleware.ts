@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { verifySessionToken, COOKIE_NAME } from '@/lib/admin-auth'
+import { verifySessionToken, COOKIE_NAME } from '@/lib/admin-auth-edge'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     if (!pathname.startsWith('/admin/login')) {
       const token = request.cookies.get(COOKIE_NAME)?.value
-      const email = token ? verifySessionToken(token) : null
+      const email = token ? await verifySessionToken(token) : null
       if (!email) {
         const loginUrl = new URL('/admin/login', request.url)
         return NextResponse.redirect(loginUrl)
