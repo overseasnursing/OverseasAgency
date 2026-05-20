@@ -3,6 +3,7 @@ import { Manrope } from 'next/font/google'
 import { Navbar } from '@/components/navbar/Navbar'
 import { MobileNav } from '@/components/navbar/MobileNav'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 /* ── Font ─────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <MobileNav />
         <AnalyticsProvider />
+        <SpeedInsights />
 
       </body>
     </html>
