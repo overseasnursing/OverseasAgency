@@ -1,0 +1,9 @@
+-- Migration 006: Remove custom admin auth — admin role now comes from public.users.role
+--
+-- Admin access is granted by setting role = 'admin' on a user row.
+-- Run the statement below (in Supabase SQL Editor or psql) to promote a user:
+--
+--   UPDATE public.users SET role = 'admin' WHERE email = 'your@email.com';
+--
+-- The is_admin() function in 002_rls_policies.sql already enforces this via RLS.
+-- No schema changes are required — this migration documents the intent only.

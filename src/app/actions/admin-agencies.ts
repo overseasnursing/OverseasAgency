@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 
 /* ── Types ─────────────────────────────────────────────────────────── */

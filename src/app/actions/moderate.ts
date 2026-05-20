@@ -1,6 +1,6 @@
 'use server'
 
-import { requireAdmin } from '@/lib/admin-auth'
+import { requireAdmin } from '@/lib/require-admin'
 import { moderateReview, deleteReview } from '@/lib/db/reviews'
 import { moderateScamReport, deleteScamReport } from '@/lib/db/scam-reports'
 import { revalidatePath } from 'next/cache'
