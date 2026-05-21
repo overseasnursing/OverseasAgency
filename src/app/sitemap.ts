@@ -7,6 +7,7 @@ import { getAllLocationSlugs } from '@/lib/data/locations'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs } from '@/lib/data/salaries'
 import { getAllExamSlugs } from '@/lib/data/exams'
+import { getAllGuideSlugs } from '@/lib/data/guides'
 import { STATIC_SITEMAP_ENTRIES } from '@/lib/seo/sitemap'
 
 const BASE = 'https://overseasnursing.com'
@@ -74,6 +75,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }))
 
+  const guidePages: MetadataRoute.Sitemap = getAllGuideSlugs().map((slug) => ({
+    url: abs(`/guides/${slug}`),
+    lastModified: today,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
+  }))
+
   const scamPages: MetadataRoute.Sitemap = getAllScamReports().map((r) => ({
     url: abs(`/scam-report/${r.slug}`),
     lastModified: new Date(r.reportedDate),
@@ -90,6 +98,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...comparisonPages,
     ...salaryPages,
     ...examPages,
+    ...guidePages,
     ...scamPages,
   ]
 }
