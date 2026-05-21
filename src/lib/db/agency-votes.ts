@@ -5,6 +5,7 @@ export type VoteCounts = {
   thumbsUp: number
   thumbsDown: number
   userVote: boolean | null // true = up, false = down, null = no vote
+  isLoggedIn: boolean
 }
 
 export async function getVoteCounts(agencyId: string): Promise<VoteCounts> {
@@ -15,11 +16,11 @@ export async function getVoteCounts(agencyId: string): Promise<VoteCounts> {
     .select('vote')
     .eq('agency_id', agencyId)
 
-  if (error || !data) return { thumbsUp: 0, thumbsDown: 0, userVote: null }
+  if (error || !data) return { thumbsUp: 0, thumbsDown: 0, userVote: null, isLoggedIn: false }
 
   const thumbsUp   = data.filter((r: { vote: boolean }) => r.vote === true).length
   const thumbsDown = data.filter((r: { vote: boolean }) => r.vote === false).length
-  return { thumbsUp, thumbsDown, userVote: null }
+  return { thumbsUp, thumbsDown, userVote: null, isLoggedIn: false }
 }
 
 export async function getVoteCountsWithUserVote(agencyId: string): Promise<VoteCounts> {
@@ -36,7 +37,7 @@ export async function getVoteCountsWithUserVote(agencyId: string): Promise<VoteC
     .select('vote, user_id')
     .eq('agency_id', agencyId)
 
-  if (error || !data) return { thumbsUp: 0, thumbsDown: 0, userVote: null }
+  if (error || !data) return { thumbsUp: 0, thumbsDown: 0, userVote: null, isLoggedIn: !!user }
 
   const thumbsUp   = data.filter((r: { vote: boolean }) => r.vote === true).length
   const thumbsDown = data.filter((r: { vote: boolean }) => r.vote === false).length
@@ -47,5 +48,5 @@ export async function getVoteCountsWithUserVote(agencyId: string): Promise<VoteC
     if (mine) userVote = mine.vote
   }
 
-  return { thumbsUp, thumbsDown, userVote }
+  return { thumbsUp, thumbsDown, userVote, isLoggedIn: !!user }
 }

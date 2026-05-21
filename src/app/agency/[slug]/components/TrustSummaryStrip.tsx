@@ -30,9 +30,10 @@ function Divider() {
 
 interface TrustSummaryStripProps {
   agency: AgencyDetail
+  recommendationPercent: number
 }
 
-export function TrustSummaryStrip({ agency }: TrustSummaryStripProps) {
+export function TrustSummaryStrip({ agency, recommendationPercent }: TrustSummaryStripProps) {
   const transparencyStatus =
     agency.transparencyScore >= 80 ? 'good'
     : agency.transparencyScore >= 60 ? 'warn'
@@ -73,9 +74,9 @@ export function TrustSummaryStrip({ agency }: TrustSummaryStripProps) {
           <Divider />
           <Metric
             icon={<ThumbsUp size={20} />}
-            value={`${agency.recommendationPercent}%`}
+            value={`${recommendationPercent}%`}
             label="Would Recommend"
-            status={agency.recommendationPercent >= 90 ? 'good' : 'neutral'}
+            status={recommendationPercent >= 90 ? 'good' : 'neutral'}
           />
           <Divider />
           <Metric

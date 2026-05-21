@@ -66,9 +66,10 @@ const COUNTRY_CODES: Record<string, string> = {
 
 interface AgencyHeroProps {
   agency: AgencyDetail
+  recommendationPercent: number
 }
 
-export function AgencyHero({ agency }: AgencyHeroProps) {
+export function AgencyHero({ agency, recommendationPercent }: AgencyHeroProps) {
   const initials = agency.name.split(' ').slice(0, 2).map((w) => w[0]).join('')
 
   return (
@@ -148,7 +149,7 @@ export function AgencyHero({ agency }: AgencyHeroProps) {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle size={16} className="text-[#22C55E]" />
-                <span className="text-[14px] font-semibold text-slate-700">{agency.recommendationPercent}%</span>
+                <span className="text-[14px] font-semibold text-slate-700">{recommendationPercent}%</span>
                 <span className="text-[14px] text-slate-400">would recommend</span>
               </div>
             </div>

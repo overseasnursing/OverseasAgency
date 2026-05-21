@@ -9,7 +9,14 @@ export const metadata: Metadata = {
   alternates: { canonical: '/reviews/submit' },
 }
 
-export default function ReviewSubmitPage() {
+interface PageProps {
+  searchParams: Promise<{ agency?: string; name?: string }>
+}
+
+export default async function ReviewSubmitPage({ searchParams }: PageProps) {
+  const { agency: agencySlug, name: rawName } = await searchParams
+  const agencyName = rawName ? decodeURIComponent(rawName) : undefined
+
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
@@ -19,14 +26,14 @@ export default function ReviewSubmitPage() {
             Community Review
           </p>
           <h1 className="text-[28px] font-bold text-slate-800 mb-3">
-            Share Your Agency Experience
+            {agencyName ? `Review ${agencyName}` : 'Share Your Agency Experience'}
           </h1>
           <p className="text-[14px] text-slate-500 leading-relaxed">
             Your review helps thousands of Indian nurses choose the right agency. Be honest, be detailed, be specific about costs and timelines.
           </p>
         </div>
 
-        <ReviewSubmitForm />
+        <ReviewSubmitForm lockedAgencySlug={agencySlug} lockedAgencyName={agencyName} />
 
         {/* Trust note */}
         <p className="text-center text-[12px] text-slate-400 mt-8">
