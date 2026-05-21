@@ -31,6 +31,20 @@ export async function getAgencies(): Promise<Agency[]> {
 
   const agencyIds: string[] = agencyRows.map((a: any) => a.id)
 
+  // Fetch all branches for branch-location filtering
+  const { data: branchRows } = await db
+    .from('branches')
+    .select('agency_id, city, state')
+    .in('agency_id', agencyIds)
+
+  const branchMap = new Map<string, { cities: string[]; states: string[] }>()
+  for (const b of (branchRows ?? []) as any[]) {
+    if (!branchMap.has(b.agency_id)) branchMap.set(b.agency_id, { cities: [], states: [] })
+    const entry = branchMap.get(b.agency_id)!
+    if (b.city  && !entry.cities.includes(b.city))  entry.cities.push(b.city)
+    if (b.state && !entry.states.includes(b.state)) entry.states.push(b.state)
+  }
+
   // Fetch all approved reviews for all agencies in one query
   const { data: reviewRows } = await db
     .from('reviews')
@@ -103,6 +117,8 @@ export async function getAgencies(): Promise<Agency[]> {
       location:              a.location,
       city,
       state,
+      branchCities:          branchMap.get(a.id)?.cities ?? [],
+      branchStates:          branchMap.get(a.id)?.states ?? [],
       established:           a.established ?? 0,
       trustLevel:            a.trust_level,
       rating,

@@ -26,17 +26,25 @@ function applyFilters(agencies: Agency[], filters: FilterState): Agency[] {
           a.name.toLowerCase().includes(q) ||
           a.location.toLowerCase().includes(q) ||
           a.countries.some((c) => c.toLowerCase().includes(q)) ||
-          a.examsSupported.some((e) => e.toLowerCase().includes(q))
+          a.examsSupported.some((e) => e.toLowerCase().includes(q)) ||
+          a.branchCities.some((c) => c.toLowerCase().includes(q)) ||
+          a.branchStates.some((s) => s.toLowerCase().includes(q))
         if (!match) return false
       }
       if (filters.countries.length > 0) {
         if (!filters.countries.some((c) => a.countries.includes(c))) return false
       }
       if (filters.state !== null) {
-        if (a.state.toLowerCase() !== filters.state.toLowerCase()) return false
+        const s = filters.state.toLowerCase()
+        const inMain     = a.state.toLowerCase() === s
+        const inBranches = a.branchStates.some(bs => bs.toLowerCase() === s)
+        if (!inMain && !inBranches) return false
       }
       if (filters.city !== null) {
-        if (a.city.toLowerCase() !== filters.city.toLowerCase()) return false
+        const c = filters.city.toLowerCase()
+        const inMain     = a.city.toLowerCase() === c
+        const inBranches = a.branchCities.some(bc => bc.toLowerCase() === c)
+        if (!inMain && !inBranches) return false
       }
       if (filters.maxPriceLakhs !== null) {
         if (a.pricing.minLakhs > filters.maxPriceLakhs) return false
@@ -126,15 +134,28 @@ export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
   const [sortOpen, setSortOpen]     = useState(false)
 
   // Derive available states and cities from agencies data
-  const availableStates = useMemo(() =>
-    [...new Set(agencies.map((a) => a.state).filter(Boolean))].sort() as string[]
-  , [agencies])
+  const availableStates = useMemo(() => {
+    const all: string[] = []
+    for (const a of agencies) {
+      if (a.state) all.push(a.state)
+      for (const s of a.branchStates) all.push(s)
+    }
+    return [...new Set(all)].sort()
+  }, [agencies])
 
   const availableCities = useMemo(() => {
     const source = filters.state
-      ? agencies.filter((a) => a.state.toLowerCase() === filters.state!.toLowerCase())
+      ? agencies.filter((a) => {
+          const s = filters.state!.toLowerCase()
+          return a.state.toLowerCase() === s || a.branchStates.some(bs => bs.toLowerCase() === s)
+        })
       : agencies
-    return [...new Set(source.map((a) => a.city).filter(Boolean))].sort() as string[]
+    const all: string[] = []
+    for (const a of source) {
+      if (a.city) all.push(a.city)
+      for (const c of a.branchCities) all.push(c)
+    }
+    return [...new Set(all)].sort()
   }, [agencies, filters.state])
 
   const results = useMemo(() => applyFilters(agencies, filters), [agencies, filters])
