@@ -47,6 +47,9 @@ export interface Branch {
   email: string
   googleMapsUrl?: string
   isHeadOffice: boolean
+  openingHours?: string
+  latitude?: number
+  longitude?: number
 }
 
 export interface ScamReport {

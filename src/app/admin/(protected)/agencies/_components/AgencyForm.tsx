@@ -244,7 +244,7 @@ function TagInput({ values, onChange, placeholder, suggestions }: {
 /* ─── Branch Editor ─────────────────────────────────────────────────── */
 
 function emptyBranch(agencyId: string): BranchInput & { id?: string } {
-  return { agency_id: agencyId, name: '', address: '', city: '', state: '', country: 'India', phone: '', whatsapp: '', email: '', google_maps_url: '', is_head_office: false }
+  return { agency_id: agencyId, name: '', address: '', city: '', state: '', country: 'India', phone: '', whatsapp: '', email: '', google_maps_url: '', is_head_office: false, office_hours: '' }
 }
 
 function BranchEditor({ agencyId, initialBranches }: { agencyId: string; initialBranches: Array<BranchInput & { id: string }> }) {
@@ -296,6 +296,7 @@ function BranchEditor({ agencyId, initialBranches }: { agencyId: string; initial
         <Field label="WhatsApp"><input className={inputCls} value={data.whatsapp ?? ''} onChange={f('whatsapp')} placeholder="+91 98765 43210" /></Field>
         <Field label="Email"><input className={inputCls} value={data.email ?? ''} onChange={f('email')} placeholder="branch@agency.com" /></Field>
         <Field label="Google Maps URL"><input className={inputCls} value={data.google_maps_url ?? ''} onChange={f('google_maps_url')} placeholder="https://maps.google.com/..." /></Field>
+        <Field label="Office Hours" hint="e.g. Mon–Sat: 9am–6pm, Sun: Closed"><input className={inputCls} value={data.office_hours ?? ''} onChange={f('office_hours')} placeholder="Mon–Sat: 9am–6pm" /></Field>
       </div>
     )
   }

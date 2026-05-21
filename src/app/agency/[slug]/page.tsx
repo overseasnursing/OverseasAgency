@@ -21,6 +21,7 @@ import { FaqAccordion } from './components/FaqAccordion'
 import { RelatedAgencies } from './components/RelatedAgencies'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
+import { LocationMap } from './components/LocationMap'
 
 function extractYouTubeId(url: string): string | null {
   const patterns = [
@@ -317,7 +318,10 @@ export default async function AgencyDetailPage({ params }: PageProps) {
             {/* ── 8. Frequently Asked Questions ────────────────────────── */}
             <FaqAccordion faqs={agency.faqs} />
 
-            {/* ── 9. Send an Inquiry ────────────────────────────────────── */}
+            {/* ── 9. Location Map ───────────────────────────────────────── */}
+            {agency.branches.length > 0 && <LocationMap agency={agency} />}
+
+            {/* ── 10. Send an Inquiry ───────────────────────────────────── */}
             <InquiryForm agency={agency} />
 
             {/* ── 10. Nurse Reviews ─────────────────────────────────────── */}
@@ -325,7 +329,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
             <ReviewsSection agency={agency} />
 
             {/* ── 11. Compare Similar Agencies ─────────────────────────── */}
-            <RelatedAgencies relatedSlugs={agency.relatedSlugs} />
+            <RelatedAgencies currentId={agency.id} city={agency.city} state={agency.state} />
           </main>
 
           {/* Desktop sidebar */}
