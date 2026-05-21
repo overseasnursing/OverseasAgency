@@ -182,7 +182,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
               <h2 id="about-heading" className="text-[22px] font-bold text-slate-800 mb-4">
                 About {agency.name}
               </h2>
-              <p className="text-[15px] text-slate-600 leading-relaxed mb-5">
+              <p className="text-[15px] text-slate-600 leading-relaxed mb-5 whitespace-pre-wrap">
                 {agency.description}
               </p>
               {agency.services.length > 0 && (
@@ -258,7 +258,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                   {agency.classScheduleNote && (
-                    <p className="text-[13.5px] text-slate-600 leading-relaxed pl-7">{agency.classScheduleNote}</p>
+                    <p className="text-[13.5px] text-slate-600 leading-relaxed pl-7 whitespace-pre-wrap">{agency.classScheduleNote}</p>
                   )}
                 </div>
               )}
