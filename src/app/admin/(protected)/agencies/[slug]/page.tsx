@@ -72,6 +72,10 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
     social_links:                  agency.social_links               ?? {},
     // Jobs
     current_openings_url:          agency.current_openings_url       ?? '',
+    // Google Reviews fallback
+    google_place_id:               agency.google_place_id      ?? '',
+    google_rating:                 agency.google_rating        ?? null,
+    google_review_count:           agency.google_review_count  ?? null,
     branches:                      branches ?? [],
     faqs:                          faqs     ?? [],
   }

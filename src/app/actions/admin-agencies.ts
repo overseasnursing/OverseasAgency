@@ -60,6 +60,10 @@ export type AgencyInput = {
   social_links: { instagram?: string; facebook?: string; youtube?: string; linkedin?: string }
   // Jobs
   current_openings_url: string
+  // Google Reviews fallback
+  google_place_id:      string
+  google_rating:        number | null
+  google_review_count:  number | null
 }
 
 export type BranchInput = {

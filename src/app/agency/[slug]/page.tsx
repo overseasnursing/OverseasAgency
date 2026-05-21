@@ -22,6 +22,7 @@ import { RelatedAgencies } from './components/RelatedAgencies'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
+import { SectionNav } from './components/SectionNav'
 
 function extractYouTubeId(url: string): string | null {
   const patterns = [
@@ -156,6 +157,20 @@ export default async function AgencyDetailPage({ params }: PageProps) {
         <TrustSummaryStrip agency={agency} recommendationPercent={liveRecommendPercent} />
       </div>
 
+      {/* ── Sticky section nav ────────────────────────────────────────── */}
+      <SectionNav sections={[
+        { id: 'about',     label: 'About' },
+        { id: 'pricing',   label: 'Pricing' },
+        ...(agency.branches.length > 0 ? [{ id: 'offices', label: 'Offices' }] : []),
+        ...(agency.branches.length > 0 ? [{ id: 'direction', label: 'Direction' }] : []),
+        { id: 'contact',   label: 'Contact' },
+        ...(agency.faqs.length > 0    ? [{ id: 'faqs',    label: 'FAQs' }]       : []),
+        { id: 'reviews',   label: 'Reviews' },
+      ]} />
+
+      {/* Sentinel: SectionNav appears once this scrolls past the navbar */}
+      <div id="nav-sentinel" style={{ height: 1, width: '100%', pointerEvents: 'none' }} />
+
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
 
@@ -163,7 +178,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
           <main className="flex-1 min-w-0 flex flex-col gap-12">
 
             {/* ── 2. About ──────────────────────────────────────────────── */}
-            <section aria-labelledby="about-heading">
+            <section id="about" aria-labelledby="about-heading">
               <h2 id="about-heading" className="text-[22px] font-bold text-slate-800 mb-4">
                 About {agency.name}
               </h2>
@@ -250,7 +265,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
             </section>
 
             {/* ── 3. Pricing ────────────────────────────────────────────── */}
-            <PricingSection agency={agency} />
+            <div id="pricing"><PricingSection agency={agency} /></div>
 
             {/* ── 4 & 5. YouTube Videos + Media & Social Proof ─────────── */}
             {((agency.videoTestimonials?.length ?? 0) > 0 || Object.values(agency.socialLinks ?? {}).some(Boolean)) && (
@@ -313,20 +328,20 @@ export default async function AgencyDetailPage({ params }: PageProps) {
             <TimelineSection />
 
             {/* ── 7. Office Locations ───────────────────────────────────── */}
-            <BranchesSection agency={agency} />
+            <div id="offices"><BranchesSection agency={agency} /></div>
 
             {/* ── 8. Frequently Asked Questions ────────────────────────── */}
-            <FaqAccordion faqs={agency.faqs} />
+            <div id="faqs"><FaqAccordion faqs={agency.faqs} /></div>
 
             {/* ── 9. Location Map ───────────────────────────────────────── */}
-            {agency.branches.length > 0 && <LocationMap agency={agency} />}
+            {agency.branches.length > 0 && <div id="direction"><LocationMap agency={agency} /></div>}
 
             {/* ── 10. Send an Inquiry ───────────────────────────────────── */}
-            <InquiryForm agency={agency} />
+            <div id="contact"><InquiryForm agency={agency} /></div>
 
             {/* ── 10. Nurse Reviews ─────────────────────────────────────── */}
             <ScamAlertSection agency={agency} />
-            <ReviewsSection agency={agency} />
+            <div id="reviews"><ReviewsSection agency={agency} /></div>
 
             {/* ── 11. Compare Similar Agencies ─────────────────────────── */}
             <RelatedAgencies currentId={agency.id} city={agency.city} state={agency.state} />

@@ -51,6 +51,7 @@ function empty(): AgencyInput {
     language_institute_name: '', batch_type: '', class_schedule_note: '',
     video_testimonials: [], social_links: {},
     current_openings_url: '',
+    google_place_id: '', google_rating: null, google_review_count: null,
   }
 }
 
@@ -144,7 +145,7 @@ function ImageUpload({
 
       {currentUrl ? (
         <div className={`relative ${previewClass} overflow-hidden border border-slate-200 bg-slate-50 group`}>
-          <Image src={currentUrl} alt={label} fill className="object-cover" />
+          <Image src={currentUrl} alt={label} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <button
               type="button"
@@ -296,7 +297,11 @@ function BranchEditor({ agencyId, initialBranches }: { agencyId: string; initial
         <Field label="WhatsApp"><input className={inputCls} value={data.whatsapp ?? ''} onChange={f('whatsapp')} placeholder="+91 98765 43210" /></Field>
         <Field label="Email"><input className={inputCls} value={data.email ?? ''} onChange={f('email')} placeholder="branch@agency.com" /></Field>
         <Field label="Google Maps URL"><input className={inputCls} value={data.google_maps_url ?? ''} onChange={f('google_maps_url')} placeholder="https://maps.google.com/..." /></Field>
-        <Field label="Office Hours" hint="e.g. Mon–Sat: 9am–6pm, Sun: Closed"><input className={inputCls} value={data.office_hours ?? ''} onChange={f('office_hours')} placeholder="Mon–Sat: 9am–6pm" /></Field>
+        <div className="col-span-2">
+          <Field label="Office Hours" hint="Shown to nurses on the agency page — e.g. Mon–Sat: 9am–6pm, Sun: Closed">
+            <input className={inputCls} value={data.office_hours ?? ''} onChange={f('office_hours')} placeholder="Mon–Sat: 9am–6pm, Sun: Closed" />
+          </Field>
+        </div>
       </div>
     )
   }
@@ -735,7 +740,25 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
         </div>
       </div>
 
-      {/* ══ 11. Related Agencies ═══════════════════════════════════════ */}
+      {/* ══ 11. Google Reviews Fallback ════════════════════════════════ */}
+      <div className={sectionCls}>
+        <SectionHeader icon={<Star size={16} />} title="Google Reviews (Fallback)" subtitle="Shown on the public profile only when there are 0 platform reviews" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="col-span-2">
+            <Field label="Google Place ID" hint='Find it at: Google Maps → search agency → share → "Copy link" — the part after "place/" or use the Place ID Finder'>
+              <input className={inputCls} value={form.google_place_id} onChange={e => set('google_place_id', e.target.value)} placeholder="ChIJN1t_tDeuEmsRUsoyG83frY4" />
+            </Field>
+          </div>
+          <Field label="Google Rating" hint="e.g. 4.8">
+            <input className={inputCls} type="number" step="0.1" min="1" max="5" value={form.google_rating ?? ''} onChange={e => set('google_rating', e.target.value ? parseFloat(e.target.value) : null)} placeholder="4.8" />
+          </Field>
+          <Field label="Google Review Count" hint="e.g. 142">
+            <input className={inputCls} type="number" min="0" value={form.google_review_count ?? ''} onChange={e => set('google_review_count', e.target.value ? parseInt(e.target.value) : null)} placeholder="142" />
+          </Field>
+        </div>
+      </div>
+
+      {/* ══ 12. Related Agencies ═══════════════════════════════════════ */}
       <div className={sectionCls}>
         <SectionHeader icon={<Users size={16} />} title="Related Agencies" />
         <Field label="Related Agency Slugs" hint="Slugs of similar agencies (press Enter to add)">
