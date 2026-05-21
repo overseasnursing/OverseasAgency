@@ -11,6 +11,8 @@ interface FilterDrawerProps {
   filters: FilterState
   onChange: (filters: FilterState) => void
   resultCount: number
+  availableStates: string[]
+  availableCities: string[]
 }
 
 export function FilterDrawer({
@@ -19,6 +21,8 @@ export function FilterDrawer({
   filters,
   onChange,
   resultCount,
+  availableStates,
+  availableCities,
 }: FilterDrawerProps) {
   // Lock scroll when open
   useEffect(() => {
@@ -71,6 +75,8 @@ export function FilterDrawer({
             filters={filters}
             onChange={onChange}
             resultCount={resultCount}
+            availableStates={availableStates}
+            availableCities={availableCities}
           />
         </div>
 
