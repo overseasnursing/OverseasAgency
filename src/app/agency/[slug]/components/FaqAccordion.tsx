@@ -33,7 +33,7 @@ function FaqItem({ faq, index }: { faq: AgencyDetail['faqs'][number]; index: num
 
       {open && (
         <div id={id} role="region" aria-label={faq.question}>
-          <p className="px-5 pb-5 text-[14px] text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+          <p className="px-5 pb-5 text-[14px] text-slate-600 leading-relaxed border-t border-slate-100 pt-4 whitespace-pre-wrap">
             {faq.answer}
           </p>
         </div>

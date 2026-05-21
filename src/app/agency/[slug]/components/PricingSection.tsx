@@ -116,7 +116,7 @@ export function PricingSection({ agency }: PricingSectionProps) {
       {/* Disclaimer */}
       <div className="flex items-start gap-3 p-4 bg-white border border-slate-200 rounded-xl">
         <Info size={15} className="text-slate-400 flex-shrink-0 mt-0.5" />
-        <p className="text-[13px] text-slate-500 leading-relaxed">
+        <p className="text-[13px] text-slate-500 leading-relaxed whitespace-pre-wrap">
           {pricing.disclaimer}{' '}
           <span className="text-slate-400">Last updated: {pricing.lastUpdated}.</span>
         </p>
