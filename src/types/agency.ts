@@ -39,6 +39,10 @@ export interface Agency {
   tagline: string          // short emotional trust summary
   reviewSnippet: ReviewSnippet
   featured: boolean
+  // Google review fallback (shown only when reviewCount === 0)
+  googlePlaceId?: string
+  googleRating?: number
+  googleReviewCount?: number
 }
 
 export interface FilterState {

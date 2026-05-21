@@ -131,6 +131,9 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
     videoTestimonials:       a.video_testimonials        ?? [],
     socialLinks:             a.social_links              ?? {},
     currentOpeningsUrl:      a.current_openings_url      ?? undefined,
+    googlePlaceId:           a.google_place_id            ?? undefined,
+    googleRating:            a.google_rating              ?? undefined,
+    googleReviewCount:       a.google_review_count        ?? undefined,
 
     pricing: {
       minCost:              (a.pricing_min_lakhs ?? 0) * 100000,

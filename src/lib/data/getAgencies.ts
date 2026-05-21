@@ -122,6 +122,9 @@ export async function getAgencies(): Promise<Agency[]> {
       tagline:               a.tagline ?? '',
       featured:              a.featured ?? false,
       reviewSnippet,
+      googlePlaceId:         a.google_place_id      ?? undefined,
+      googleRating:          a.google_rating        ?? undefined,
+      googleReviewCount:     a.google_review_count  ?? undefined,
     }
   }).sort((a: Agency, b: Agency) => b.rating - a.rating || b.reviewCount - a.reviewCount)
 }

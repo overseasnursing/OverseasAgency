@@ -98,4 +98,8 @@ export interface AgencyDetail extends Omit<Agency, 'pricing'> {
   socialLinks: { instagram?: string; facebook?: string; youtube?: string; linkedin?: string }
   // Jobs
   currentOpeningsUrl?: string
+  // Google review fallback (shown only when reviewCount === 0)
+  googlePlaceId?: string
+  googleRating?: number
+  googleReviewCount?: number
 }
