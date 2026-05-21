@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckCircle, ChevronRight, Loader2, AlertCircle } from 'lucide-react'
+import { CheckCircle, ChevronRight, Loader2, AlertCircle, Building2 } from 'lucide-react'
 import { submitReview } from '@/app/actions/submitReview'
 
 type Step = 'agency' | 'financial' | 'ratings' | 'written' | 'verify'
@@ -134,9 +134,14 @@ function Select({ className = '', children, ...props }: React.SelectHTMLAttribut
   )
 }
 
-export function ReviewSubmitForm() {
+interface ReviewSubmitFormProps {
+  lockedAgencySlug?: string
+  lockedAgencyName?: string
+}
+
+export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewSubmitFormProps) {
   const [step, setStep] = useState<Step>('agency')
-  const [form, setForm] = useState(initialForm)
+  const [form, setForm] = useState({ ...initialForm, agencyName: lockedAgencyName ?? '' })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -162,7 +167,7 @@ export function ReviewSubmitForm() {
     setSubmitting(true)
     setSubmitError('')
 
-    const agencySlug = form.agencyName
+    const agencySlug = lockedAgencySlug ?? form.agencyName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
@@ -205,9 +210,16 @@ export function ReviewSubmitForm() {
         <p className="text-[14px] text-slate-500 max-w-md leading-relaxed mb-6">
           {successMessage || 'Thank you for sharing your experience. Our team will review it within 24–48 hours. Once verified, it will appear on the platform.'}
         </p>
-        <a href="/reviews" className="text-[14px] font-semibold text-primary hover:underline">
-          Back to reviews →
-        </a>
+        <div className="flex items-center gap-4">
+          {lockedAgencySlug && (
+            <a href={`/agency/${lockedAgencySlug}`} className="text-[14px] font-semibold text-primary hover:underline">
+              ← Back to agency
+            </a>
+          )}
+          <a href="/reviews" className="text-[14px] font-semibold text-slate-500 hover:underline">
+            All reviews →
+          </a>
+        </div>
       </div>
     )
   }
@@ -224,11 +236,18 @@ export function ReviewSubmitForm() {
             <h2 className="text-[18px] font-bold text-slate-800">Which agency and destination?</h2>
             <div>
               <FieldLabel required>Agency Name</FieldLabel>
-              <Input
-                placeholder="e.g. Global Nursing Solutions"
-                value={form.agencyName}
-                onChange={(e) => set('agencyName', e.target.value)}
-              />
+              {lockedAgencyName ? (
+                <div className="flex items-center gap-2 h-10 px-3 bg-[#F0FDF4] border border-[#BBF7D0] rounded-xl">
+                  <CheckCircle size={14} className="text-[#166534] flex-shrink-0" />
+                  <span className="text-[14px] font-semibold text-[#166534]">{lockedAgencyName}</span>
+                </div>
+              ) : (
+                <Input
+                  placeholder="e.g. Global Nursing Solutions"
+                  value={form.agencyName}
+                  onChange={(e) => set('agencyName', e.target.value)}
+                />
+              )}
             </div>
             <div>
               <FieldLabel required>Destination Country</FieldLabel>

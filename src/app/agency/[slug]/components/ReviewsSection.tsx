@@ -1,5 +1,5 @@
 import React from 'react'
-import { Star, CheckCircle, ThumbsUp, AlertTriangle } from 'lucide-react'
+import { Star, CheckCircle, ThumbsUp, AlertTriangle, PenLine } from 'lucide-react'
 import type { Review } from '@/types/agencyDetail'
 import type { AgencyDetail } from '@/types/agencyDetail'
 
@@ -191,7 +191,7 @@ interface ReviewsSectionProps {
 }
 
 export function ReviewsSection({ agency }: ReviewsSectionProps) {
-  if (agency.reviews.length === 0) return null
+  const writeReviewUrl = `/reviews/submit?agency=${agency.slug}&name=${encodeURIComponent(agency.name)}`
 
   return (
     <section id="reviews" aria-labelledby="reviews-heading">
@@ -200,20 +200,52 @@ export function ReviewsSection({ agency }: ReviewsSectionProps) {
           Nurse Reviews
         </h2>
         <a
-          href="#write-review"
-          className="text-[13.5px] font-semibold text-primary hover:text-primary-hover transition-colors"
+          href={writeReviewUrl}
+          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-primary hover:text-primary-hover transition-colors"
         >
-          + Write a review
+          <PenLine size={14} />
+          Write a review
         </a>
       </div>
 
-      <RatingSummary reviews={agency.reviews} overallRating={agency.rating} />
-
-      <div className="flex flex-col gap-4">
-        {agency.reviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
-      </div>
+      {agency.reviews.length === 0 ? (
+        <div className="bg-[#F8FAFC] border border-dashed border-slate-200 rounded-2xl p-10 flex flex-col items-center text-center gap-4">
+          <div className="w-12 h-12 bg-white border border-slate-200 rounded-2xl flex items-center justify-center">
+            <PenLine size={20} className="text-slate-400" />
+          </div>
+          <div>
+            <p className="text-[16px] font-semibold text-slate-700 mb-1">No reviews yet</p>
+            <p className="text-[13.5px] text-slate-400 max-w-sm leading-relaxed">
+              Be the first to share your experience with {agency.name} and help other nurses make an informed decision.
+            </p>
+          </div>
+          <a
+            href={writeReviewUrl}
+            className="inline-flex items-center gap-2 h-10 px-5 bg-primary hover:bg-primary-hover text-white text-[13.5px] font-semibold rounded-xl transition-colors"
+          >
+            <PenLine size={14} />
+            Write the first review
+          </a>
+        </div>
+      ) : (
+        <>
+          <RatingSummary reviews={agency.reviews} overallRating={agency.rating} />
+          <div className="flex flex-col gap-4">
+            {agency.reviews.map((review) => (
+              <ReviewCard key={review.id} review={review} />
+            ))}
+          </div>
+          <div className="mt-6 text-center">
+            <a
+              href={writeReviewUrl}
+              className="inline-flex items-center gap-2 h-10 px-5 bg-white border border-slate-200 hover:border-primary hover:text-primary text-slate-600 text-[13.5px] font-semibold rounded-xl transition-colors"
+            >
+              <PenLine size={14} />
+              Write a review
+            </a>
+          </div>
+        </>
+      )}
     </section>
   )
 }

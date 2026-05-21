@@ -74,6 +74,8 @@ export default async function AgencyDetailPage({ params }: PageProps) {
   if (!agency) notFound()
 
   const votes = await getVoteCountsWithUserVote(agency.id)
+  const voteTotal = votes.thumbsUp + votes.thumbsDown
+  const liveRecommendPercent = voteTotal === 0 ? 100 : Math.round((votes.thumbsUp / voteTotal) * 100)
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -102,7 +104,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <AgencyHero agency={agency} />
+      <AgencyHero agency={agency} recommendationPercent={liveRecommendPercent} />
 
       {/* Mobile contact buttons — shown only on mobile in place of TrustSummaryStrip */}
       <div className="lg:hidden bg-white border-b border-slate-100 px-5 py-5">
@@ -143,13 +145,14 @@ export default async function AgencyDetailPage({ params }: PageProps) {
             initialThumbsUp={votes.thumbsUp}
             initialThumbsDown={votes.thumbsDown}
             initialUserVote={votes.userVote}
+            isLoggedIn={votes.isLoggedIn}
           />
         </div>
       </div>
 
       {/* TrustSummaryStrip — desktop only */}
       <div className="hidden lg:block">
-        <TrustSummaryStrip agency={agency} />
+        <TrustSummaryStrip agency={agency} recommendationPercent={liveRecommendPercent} />
       </div>
 
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
@@ -365,6 +368,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
                     initialThumbsUp={votes.thumbsUp}
                     initialThumbsDown={votes.thumbsDown}
                     initialUserVote={votes.userVote}
+                    isLoggedIn={votes.isLoggedIn}
                   />
                 </div>
               </div>
