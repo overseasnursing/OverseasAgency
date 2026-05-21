@@ -248,6 +248,29 @@ function emptyBranch(agencyId: string): BranchInput & { id?: string } {
   return { agency_id: agencyId, name: '', address: '', city: '', state: '', country: 'India', phone: '', whatsapp: '', email: '', google_maps_url: '', is_head_office: false, office_hours: '' }
 }
 
+function BranchFields({ data, onChange }: { data: BranchInput; onChange: (d: BranchInput) => void }) {
+  const f = <K extends keyof BranchInput>(k: K) => (e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...data, [k]: e.target.value })
+  return (
+    <div className="grid grid-cols-2 gap-3 mt-3">
+      <Field label="Branch Name" required><input className={inputCls} value={data.name} onChange={f('name')} placeholder="Head Office — Kochi" /></Field>
+      <Field label="Is Head Office"><Toggle checked={data.is_head_office} onChange={v => onChange({ ...data, is_head_office: v })} label="Head Office" /></Field>
+      <Field label="Address" required><input className={inputCls} value={data.address} onChange={f('address')} placeholder="123 MG Road" /></Field>
+      <Field label="City" required><input className={inputCls} value={data.city} onChange={f('city')} placeholder="Kochi" /></Field>
+      <Field label="State" required><input className={inputCls} value={data.state} onChange={f('state')} placeholder="Kerala" /></Field>
+      <Field label="Country"><input className={inputCls} value={data.country} onChange={f('country')} placeholder="India" /></Field>
+      <Field label="Phone"><input className={inputCls} value={data.phone ?? ''} onChange={f('phone')} placeholder="+91 484 123 4567" /></Field>
+      <Field label="WhatsApp"><input className={inputCls} value={data.whatsapp ?? ''} onChange={f('whatsapp')} placeholder="+91 98765 43210" /></Field>
+      <Field label="Email"><input className={inputCls} value={data.email ?? ''} onChange={f('email')} placeholder="branch@agency.com" /></Field>
+      <Field label="Google Maps URL"><input className={inputCls} value={data.google_maps_url ?? ''} onChange={f('google_maps_url')} placeholder="https://maps.google.com/..." /></Field>
+      <div className="col-span-2">
+        <Field label="Office Hours" hint="Shown to nurses on the agency page — e.g. Mon–Sat: 9am–6pm, Sun: Closed">
+          <input className={inputCls} value={data.office_hours ?? ''} onChange={f('office_hours')} placeholder="Mon–Sat: 9am–6pm, Sun: Closed" />
+        </Field>
+      </div>
+    </div>
+  )
+}
+
 function BranchEditor({ agencyId, initialBranches }: { agencyId: string; initialBranches: Array<BranchInput & { id: string }> }) {
   const [branches, setBranches] = useState(initialBranches)
   const [adding, setAdding] = useState(false)
@@ -281,29 +304,6 @@ function BranchEditor({ agencyId, initialBranches }: { agencyId: string; initial
     const result = await deleteBranch(id)
     if (result.error) { setError(result.error); return }
     setBranches(prev => prev.filter(b => b.id !== id))
-  }
-
-  function BranchFields({ data, onChange }: { data: BranchInput; onChange: (d: BranchInput) => void }) {
-    const f = <K extends keyof BranchInput>(k: K) => (e: React.ChangeEvent<HTMLInputElement>) => onChange({ ...data, [k]: e.target.value })
-    return (
-      <div className="grid grid-cols-2 gap-3 mt-3">
-        <Field label="Branch Name" required><input className={inputCls} value={data.name} onChange={f('name')} placeholder="Head Office — Kochi" /></Field>
-        <Field label="Is Head Office"><Toggle checked={data.is_head_office} onChange={v => onChange({ ...data, is_head_office: v })} label="Head Office" /></Field>
-        <Field label="Address" required><input className={inputCls} value={data.address} onChange={f('address')} placeholder="123 MG Road" /></Field>
-        <Field label="City" required><input className={inputCls} value={data.city} onChange={f('city')} placeholder="Kochi" /></Field>
-        <Field label="State" required><input className={inputCls} value={data.state} onChange={f('state')} placeholder="Kerala" /></Field>
-        <Field label="Country"><input className={inputCls} value={data.country} onChange={f('country')} placeholder="India" /></Field>
-        <Field label="Phone"><input className={inputCls} value={data.phone ?? ''} onChange={f('phone')} placeholder="+91 484 123 4567" /></Field>
-        <Field label="WhatsApp"><input className={inputCls} value={data.whatsapp ?? ''} onChange={f('whatsapp')} placeholder="+91 98765 43210" /></Field>
-        <Field label="Email"><input className={inputCls} value={data.email ?? ''} onChange={f('email')} placeholder="branch@agency.com" /></Field>
-        <Field label="Google Maps URL"><input className={inputCls} value={data.google_maps_url ?? ''} onChange={f('google_maps_url')} placeholder="https://maps.google.com/..." /></Field>
-        <div className="col-span-2">
-          <Field label="Office Hours" hint="Shown to nurses on the agency page — e.g. Mon–Sat: 9am–6pm, Sun: Closed">
-            <input className={inputCls} value={data.office_hours ?? ''} onChange={f('office_hours')} placeholder="Mon–Sat: 9am–6pm, Sun: Closed" />
-          </Field>
-        </div>
-      </div>
-    )
   }
 
   return (

@@ -200,6 +200,10 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     social_links:                  data.social_links,
     // Jobs
     current_openings_url:          data.current_openings_url      || null,
+    // Google Reviews fallback
+    google_place_id:               data.google_place_id           || null,
+    google_rating:                 data.google_rating             ?? null,
+    google_review_count:           data.google_review_count       ?? null,
   }
 
   if (data.id) {
