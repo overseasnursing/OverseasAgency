@@ -75,6 +75,9 @@ export type BranchInput = {
   email: string
   google_maps_url: string
   is_head_office: boolean
+  office_hours?: string
+  latitude?: string
+  longitude?: string
 }
 
 export type FaqInput = {

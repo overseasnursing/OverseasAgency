@@ -1,5 +1,5 @@
 import React from 'react'
-import { MapPin, Phone, Mail, ExternalLink } from 'lucide-react'
+import { MapPin, Phone, Mail, ExternalLink, Clock } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
 
 interface BranchesSectionProps {
@@ -33,6 +33,12 @@ export function BranchesSection({ agency }: BranchesSectionProps) {
                   <MapPin size={13} className="text-slate-400 mt-0.5 flex-shrink-0" />
                   <span>{branch.address}, {branch.city}, {branch.state}</span>
                 </div>
+                {branch.openingHours && (
+                  <div className="flex items-center gap-1.5 text-[12.5px] text-slate-500 mt-1">
+                    <Clock size={12} className="text-slate-400 flex-shrink-0" />
+                    <span>{branch.openingHours}</span>
+                  </div>
+                )}
               </div>
             </div>
 

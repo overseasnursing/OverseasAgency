@@ -157,6 +157,9 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
       email:        b.email       ?? '',
       googleMapsUrl:b.google_maps_url ?? undefined,
       isHeadOffice: b.is_head_office,
+      openingHours: b.office_hours   ?? undefined,
+      latitude:     b.latitude       ?? undefined,
+      longitude:    b.longitude      ?? undefined,
     })),
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
