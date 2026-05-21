@@ -194,7 +194,7 @@ function TagInput({ values, onChange, placeholder, suggestions }: {
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   function add(val: string) {
-    const parts = val.split(', ').map(s => s.trim()).filter(s => s && !values.includes(s))
+    const parts = val.split(/,(?! )/).map(s => s.trim()).filter(s => s && !values.includes(s))
     if (parts.length) onChange([...values, ...parts])
     setInput(''); setShowSuggestions(false)
   }
