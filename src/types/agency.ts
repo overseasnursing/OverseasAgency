@@ -44,6 +44,8 @@ export interface Agency {
 export interface FilterState {
   search: string
   countries: string[]
+  state: string | null
+  city: string | null
   maxPriceLakhs: number | null
   minRating: number | null
   visaSponsorship: boolean | null
@@ -56,6 +58,8 @@ export interface FilterState {
 export const DEFAULT_FILTERS: FilterState = {
   search: '',
   countries: [],
+  state: null,
+  city: null,
   maxPriceLakhs: null,
   minRating: null,
   visaSponsorship: null,

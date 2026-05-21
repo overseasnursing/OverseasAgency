@@ -4,11 +4,14 @@ import React from 'react'
 import { RotateCcw } from 'lucide-react'
 import type { FilterState } from '@/types/agency'
 import { COUNTRIES } from '@/lib/data/agencies'
+import { SearchableSelect } from './SearchableSelect'
 
 interface FilterSidebarProps {
   filters: FilterState
   onChange: (filters: FilterState) => void
   resultCount: number
+  availableStates: string[]
+  availableCities: string[]
 }
 
 const PRICE_OPTIONS = [
@@ -39,9 +42,11 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
   )
 }
 
-export function FilterSidebar({ filters, onChange, resultCount }: FilterSidebarProps) {
+export function FilterSidebar({ filters, onChange, resultCount, availableStates, availableCities }: FilterSidebarProps) {
   const hasActiveFilters =
     filters.countries.length > 0 ||
+    filters.state !== null ||
+    filters.city !== null ||
     filters.maxPriceLakhs !== null ||
     filters.minRating !== null ||
     filters.visaSponsorship !== null ||
@@ -53,6 +58,8 @@ export function FilterSidebar({ filters, onChange, resultCount }: FilterSidebarP
     onChange({
       ...filters,
       countries: [],
+      state: null,
+      city: null,
       maxPriceLakhs: null,
       minRating: null,
       visaSponsorship: null,
@@ -60,6 +67,11 @@ export function FilterSidebar({ filters, onChange, resultCount }: FilterSidebarP
       hideHiddenCharges: false,
       minPlacements: null,
     })
+
+  // When state changes, clear city if it doesn't belong to new state
+  function handleStateChange(state: string | null) {
+    onChange({ ...filters, state, city: null })
+  }
 
   const toggleCountry = (country: string) => {
     const next = filters.countries.includes(country)
@@ -91,6 +103,30 @@ export function FilterSidebar({ filters, onChange, resultCount }: FilterSidebarP
           </button>
         )}
       </div>
+
+      {/* Location */}
+      <FilterSection title="Agency Location">
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-[11.5px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">State / Union Territory</p>
+            <SearchableSelect
+              options={availableStates}
+              value={filters.state}
+              onChange={handleStateChange}
+              placeholder="All states"
+            />
+          </div>
+          <div>
+            <p className="text-[11.5px] font-semibold text-slate-400 uppercase tracking-wide mb-1.5">City</p>
+            <SearchableSelect
+              options={availableCities}
+              value={filters.city}
+              onChange={(city) => onChange({ ...filters, city })}
+              placeholder="All cities"
+            />
+          </div>
+        </div>
+      </FilterSection>
 
       {/* Country */}
       <FilterSection title="Destination Country">

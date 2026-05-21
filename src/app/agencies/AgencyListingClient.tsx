@@ -32,6 +32,12 @@ function applyFilters(agencies: Agency[], filters: FilterState): Agency[] {
       if (filters.countries.length > 0) {
         if (!filters.countries.some((c) => a.countries.includes(c))) return false
       }
+      if (filters.state !== null) {
+        if (a.state.toLowerCase() !== filters.state.toLowerCase()) return false
+      }
+      if (filters.city !== null) {
+        if (a.city.toLowerCase() !== filters.city.toLowerCase()) return false
+      }
       if (filters.maxPriceLakhs !== null) {
         if (a.pricing.minLakhs > filters.maxPriceLakhs) return false
       }
@@ -76,6 +82,10 @@ function ActiveFilterPills({
   filters.countries.forEach((c) =>
     pills.push({ label: c, clear: () => onChange({ ...filters, countries: filters.countries.filter((x) => x !== c) }) })
   )
+  if (filters.state !== null)
+    pills.push({ label: filters.state, clear: () => onChange({ ...filters, state: null, city: null }) })
+  if (filters.city !== null)
+    pills.push({ label: filters.city, clear: () => onChange({ ...filters, city: null }) })
   if (filters.maxPriceLakhs !== null)
     pills.push({ label: `Max ₹${filters.maxPriceLakhs}L`, clear: () => onChange({ ...filters, maxPriceLakhs: null }) })
   if (filters.minRating !== null)
@@ -115,10 +125,24 @@ export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [sortOpen, setSortOpen]     = useState(false)
 
+  // Derive available states and cities from agencies data
+  const availableStates = useMemo(() =>
+    [...new Set(agencies.map((a) => a.state).filter(Boolean))].sort() as string[]
+  , [agencies])
+
+  const availableCities = useMemo(() => {
+    const source = filters.state
+      ? agencies.filter((a) => a.state.toLowerCase() === filters.state!.toLowerCase())
+      : agencies
+    return [...new Set(source.map((a) => a.city).filter(Boolean))].sort() as string[]
+  }, [agencies, filters.state])
+
   const results = useMemo(() => applyFilters(agencies, filters), [agencies, filters])
 
   const activeFilterCount = [
     filters.countries.length > 0,
+    filters.state !== null,
+    filters.city !== null,
     filters.maxPriceLakhs !== null,
     filters.minRating !== null,
     filters.visaSponsorship !== null,
@@ -201,6 +225,8 @@ export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
               filters={filters}
               onChange={setFilters}
               resultCount={results.length}
+              availableStates={availableStates}
+              availableCities={availableCities}
             />
           </div>
         </div>
@@ -299,6 +325,8 @@ export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
         filters={filters}
         onChange={setFilters}
         resultCount={results.length}
+        availableStates={availableStates}
+        availableCities={availableCities}
       />
     </div>
   )

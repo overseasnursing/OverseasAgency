@@ -67,6 +67,11 @@ export async function getAgencies(): Promise<Agency[]> {
       : 0
     const hiddenChargesReported = stats?.hidden ?? 0
 
+    // Parse city/state from location string when DB columns are empty
+    const locationParts = (a.location ?? '').split(',').map((s: string) => s.trim())
+    const city  = (a.city  && a.city.trim())  ? a.city.trim()  : (locationParts[0] ?? '')
+    const state = (a.state && a.state.trim()) ? a.state.trim() : (locationParts[1] ?? '')
+
     const reviewSnippet = r
       ? {
           authorName:     r.author_name,
@@ -80,7 +85,7 @@ export async function getAgencies(): Promise<Agency[]> {
         }
       : {
           authorName:     'Verified Nurse',
-          authorFrom:     a.city ? `${a.city}, ${a.state}` : '',
+          authorFrom:     city ? `${city}, ${state}` : '',
           countryPlaced:  (a.countries ?? [])[0] ?? '',
           rating,
           text:           a.tagline ?? '',
@@ -96,8 +101,8 @@ export async function getAgencies(): Promise<Agency[]> {
       logo:                  a.logo_url          ?? undefined,
       featuredImage:         a.featured_image_url ?? undefined,
       location:              a.location,
-      city:                  a.city,
-      state:                 a.state,
+      city,
+      state,
       established:           a.established ?? 0,
       trustLevel:            a.trust_level,
       rating,
