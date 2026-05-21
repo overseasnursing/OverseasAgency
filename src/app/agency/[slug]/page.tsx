@@ -8,6 +8,8 @@ export const revalidate = 3600
 import { ShieldCheck, Building2, BookOpen, Instagram, Facebook, Youtube, Linkedin, Briefcase, Star, AlertTriangle } from 'lucide-react'
 import { getAgencyDetail } from '@/lib/data/getAgencyDetail'
 
+import { AgencyVote } from './components/AgencyVote'
+import { getVoteCountsWithUserVote } from '@/lib/db/agency-votes'
 import { AgencyHero } from './components/AgencyHero'
 import { TrustSummaryStrip } from './components/TrustSummaryStrip'
 import { PricingSection } from './components/PricingSection'
@@ -71,6 +73,8 @@ export default async function AgencyDetailPage({ params }: PageProps) {
   const agency = await getAgencyDetail(slug)
   if (!agency) notFound()
 
+  const votes = await getVoteCountsWithUserVote(agency.id)
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -131,6 +135,15 @@ export default async function AgencyDetailPage({ params }: PageProps) {
               Call the Office
             </a>
           )}
+        </div>
+        <div className="border-t border-slate-100 pt-3 mt-1">
+          <AgencyVote
+            agencyId={agency.id}
+            agencySlug={agency.slug}
+            initialThumbsUp={votes.thumbsUp}
+            initialThumbsDown={votes.thumbsDown}
+            initialUserVote={votes.userVote}
+          />
         </div>
       </div>
 
@@ -345,6 +358,15 @@ export default async function AgencyDetailPage({ params }: PageProps) {
                     Call the Office
                   </a>
                 </div>
+                <div className="border-t border-slate-100 pt-3 mt-1">
+                  <AgencyVote
+                    agencyId={agency.id}
+                    agencySlug={agency.slug}
+                    initialThumbsUp={votes.thumbsUp}
+                    initialThumbsDown={votes.thumbsDown}
+                    initialUserVote={votes.userVote}
+                  />
+                </div>
               </div>
 
               {/* Quick stats */}
@@ -381,10 +403,6 @@ export default async function AgencyDetailPage({ params }: PageProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Average timeline</span>
                     <span className="font-semibold text-slate-800">{agency.averageTimelineMonths} months</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-500">Would recommend</span>
-                    <span className="font-semibold text-slate-800">{agency.recommendationPercent}%</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Nurses placed</span>

@@ -85,6 +85,31 @@ export async function getPendingScamReports(): Promise<ScamReportRow[]> {
   return data ?? []
 }
 
+export async function getScamReportStats(): Promise<{
+  total: number; pending: number; approved: number; rejected: number
+}> {
+  const db = createAdminClient()
+  const { data, error } = await db.from('scam_reports').select('status')
+  if (error || !data) return { total: 0, pending: 0, approved: 0, rejected: 0 }
+  return {
+    total:    data.length,
+    pending:  data.filter((r) => r.status === 'pending').length,
+    approved: data.filter((r) => r.status === 'approved').length,
+    rejected: data.filter((r) => r.status === 'rejected').length,
+  }
+}
+
+export async function getRecentScamReportsAdmin(limit = 5): Promise<ScamReportRow[]> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('scam_reports')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) return []
+  return data ?? []
+}
+
 // ── Public insert (admin client so anonymous submissions work) ────────────
 // Server actions validate all inputs before calling this.
 
