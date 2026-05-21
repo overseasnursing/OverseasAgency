@@ -80,6 +80,31 @@ export async function getAllReviewsAdmin(
   return data ?? []
 }
 
+export async function getReviewStats(): Promise<{
+  total: number; pending: number; approved: number; rejected: number
+}> {
+  const db = createAdminClient()
+  const { data, error } = await db.from('reviews').select('status')
+  if (error || !data) return { total: 0, pending: 0, approved: 0, rejected: 0 }
+  return {
+    total:    data.length,
+    pending:  data.filter((r) => r.status === 'pending').length,
+    approved: data.filter((r) => r.status === 'approved').length,
+    rejected: data.filter((r) => r.status === 'rejected').length,
+  }
+}
+
+export async function getRecentReviewsAdmin(limit = 5): Promise<ReviewRow[]> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) return []
+  return data ?? []
+}
+
 // ── Public insert (admin client so anonymous submissions work) ────────────
 // Server actions validate all inputs before calling this.
 
