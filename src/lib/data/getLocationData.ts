@@ -1,5 +1,3 @@
-'use server'
-
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { LocationAgencyListing, LocationPageData } from '@/types/location'
 
