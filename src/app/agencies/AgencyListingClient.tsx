@@ -27,8 +27,8 @@ function applyFilters(agencies: Agency[], filters: FilterState): Agency[] {
           a.location.toLowerCase().includes(q) ||
           a.countries.some((c) => c.toLowerCase().includes(q)) ||
           a.examsSupported.some((e) => e.toLowerCase().includes(q)) ||
-          a.branchCities.some((c) => c.toLowerCase().includes(q)) ||
-          a.branchStates.some((s) => s.toLowerCase().includes(q))
+          (a.branchCities ?? []).some((c) => c.toLowerCase().includes(q)) ||
+          (a.branchStates ?? []).some((s) => s.toLowerCase().includes(q))
         if (!match) return false
       }
       if (filters.countries.length > 0) {
@@ -37,13 +37,13 @@ function applyFilters(agencies: Agency[], filters: FilterState): Agency[] {
       if (filters.state !== null) {
         const s = filters.state.toLowerCase()
         const inMain     = a.state.toLowerCase() === s
-        const inBranches = a.branchStates.some(bs => bs.toLowerCase() === s)
+        const inBranches = (a.branchStates ?? []).some(bs => bs.toLowerCase() === s)
         if (!inMain && !inBranches) return false
       }
       if (filters.city !== null) {
         const c = filters.city.toLowerCase()
         const inMain     = a.city.toLowerCase() === c
-        const inBranches = a.branchCities.some(bc => bc.toLowerCase() === c)
+        const inBranches = (a.branchCities ?? []).some(bc => bc.toLowerCase() === c)
         if (!inMain && !inBranches) return false
       }
       if (filters.maxPriceLakhs !== null) {
@@ -138,7 +138,7 @@ export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
     const all: string[] = []
     for (const a of agencies) {
       if (a.state) all.push(a.state)
-      for (const s of a.branchStates) all.push(s)
+      for (const s of (a.branchStates ?? [])) all.push(s)
     }
     return [...new Set(all)].sort()
   }, [agencies])
@@ -147,13 +147,13 @@ export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
     const source = filters.state
       ? agencies.filter((a) => {
           const s = filters.state!.toLowerCase()
-          return a.state.toLowerCase() === s || a.branchStates.some(bs => bs.toLowerCase() === s)
+          return a.state.toLowerCase() === s || (a.branchStates ?? []).some(bs => bs.toLowerCase() === s)
         })
       : agencies
     const all: string[] = []
     for (const a of source) {
       if (a.city) all.push(a.city)
-      for (const c of a.branchCities) all.push(c)
+      for (const c of (a.branchCities ?? [])) all.push(c)
     }
     return [...new Set(all)].sort()
   }, [agencies, filters.state])

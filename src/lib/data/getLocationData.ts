@@ -174,10 +174,12 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
 
   // Nearby locations: other cities in same state
   const nearbySeen = new Map<string, string>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const a of agencyRows as any[]) {
     if (a.state === stateName && a.city && toSlug(a.city) !== citySlug)
       nearbySeen.set(toSlug(a.city), a.city)
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const b of (branchRows ?? []) as any[]) {
     if (b.state === stateName && b.city && toSlug(b.city) !== citySlug)
       nearbySeen.set(toSlug(b.city), b.city)
