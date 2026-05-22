@@ -20,6 +20,8 @@ export interface Agency {
   location: string         // display string
   city: string
   state: string
+  branchCities?: string[]
+  branchStates?: string[]
   established: number
   trustLevel: TrustLevel
   rating: number           // 0–5
