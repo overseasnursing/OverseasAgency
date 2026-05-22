@@ -3,7 +3,7 @@ import { getAllAgencies } from '@/lib/data/agencies'
 import { getAllCountrySlugs } from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
 import { getAllScamReports } from '@/lib/data/scamReports'
-import { getAllLocationSlugs } from '@/lib/data/locations'
+import { getAllLocationCitiesFromDb } from '@/lib/data/getLocationData'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs } from '@/lib/data/salaries'
 import { getAllExamSlugs } from '@/lib/data/exams'
@@ -29,7 +29,7 @@ type SitemapType =
   | 'salaries'
   | 'exams'
 
-function buildXml(type: string): string | null {
+async function buildXml(type: string): Promise<string | null> {
   switch (type as SitemapType) {
     case 'agencies': {
       const slugs = getAllAgencies().map((a) => a.slug)
@@ -46,7 +46,8 @@ function buildXml(type: string): string | null {
       return buildSitemapXml(scamReportSitemapEntries(slugs))
     }
     case 'locations': {
-      return buildSitemapXml(locationSitemapEntries(getAllLocationSlugs()))
+      const cities = await getAllLocationCitiesFromDb()
+      return buildSitemapXml(locationSitemapEntries(cities.map((c) => c.slug)))
     }
     case 'comparisons': {
       return buildSitemapXml(comparisonSitemapEntries(getAllComparisonSlugs()))
@@ -67,7 +68,7 @@ export async function GET(
   { params }: { params: Promise<{ type: string }> }
 ) {
   const { type } = await params
-  const xml = buildXml(type)
+  const xml = await buildXml(type)
 
   if (!xml) {
     return new Response('Not found', { status: 404 })

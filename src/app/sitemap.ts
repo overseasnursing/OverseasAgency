@@ -3,7 +3,7 @@ import { getAllCountrySlugs } from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
 import { getAllScamReports } from '@/lib/data/scamReports'
 import { getAllAgencySlugs } from '@/lib/data/agencies'
-import { getAllLocationSlugs } from '@/lib/data/locations'
+import { getAllLocationCitiesFromDb } from '@/lib/data/getLocationData'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs } from '@/lib/data/salaries'
 import { getAllExamSlugs } from '@/lib/data/exams'
@@ -16,7 +16,7 @@ function abs(path: string): string {
   return `${BASE}${path}`
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const today = new Date()
 
   const staticPages: MetadataRoute.Sitemap = STATIC_SITEMAP_ENTRIES.map((e) => ({
@@ -47,7 +47,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }))
 
-  const locationPages: MetadataRoute.Sitemap = getAllLocationSlugs().map((slug) => ({
+  const locationCities = await getAllLocationCitiesFromDb()
+  const locationPages: MetadataRoute.Sitemap = locationCities.map(({ slug }) => ({
     url: abs(`/location/${slug}`),
     lastModified: today,
     changeFrequency: 'monthly' as const,

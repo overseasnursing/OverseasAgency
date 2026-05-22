@@ -2,49 +2,51 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { MapPin, Star, ShieldCheck, Building2 } from 'lucide-react'
-import { getAllLocations, getLocation } from '@/lib/data/locations'
+import { getAllLocationCitiesFromDb, getLocationPageData } from '@/lib/data/getLocationData'
 import { buildLocationMetadata } from '@/lib/seo/metadata'
 import { buildFaqSchema } from '@/lib/seo/schemas'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { ContentCluster } from '@/components/seo/RelatedContent'
 
+export const revalidate = 86400
+
 interface PageProps {
   params: Promise<{ city: string }>
 }
 
 export async function generateStaticParams() {
-  return getAllLocations().map((l) => ({ city: l.citySlug }))
+  const cities = await getAllLocationCitiesFromDb()
+  return cities.map((c) => ({ city: c.slug }))
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { city } = await params
-  const data = getLocation(city)
+  const data = await getLocationPageData(city)
   if (!data) return {}
-
   return buildLocationMetadata({
-    city: data.city,
-    citySlug: data.citySlug,
-    state: data.state,
+    city:       data.city,
+    citySlug:   data.citySlug,
+    state:      data.state,
     agencyCount: data.agencyCount,
   })
 }
 
 const TRUST_COLORS = {
-  verified: { bg: 'bg-[#DCFCE7]', text: 'text-[#166534]', label: 'Verified' },
-  trusted: { bg: 'bg-[#DBEAFE]', text: 'text-[#1D4ED8]', label: 'Trusted' },
-  unverified: { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Unverified' },
+  verified:   { bg: 'bg-[#DCFCE7]', text: 'text-[#166534]', label: 'Verified' },
+  trusted:    { bg: 'bg-[#DBEAFE]', text: 'text-[#1D4ED8]', label: 'Trusted' },
+  unverified: { bg: 'bg-slate-100',  text: 'text-slate-500',  label: 'Unverified' },
 }
 
 export default async function LocationPage({ params }: PageProps) {
   const { city } = await params
-  const data = getLocation(city)
+  const data = await getLocationPageData(city)
   if (!data) notFound()
 
-  const faqSchema = buildFaqSchema(data.faqs)
+  const faqSchema     = buildFaqSchema(data.faqs)
   const breadcrumbItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Agencies', href: '/agencies' },
+    { name: 'Home',     href: '/' },
+    { name: 'Location', href: '/location' },
     { name: `${data.city}, ${data.state}`, href: `/location/${data.citySlug}` },
   ]
 
@@ -56,12 +58,11 @@ export default async function LocationPage({ params }: PageProps) {
       <div className="bg-[#F8FAFC] border-b border-slate-200">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
           <Breadcrumb items={breadcrumbItems} />
-
           <div className="mt-4 max-w-2xl">
             <div className="flex items-center gap-2 mb-3">
               <MapPin size={16} className="text-primary" />
               <p className="text-[13px] font-semibold text-primary">
-                {data.region} · {data.state}
+                {data.state}
               </p>
             </div>
             <h1 className="text-[32px] sm:text-[38px] font-bold text-slate-900 leading-tight mb-3">
@@ -70,16 +71,18 @@ export default async function LocationPage({ params }: PageProps) {
             <p className="text-[15px] text-slate-500 leading-relaxed mb-5">
               {data.tagline}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {data.popularDestinations.map((dest) => (
-                <span
-                  key={dest}
-                  className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full"
-                >
-                  {dest}
-                </span>
-              ))}
-            </div>
+            {data.popularDestinations.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {data.popularDestinations.map((dest) => (
+                  <span
+                    key={dest}
+                    className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full"
+                  >
+                    {dest}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -87,7 +90,8 @@ export default async function LocationPage({ params }: PageProps) {
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
           <main className="flex-1 min-w-0 flex flex-col gap-12">
-            {/* About this location */}
+
+            {/* About */}
             <section>
               <h2 className="text-[20px] font-bold text-slate-800 mb-3">
                 Nursing Migration in {data.city}
@@ -103,70 +107,79 @@ export default async function LocationPage({ params }: PageProps) {
                     Agencies in {data.city}
                   </h2>
                   <p className="text-[13.5px] text-slate-500">
-                    {data.agencyCount} agencies serving nurses from {data.city}
+                    {data.agencyCount} {data.agencyCount === 1 ? 'agency' : 'agencies'} serving nurses from {data.city}
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                {data.agencies.map((agency) => {
-                  const trust = TRUST_COLORS[agency.trustLevel]
-                  return (
-                    <a
-                      key={agency.slug}
-                      href={`/agency/${agency.slug}`}
-                      className="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-primary/30 hover:shadow-card transition-all"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <h3 className="text-[16px] font-bold text-slate-800 group-hover:text-primary transition-colors">
-                              {agency.name}
-                            </h3>
-                            <span
-                              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${trust.bg} ${trust.text}`}
-                            >
-                              <ShieldCheck size={10} />
-                              {trust.label}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1 mb-3">
-                            <Star size={13} className="text-[#F59E0B] fill-[#F59E0B]" />
-                            <span className="text-[13px] font-semibold text-slate-700">
-                              {agency.rating.toFixed(1)}
-                            </span>
-                            <span className="text-[12px] text-slate-400">
-                              ({agency.reviewCount} reviews)
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 text-[12.5px] text-slate-400 mb-3">
-                            <MapPin size={12} />
-                            {agency.address}
-                          </div>
-
-                          <div className="flex flex-wrap gap-1.5">
-                            {agency.destinations.map((d) => (
-                              <span
-                                key={d}
-                                className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full"
-                              >
-                                {d}
+              {data.agencies.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  {data.agencies.map((agency) => {
+                    const trust = TRUST_COLORS[agency.trustLevel]
+                    return (
+                      <a
+                        key={agency.slug}
+                        href={`/agency/${agency.slug}`}
+                        className="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-primary/30 hover:shadow-card transition-all"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h3 className="text-[16px] font-bold text-slate-800 group-hover:text-primary transition-colors">
+                                {agency.name}
+                              </h3>
+                              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${trust.bg} ${trust.text}`}>
+                                <ShieldCheck size={10} />
+                                {trust.label}
                               </span>
-                            ))}
+                            </div>
+
+                            <div className="flex items-center gap-1 mb-3">
+                              <Star size={13} className="text-[#F59E0B] fill-[#F59E0B]" />
+                              <span className="text-[13px] font-semibold text-slate-700">
+                                {agency.rating > 0 ? agency.rating.toFixed(1) : '—'}
+                              </span>
+                              <span className="text-[12px] text-slate-400">
+                                {agency.reviewCount > 0 ? `(${agency.reviewCount} reviews)` : 'No reviews yet'}
+                              </span>
+                            </div>
+
+                            {agency.address && (
+                              <div className="flex items-center gap-1.5 text-[12.5px] text-slate-400 mb-3">
+                                <MapPin size={12} />
+                                {agency.address}
+                              </div>
+                            )}
+
+                            {agency.destinations.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {agency.destinations.slice(0, 5).map((d) => (
+                                  <span key={d} className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                                    {d}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-[11px] text-slate-400 mb-0.5">Fee range</p>
+                            <p className="text-[15px] font-bold text-slate-800">{agency.feeRangeDisplay}</p>
                           </div>
                         </div>
-
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-[11px] text-slate-400 mb-0.5">Fee range</p>
-                          <p className="text-[15px] font-bold text-slate-800">{agency.feeRangeDisplay}</p>
-                        </div>
-                      </div>
-                    </a>
-                  )
-                })}
-              </div>
+                      </a>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
+                  <Building2 size={32} className="text-slate-200 mx-auto mb-3" />
+                  <p className="text-[14px] text-slate-400">No agencies listed in {data.city} yet.</p>
+                  <a href="/agencies" className="text-[13.5px] text-primary hover:underline mt-2 inline-block">
+                    Browse all agencies →
+                  </a>
+                </div>
+              )}
 
               <a
                 href="/agencies"
@@ -202,7 +215,6 @@ export default async function LocationPage({ params }: PageProps) {
               </section>
             )}
 
-            {/* Related content cluster */}
             <ContentCluster
               relatedCountrySlugs={data.relatedCountrySlugs}
               relatedPricingSlugs={data.relatedCountrySlugs}
@@ -221,11 +233,19 @@ export default async function LocationPage({ params }: PageProps) {
                 <div className="flex flex-col gap-2.5 text-[13px]">
                   <div className="flex justify-between">
                     <span className="text-slate-500">Agencies</span>
-                    <span className="font-semibold text-slate-700">{data.agencyCount}+</span>
+                    <span className="font-semibold text-slate-700">{data.agencyCount}</span>
                   </div>
+                  {data.popularDestinations.length > 0 && (
+                    <div className="flex justify-between gap-3">
+                      <span className="text-slate-500 flex-shrink-0">Top destinations</span>
+                      <span className="font-semibold text-slate-700 text-right">
+                        {data.popularDestinations.slice(0, 2).join(', ')}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Top destinations</span>
-                    <span className="font-semibold text-slate-700">{data.popularDestinations.slice(0, 2).join(', ')}</span>
+                    <span className="text-slate-500">State</span>
+                    <span className="font-semibold text-slate-700">{data.state}</span>
                   </div>
                 </div>
               </div>
@@ -250,7 +270,7 @@ export default async function LocationPage({ params }: PageProps) {
                 </div>
               )}
 
-              {/* CTA */}
+              {/* CTAs */}
               <div className="flex flex-col gap-2.5">
                 <a
                   href="/agencies"
