@@ -109,7 +109,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || !email || !password}
+              disabled={loading}
               className="flex items-center justify-center gap-2 h-10 bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed text-white text-[13.5px] font-semibold rounded-xl transition-colors mt-1"
             >
               {loading ? (
