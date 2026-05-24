@@ -6,14 +6,13 @@ import { NavbarClient } from './NavbarClient'
 const NAV_LINKS = [
   { href: '/countries',    label: 'Countries' },
   { href: '/agencies',     label: 'Agencies' },
+  { href: '/mock-tests',   label: 'Mock Test' },
   { href: '/pricing',      label: 'Check Eligibility' },
   { href: '/reviews',      label: 'Reviews' },
   { href: '/scam-reports', label: 'Scam Reports' },
   { href: '/guides',       label: 'Guides' },
 ]
 
-// Server component — static nav links are rendered to HTML, not hydrated.
-// Only NavbarClient (scroll shadow + mobile toggle) hydrates on the client.
 export function Navbar() {
   return (
     <nav
@@ -23,7 +22,7 @@ export function Navbar() {
       <Container>
         <div className="flex items-center justify-between h-[68px] relative">
 
-          {/* Logo — server-rendered, zero JS */}
+          {/* Logo */}
           <a
             href="/"
             className="flex items-center gap-2.5 flex-shrink-0 group"
@@ -37,7 +36,7 @@ export function Navbar() {
             </span>
           </a>
 
-          {/* Desktop links — server-rendered, zero JS */}
+          {/* Desktop nav links */}
           <div className="hidden lg:flex items-center gap-0.5" role="navigation">
             {NAV_LINKS.map(({ href, label }) => (
               <a
@@ -50,7 +49,7 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Desktop right actions — server-rendered */}
+          {/* For Agencies link (desktop) */}
           <div className="hidden lg:flex items-center gap-2">
             <a
               href="/for-agencies"
@@ -58,15 +57,9 @@ export function Navbar() {
             >
               For Agencies
             </a>
-            <a
-              href="/auth/login"
-              className="ml-1 inline-flex items-center px-4 py-2 text-[13px] font-semibold text-primary border border-primary/25 rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-all"
-            >
-              Sign in
-            </a>
           </div>
 
-          {/* Client island: scroll shadow overlay + mobile menu toggle */}
+          {/* Client island — owns all auth state */}
           <NavbarClient />
         </div>
       </Container>

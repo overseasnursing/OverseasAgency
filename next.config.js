@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 // Content-Security-Policy
 // - script-src needs 'unsafe-inline': Next.js embeds inline JSON/hydration scripts.
 // - style-src needs 'unsafe-inline': Tailwind uses inline style attributes.
@@ -7,7 +9,7 @@
 // - connect-src: Supabase + analytics.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.clarity.ms",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.clarity.ms`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 https://maps.gstatic.com https://maps.googleapis.com",
   "frame-src https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
