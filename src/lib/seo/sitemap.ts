@@ -119,13 +119,33 @@ export function examSitemapEntries(slugs: string[]): SitemapEntry[] {
 // ─── Static pages ─────────────────────────────────────────────────────────────
 
 export const STATIC_SITEMAP_ENTRIES: SitemapEntry[] = [
-  { path: '/', changeFrequency: 'daily', priority: 1.0 },
-  { path: '/agencies', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/reviews', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/scam-reports', changeFrequency: 'daily', priority: 0.9 },
-  { path: '/guides', changeFrequency: 'weekly', priority: 0.8 },
-  { path: '/reviews/submit', changeFrequency: 'yearly', priority: 0.5 },
+  // Core discovery pages
+  { path: '/',               changeFrequency: 'daily',   priority: 1.0 },
+  { path: '/agencies',       changeFrequency: 'daily',   priority: 0.9 },
+  { path: '/countries',      changeFrequency: 'monthly', priority: 0.9 },
+  { path: '/mock-tests',     changeFrequency: 'weekly',  priority: 0.9 },
+  { path: '/pricing',        changeFrequency: 'weekly',  priority: 0.9 },
+  { path: '/reviews',        changeFrequency: 'daily',   priority: 0.9 },
+  { path: '/scam-reports',   changeFrequency: 'daily',   priority: 0.9 },
+
+  // Secondary listing pages
+  { path: '/compare',        changeFrequency: 'weekly',  priority: 0.8 },
+  { path: '/exam',           changeFrequency: 'monthly', priority: 0.8 },
+  { path: '/guides',         changeFrequency: 'weekly',  priority: 0.8 },
+  { path: '/location',       changeFrequency: 'monthly', priority: 0.7 },
+
+  // Tools & landing pages
+  { path: '/agency-compare', changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/for-agencies',   changeFrequency: 'monthly', priority: 0.7 },
+  { path: '/contact',        changeFrequency: 'yearly',  priority: 0.5 },
+
+  // User action pages
+  { path: '/reviews/submit',      changeFrequency: 'yearly', priority: 0.5 },
   { path: '/scam-reports/submit', changeFrequency: 'yearly', priority: 0.5 },
+
+  // Legal
+  { path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
+  { path: '/terms',   changeFrequency: 'yearly', priority: 0.3 },
 ]
 
 // ─── Sub-sitemap index entries (for robots.txt / sitemap index) ──────────────
