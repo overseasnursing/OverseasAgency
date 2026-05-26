@@ -1,13 +1,14 @@
 'use client'
 
-import React, { useState, useTransition, useMemo, useRef, useCallback } from 'react'
+import React, { useState, useTransition, useMemo, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Plus, Search, X, Trash2, Pencil, Copy, ToggleLeft, ToggleRight,
-  Upload, GripVertical, Clock, HelpCircle, CheckCircle, AlertTriangle,
-  ChevronDown, Filter,
+  Upload, GripVertical, HelpCircle, CheckCircle, AlertTriangle,
+  ChevronDown, Filter, CheckSquare,
 } from 'lucide-react'
-import { deleteQuestion, duplicateQuestion, toggleQuestionStatus, reorderQuestions } from '@/app/actions/admin-questions'
+import { deleteQuestion, duplicateQuestion, toggleQuestionStatus, reorderQuestions, deleteMultipleQuestions } from '@/app/actions/admin-questions'
+import { deleteMockTest } from '@/app/actions/admin-mock-tests'
 import { QuestionModal } from './QuestionModal'
 import { BulkImportModal } from './BulkImportModal'
 
@@ -43,7 +44,7 @@ const DIFF_BADGE = {
 
 const PAGE_SIZE = 20
 
-/* ── Delete Confirmation ────────────────────────────────────────────── */
+/* ── Delete single question ─────────────────────────────────────────── */
 function DeleteModal({ onConfirm, onCancel, pending }: { onConfirm: () => void; onCancel: () => void; pending: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)' }}>
@@ -64,6 +65,56 @@ function DeleteModal({ onConfirm, onCancel, pending }: { onConfirm: () => void; 
   )
 }
 
+/* ── Bulk delete questions ──────────────────────────────────────────── */
+function BulkDeleteModal({ count, onConfirm, onCancel, pending }: { count: number; onConfirm: () => void; onCancel: () => void; pending: boolean }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+        <div className="w-12 h-12 bg-[#FEE2E2] rounded-full flex items-center justify-center mx-auto mb-4">
+          <Trash2 size={20} className="text-[#B91C1C]" />
+        </div>
+        <h3 className="text-[16px] font-bold text-slate-800 mb-2">Delete {count} Question{count !== 1 ? 's' : ''}?</h3>
+        <p className="text-[13px] text-slate-500 mb-5">
+          These <span className="font-semibold">{count} question{count !== 1 ? 's' : ''}</span> will be permanently removed. This cannot be undone.
+        </p>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 h-9 border border-slate-200 text-slate-600 text-[13px] font-medium rounded-xl">Cancel</button>
+          <button onClick={onConfirm} disabled={pending} className="flex-1 h-9 bg-[#B91C1C] hover:bg-red-700 text-white text-[13px] font-semibold rounded-xl disabled:opacity-60">
+            {pending ? 'Deleting…' : `Delete ${count}`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Delete entire mock test ────────────────────────────────────────── */
+function DeleteTestModal({ testName, onConfirm, onCancel, pending }: { testName: string; onConfirm: () => void; onCancel: () => void; pending: boolean }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(15,23,42,0.5)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+        <div className="w-12 h-12 bg-[#FEE2E2] rounded-full flex items-center justify-center mx-auto mb-4">
+          <Trash2 size={20} className="text-[#B91C1C]" />
+        </div>
+        <h3 className="text-[16px] font-bold text-slate-800 mb-2">Delete Entire Mock Test?</h3>
+        <p className="text-[13px] text-slate-500 mb-1">
+          You are about to permanently delete:
+        </p>
+        <p className="text-[14px] font-semibold text-slate-800 mb-4 px-2 truncate">"{testName}"</p>
+        <p className="text-[12px] text-[#B91C1C] bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-3 py-2 mb-5">
+          This will also delete ALL questions and cannot be undone.
+        </p>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 h-9 border border-slate-200 text-slate-600 text-[13px] font-medium rounded-xl">Cancel</button>
+          <button onClick={onConfirm} disabled={pending} className="flex-1 h-9 bg-[#B91C1C] hover:bg-red-700 text-white text-[13px] font-semibold rounded-xl disabled:opacity-60">
+            {pending ? 'Deleting…' : 'Delete Test'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Main Component ─────────────────────────────────────────────────── */
 export function QuestionsClient({
   location, category, test, questions: initialQuestions,
@@ -77,14 +128,18 @@ export function QuestionsClient({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
-  // Local ordered list for drag-and-drop
   const [questions, setQuestions] = useState<Question[]>(initialQuestions)
 
   // Modals
-  const [showAdd, setShowAdd]           = useState(false)
-  const [editItem, setEditItem]         = useState<Question | null>(null)
-  const [deleteItem, setDeleteItem]     = useState<Question | null>(null)
-  const [showBulk, setShowBulk]         = useState(false)
+  const [showAdd, setShowAdd]             = useState(false)
+  const [editItem, setEditItem]           = useState<Question | null>(null)
+  const [deleteItem, setDeleteItem]       = useState<Question | null>(null)
+  const [showBulk, setShowBulk]           = useState(false)
+  const [showBulkDelete, setShowBulkDelete] = useState(false)
+  const [showDeleteTest, setShowDeleteTest] = useState(false)
+
+  // Multi-select
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   // Filters & pagination
   const [search, setSearch]             = useState('')
@@ -97,7 +152,10 @@ export function QuestionsClient({
   // Drag state
   const dragIndex = useRef<number | null>(null)
   const dragOverIndex = useRef<number | null>(null)
-  const [isDragging, setIsDragging]     = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+
+  // Select-all checkbox ref (for indeterminate state)
+  const selectAllRef = useRef<HTMLInputElement>(null)
 
   /* ── Filtered + paginated ─── */
   const filtered = useMemo(() => {
@@ -109,8 +167,39 @@ export function QuestionsClient({
     })
   }, [questions, search, diffFilter, statusFilter])
 
-  const totalPages   = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated    = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const allPageSelected  = paginated.length > 0 && paginated.every(q => selectedIds.has(q.id))
+  const somePageSelected = paginated.some(q => selectedIds.has(q.id)) && !allPageSelected
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = somePageSelected
+    }
+  }, [somePageSelected])
+
+  /* ── Multi-select helpers ─── */
+  function toggleAll() {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (allPageSelected) {
+        paginated.forEach(q => next.delete(q.id))
+      } else {
+        paginated.forEach(q => next.add(q.id))
+      }
+      return next
+    })
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   /* ── Actions ─── */
   function handleDelete() {
@@ -118,8 +207,27 @@ export function QuestionsClient({
     startTransition(async () => {
       await deleteQuestion(deleteItem.id, test.id)
       setQuestions(prev => prev.filter(q => q.id !== deleteItem.id))
+      setSelectedIds(prev => { const next = new Set(prev); next.delete(deleteItem.id); return next })
       setDeleteItem(null)
       router.refresh()
+    })
+  }
+
+  function handleBulkDelete() {
+    const ids = Array.from(selectedIds)
+    startTransition(async () => {
+      await deleteMultipleQuestions(ids, test.id)
+      setQuestions(prev => prev.filter(q => !selectedIds.has(q.id)))
+      setSelectedIds(new Set())
+      setShowBulkDelete(false)
+      router.refresh()
+    })
+  }
+
+  function handleDeleteTest() {
+    startTransition(async () => {
+      await deleteMockTest(test.id)
+      router.push(`/admin/mock-tests/${location.id}/categories/${category.id}/tests`)
     })
   }
 
@@ -158,8 +266,6 @@ export function QuestionsClient({
       const [moved] = next.splice(from, 1)
       next.splice(to, 0, moved)
       const reindexed = next.map((q, i) => ({ ...q, sort_order: i }))
-
-      // Persist
       startTransition(async () => {
         await reorderQuestions(reindexed.map(q => ({ id: q.id, sort_order: q.sort_order })), test.id)
       })
@@ -181,14 +287,16 @@ export function QuestionsClient({
     <>
       {/* Modals */}
       {(showAdd || editItem) && (
-        <QuestionModal
-          initial={editItem}
-          mockTestId={test.id}
-          onClose={onModalClose}
-        />
+        <QuestionModal initial={editItem} mockTestId={test.id} onClose={onModalClose} />
       )}
       {deleteItem && (
         <DeleteModal onConfirm={handleDelete} onCancel={() => setDeleteItem(null)} pending={pending} />
+      )}
+      {showBulkDelete && (
+        <BulkDeleteModal count={selectedIds.size} onConfirm={handleBulkDelete} onCancel={() => setShowBulkDelete(false)} pending={pending} />
+      )}
+      {showDeleteTest && (
+        <DeleteTestModal testName={test.name} onConfirm={handleDeleteTest} onCancel={() => setShowDeleteTest(false)} pending={pending} />
       )}
       {showBulk && (
         <BulkImportModal mockTestId={test.id} onClose={() => { setShowBulk(false); router.refresh() }} existingTexts={questions.map(q => q.question_text)} />
@@ -203,6 +311,13 @@ export function QuestionsClient({
             <p className="text-[13px] text-slate-500">Questions Management</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => setShowDeleteTest(true)}
+              className="flex items-center gap-1.5 h-9 px-4 border border-red-200 bg-red-50 hover:bg-red-100 text-[#B91C1C] text-[13px] font-medium rounded-xl transition-colors"
+            >
+              <Trash2 size={14} /> Delete Test
+            </button>
+            <div className="w-px h-5 bg-slate-200" />
             <button
               onClick={() => setShowBulk(true)}
               className="flex items-center gap-1.5 h-9 px-4 border border-slate-200 hover:border-primary/40 text-slate-600 hover:text-primary text-[13px] font-medium rounded-xl transition-colors"
@@ -234,12 +349,12 @@ export function QuestionsClient({
         {/* Stats strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
-            { label: 'Total Questions', value: questions.length,                            color: 'text-primary',      bg: 'bg-primary/5'    },
-            { label: 'Total Marks',     value: totalMarks,                                  color: 'text-violet-600',   bg: 'bg-violet-50'    },
-            { label: 'Duration',        value: `${test.duration_minutes}m`,                 color: 'text-slate-700',    bg: 'bg-slate-50'     },
-            { label: 'Pass Mark',       value: `${test.passing_percentage}%`,               color: 'text-amber-600',    bg: 'bg-amber-50'     },
-            { label: 'Easy',            value: difficultyStats.easy,                         color: 'text-[#166534]',   bg: 'bg-[#DCFCE7]'   },
-            { label: 'Medium / Hard',   value: `${difficultyStats.medium} / ${difficultyStats.hard}`, color: 'text-[#92400E]', bg: 'bg-[#FEF3C7]' },
+            { label: 'Total Questions', value: questions.length,                                          color: 'text-primary',    bg: 'bg-primary/5'  },
+            { label: 'Total Marks',     value: totalMarks,                                                color: 'text-violet-600', bg: 'bg-violet-50'  },
+            { label: 'Duration',        value: `${test.duration_minutes}m`,                               color: 'text-slate-700',  bg: 'bg-slate-50'   },
+            { label: 'Pass Mark',       value: `${test.passing_percentage}%`,                             color: 'text-amber-600',  bg: 'bg-amber-50'   },
+            { label: 'Easy',            value: difficultyStats.easy,                                      color: 'text-[#166534]',  bg: 'bg-[#DCFCE7]'  },
+            { label: 'Medium / Hard',   value: `${difficultyStats.medium} / ${difficultyStats.hard}`,    color: 'text-[#92400E]',  bg: 'bg-[#FEF3C7]'  },
           ].map(s => (
             <div key={s.label} className={`${s.bg} rounded-xl p-3`}>
               <p className={`text-[18px] font-bold ${s.color} leading-none`}>{s.value}</p>
@@ -251,6 +366,30 @@ export function QuestionsClient({
         {dbError && (
           <div className="flex items-center gap-2 p-4 bg-[#FEE2E2] border border-[#FECACA] rounded-xl text-[13px] text-[#B91C1C]">
             <AlertTriangle size={14} />{dbError}
+          </div>
+        )}
+
+        {/* Bulk-select action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 px-4 py-3 bg-primary/5 border border-primary/20 rounded-xl">
+            <CheckSquare size={15} className="text-primary flex-shrink-0" />
+            <span className="text-[13px] font-semibold text-primary">
+              {selectedIds.size} question{selectedIds.size !== 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-[12px] text-slate-500 hover:text-slate-700 underline transition-colors"
+            >
+              Clear
+            </button>
+            <div className="ml-auto">
+              <button
+                onClick={() => setShowBulkDelete(true)}
+                className="flex items-center gap-1.5 h-8 px-3 bg-[#B91C1C] hover:bg-red-700 text-white text-[12.5px] font-semibold rounded-lg transition-colors"
+              >
+                <Trash2 size={13} /> Delete Selected ({selectedIds.size})
+              </button>
+            </div>
           </div>
         )}
 
@@ -330,6 +469,17 @@ export function QuestionsClient({
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
+                  {/* Checkbox column */}
+                  <th className="w-10 px-3 py-3">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allPageSelected}
+                      onChange={toggleAll}
+                      className="w-4 h-4 rounded border-slate-300 text-primary accent-primary cursor-pointer"
+                      title="Select all on this page"
+                    />
+                  </th>
                   <th className="w-10 px-3 py-3" />
                   <th className="text-left px-3 py-3 font-semibold text-slate-500 w-10">#</th>
                   <th className="text-left px-4 py-3 font-semibold text-slate-500">Question</th>
@@ -344,6 +494,7 @@ export function QuestionsClient({
                 {paginated.map((q, localIdx) => {
                   const globalIdx = (page - 1) * PAGE_SIZE + localIdx
                   const diff = DIFF_BADGE[q.difficulty]
+                  const isSelected = selectedIds.has(q.id)
                   return (
                     <tr
                       key={q.id}
@@ -352,8 +503,17 @@ export function QuestionsClient({
                       onDragOver={(e) => onDragOver(e, globalIdx)}
                       onDrop={onDrop}
                       onDragEnd={() => setIsDragging(false)}
-                      className={`hover:bg-slate-50/60 transition-colors ${isDragging ? 'cursor-grabbing' : ''}`}
+                      className={`transition-colors ${isDragging ? 'cursor-grabbing' : ''} ${isSelected ? 'bg-primary/5' : 'hover:bg-slate-50/60'}`}
                     >
+                      {/* Checkbox */}
+                      <td className="px-3 py-3.5" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleOne(q.id)}
+                          className="w-4 h-4 rounded border-slate-300 text-primary accent-primary cursor-pointer"
+                        />
+                      </td>
                       {/* Drag handle */}
                       <td className="px-3 py-3.5">
                         <GripVertical size={14} className="text-slate-300 hover:text-slate-500 cursor-grab transition-colors" />
