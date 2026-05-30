@@ -70,7 +70,7 @@ export function TestStartButton({ testId, locationSlug, categorySlug, testSlug }
 
       {!user && !isPending && (
         <p className="text-[11.5px] text-slate-400 text-center">
-          You'll be asked to sign in before the exam starts. It's free.
+          You&apos;ll be asked to sign in before the exam starts. It&apos;s free.
         </p>
       )}
     </div>
