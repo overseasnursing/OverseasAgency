@@ -184,6 +184,51 @@ export async function getMockTestBySlug(locSlug: string, catSlug: string, testSl
   }
 }
 
+// Returns active locations whose slug or name contain any of the supplied keywords,
+// filtered to those with at least one active test. Used by exam guide pages.
+export async function getMockTestLocationsForExam(keywords: string[]): Promise<PublicLocation[]> {
+  if (!keywords.length) return []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+
+  const [{ data: locs }, { data: cats }, { data: tests }] = await Promise.all([
+    db.from('mock_test_locations').select('id, name, slug, description').eq('is_active', true),
+    db.from('mock_test_categories').select('id, location_id').eq('is_active', true),
+    db.from('mock_tests').select('id, category_id').eq('is_active', true),
+  ])
+
+  if (!locs?.length) return []
+
+  const lower = keywords.map((k) => k.toLowerCase())
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const matched = (locs as any[]).filter((loc) => {
+    const haystack = `${loc.slug} ${loc.name}`.toLowerCase()
+    return lower.some((kw) => haystack.includes(kw))
+  })
+  if (!matched.length) return []
+
+  const catsByLoc: Record<string, { id: string }[]> = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(cats ?? []).forEach((c: any) => {
+    catsByLoc[c.location_id] ??= []
+    catsByLoc[c.location_id].push(c)
+  })
+  const testsByCat: Record<string, number> = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(tests ?? []).forEach((t: any) => { testsByCat[t.category_id] = (testsByCat[t.category_id] ?? 0) + 1 })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return matched.map((loc: any) => {
+    const cs = catsByLoc[loc.id] ?? []
+    return {
+      id: loc.id, name: loc.name, slug: loc.slug,
+      description: loc.description ?? '',
+      category_count: cs.length,
+      test_count: cs.reduce((s: number, c: { id: string }) => s + (testsByCat[c.id] ?? 0), 0),
+    }
+  }).filter((loc: PublicLocation) => loc.test_count > 0)
+}
+
 export async function getAllMockTestLocationSlugs(): Promise<string[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any

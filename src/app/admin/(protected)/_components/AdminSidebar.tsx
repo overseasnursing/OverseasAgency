@@ -3,7 +3,7 @@
 import React from 'react'
 import { usePathname } from 'next/navigation'
 import {
-  Shield, LayoutDashboard, Building2, Star, ShieldAlert, LogOut, ExternalLink, ClipboardList,
+  Shield, LayoutDashboard, Building2, Star, ShieldAlert, LogOut, ExternalLink, ClipboardList, Settings,
 } from 'lucide-react'
 
 const NAV = [
@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/reviews',      label: 'Reviews',      Icon: Star,            exact: false },
   { href: '/admin/scam-reports', label: 'Scam Reports', Icon: ShieldAlert,     exact: false },
   { href: '/admin/mock-tests',   label: 'Mock Tests',   Icon: ClipboardList,   exact: false },
+  { href: '/admin/settings',     label: 'Settings',     Icon: Settings,        exact: false },
 ]
 
 export function AdminSidebar({ email }: { email: string }) {

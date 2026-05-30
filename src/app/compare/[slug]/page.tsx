@@ -3,12 +3,15 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CheckCircle, XCircle, Minus } from 'lucide-react'
 import { getAllComparisons, getComparison } from '@/lib/data/comparisons'
+import { LAST_REVIEWED } from '@/lib/data/freshness'
 import { buildComparisonMetadata } from '@/lib/seo/metadata'
-import { buildFaqSchema, buildArticleSchema } from '@/lib/seo/schemas'
+import { buildFaqSchema, buildArticleSchema, buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { ContentCluster } from '@/components/seo/RelatedContent'
+import { ContentAttribution, type AttributionSource } from '@/components/seo/ContentAttribution'
 import { FlagIcon } from '@/components/ui/FlagIcon'
+import { getAttributionProfiles } from '@/lib/admin-profile'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -31,6 +34,29 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   })
 }
 
+const COUNTRY_REGULATORS: Record<string, AttributionSource[]> = {
+  germany: [
+    { label: 'Federal Employment Agency (Bundesagentur für Arbeit), Germany' },
+    { label: 'German Nursing Act (Pflegeberufegesetz — PflBG)' },
+  ],
+  uk: [
+    { label: 'Nursing and Midwifery Council (NMC), United Kingdom' },
+    { label: 'UK Home Office — Health and Care Worker Visa' },
+  ],
+  canada: [
+    { label: 'Immigration, Refugees and Citizenship Canada (IRCC)' },
+    { label: 'Canadian Nurses Association (CNA)' },
+  ],
+  australia: [
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
+    { label: 'Australian Department of Home Affairs' },
+  ],
+  dubai: [
+    { label: 'Dubai Health Authority (DHA) — Health Regulation Sector' },
+    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA), Dubai' },
+  ],
+}
+
 function WinnerIcon({ winner, side }: { winner: 'a' | 'b' | 'tie'; side: 'a' | 'b' }) {
   if (winner === 'tie') return <Minus size={14} className="text-slate-400" />
   if (winner === side) return <CheckCircle size={14} className="text-[#166534]" />
@@ -42,6 +68,14 @@ export default async function ComparisonPage({ params }: PageProps) {
   const data = getComparison(slug)
   if (!data) notFound()
 
+  const attribution = await getAttributionProfiles()
+
+  const breadcrumbItems = [
+    { name: 'Home', href: '/' },
+    { name: 'Compare', href: '/compare' },
+    { name: `${data.countryAName} vs ${data.countryBName}`, href: `/compare/${slug}` },
+  ]
+
   const schemas = [
     buildFaqSchema(data.faqs),
     buildArticleSchema({
@@ -50,12 +84,12 @@ export default async function ComparisonPage({ params }: PageProps) {
       path: `/compare/${data.slug}`,
       publishedDate: '2025-01-01',
     }),
-  ]
-
-  const breadcrumbItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Compare', href: '/compare' },
-    { name: `${data.countryAName} vs ${data.countryBName}`, href: `/compare/${slug}` },
+    buildWebPageSchema({
+      title: data.headline,
+      description: data.verdict,
+      path: `/compare/${data.slug}`,
+    }),
+    buildBreadcrumbSchema(breadcrumbItems),
   ]
 
   return (
@@ -102,6 +136,44 @@ export default async function ComparisonPage({ params }: PageProps) {
               <h2 className="text-[18px] font-bold text-slate-800 mb-2">{data.verdict}</h2>
               <p className="text-[14px] text-slate-600 leading-relaxed">{data.verdictDetails}</p>
             </section>
+
+            {/* Decision support — rendered only for pages with decisionSupport data */}
+            {data.decisionSupport && (
+              <section aria-labelledby="decision-heading">
+                <h2 id="decision-heading" className="text-[20px] font-bold text-slate-800 mb-5">
+                  At a Glance — Key Decision Factors
+                </h2>
+                <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                  {(
+                    [
+                      { label: 'Salary Winner', value: data.decisionSupport.salaryWinner },
+                      { label: 'Migration Cost Winner', value: data.decisionSupport.migrationCostWinner },
+                      { label: 'Licensing Simplicity', value: data.decisionSupport.licensingWinner },
+                      { label: 'Family Settlement', value: data.decisionSupport.familySettlementWinner },
+                      { label: 'Long-Term Career', value: data.decisionSupport.longTermCareerWinner },
+                    ] as const
+                  ).map(({ label, value }, i, arr) => (
+                    <div
+                      key={label}
+                      className={`grid grid-cols-[148px_1fr] gap-4 px-5 py-4 ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'} ${i < arr.length - 1 ? 'border-b border-slate-100' : ''}`}
+                    >
+                      <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide self-start pt-0.5">
+                        {label}
+                      </p>
+                      <p className="text-[13.5px] text-slate-700 leading-relaxed">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl px-5 py-4">
+                  <p className="text-[11.5px] font-semibold text-primary uppercase tracking-wide mb-1.5">
+                    Overall Recommendation
+                  </p>
+                  <p className="text-[14px] text-slate-700 leading-relaxed">
+                    {data.decisionSupport.overallRecommendation}
+                  </p>
+                </div>
+              </section>
+            )}
 
             {/* Metrics comparison table */}
             <section aria-labelledby="metrics-heading">
@@ -204,6 +276,17 @@ export default async function ComparisonPage({ params }: PageProps) {
                 label: s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()).replace(' Vs ', ' vs '),
               }))}
               relatedSalaries={data.relatedCountrySlugs}
+            />
+
+            <ContentAttribution
+              {...(attribution?.author && { author: attribution.author })}
+              {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={LAST_REVIEWED.comparisons}
+              sources={[
+                ...(COUNTRY_REGULATORS[data.countryASlug] ?? []),
+                ...(COUNTRY_REGULATORS[data.countryBSlug] ?? []),
+              ]}
+              sourceNote="Comparison data reviewed against official government and regulatory publications for each destination country. Figures are indicative — salary ranges, timelines, and costs vary by employer, province, and individual circumstance."
             />
           </main>
 

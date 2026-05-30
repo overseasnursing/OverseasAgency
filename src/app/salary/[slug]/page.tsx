@@ -4,11 +4,41 @@ import { notFound } from 'next/navigation'
 import { TrendingUp, AlertCircle } from 'lucide-react'
 import { getAllSalaries, getSalary } from '@/lib/data/salaries'
 import { buildSalaryMetadata } from '@/lib/seo/metadata'
-import { buildFaqSchema, buildArticleSchema } from '@/lib/seo/schemas'
+import { buildFaqSchema, buildArticleSchema, buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { ContentCluster } from '@/components/seo/RelatedContent'
+import { ContentAttribution, type AttributionSource } from '@/components/seo/ContentAttribution'
 import { FlagIcon } from '@/components/ui/FlagIcon'
+import { getAttributionProfiles } from '@/lib/admin-profile'
+
+const SALARY_SOURCES: Record<string, AttributionSource[]> = {
+  germany: [
+    { label: 'TVöD (Tarifvertrag für den öffentlichen Dienst) — Public Sector Pay Tables' },
+    { label: 'Federal Statistical Office (Destatis) — Earnings and Labour Costs' },
+    { label: 'German Nursing Association (Deutscher Berufsverband für Pflegeberufe — DBfK)' },
+  ],
+  uk: [
+    { label: 'NHS Employers — Agenda for Change Pay Scales 2024/25' },
+    { label: 'NHS Digital — NHS Workforce Statistics' },
+    { label: 'Office for National Statistics (ONS) — Annual Survey of Hours and Earnings' },
+  ],
+  canada: [
+    { label: 'Statistics Canada — Labour Force Survey, Nursing and Allied Health Wages' },
+    { label: 'Canadian Federation of Nurses Unions (CFNU) — Compensation Data' },
+    { label: 'Provincial Nursing Collective Agreements (CARNA, ONA, BCNU, CUPE Health)' },
+  ],
+  australia: [
+    { label: 'Australian Bureau of Statistics (ABS) — Wage Price Index' },
+    { label: 'Australian Nursing and Midwifery Federation (ANMF) — Enterprise Agreements' },
+    { label: 'Fair Work Commission — Nursing and Midwifery Industry Award 2020' },
+  ],
+  dubai: [
+    { label: 'Dubai Health Authority (DHA) — Healthcare Workforce Remuneration Guidelines' },
+    { label: 'Ministry of Human Resources & Emiratisation (MOHRE) — Wage Protection System' },
+    { label: 'Gulf Cooperation Council (GCC) — Healthcare Compensation Benchmarks' },
+  ],
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -48,6 +78,14 @@ export default async function SalaryPage({ params }: PageProps) {
   const data = getSalary(slug)
   if (!data) notFound()
 
+  const attribution = await getAttributionProfiles()
+
+  const breadcrumbItems = [
+    { name: 'Home', href: '/' },
+    { name: data.countryName, href: `/country/${data.countrySlug}` },
+    { name: `${data.countryName} Nurse Salary`, href: `/salary/${slug}` },
+  ]
+
   const schemas = [
     buildFaqSchema(data.faqs),
     buildArticleSchema({
@@ -56,12 +94,12 @@ export default async function SalaryPage({ params }: PageProps) {
       path: `/salary/${data.slug}`,
       publishedDate: '2025-01-01',
     }),
-  ]
-
-  const breadcrumbItems = [
-    { name: 'Home', href: '/' },
-    { name: data.countryName, href: `/country/${data.countrySlug}` },
-    { name: `${data.countryName} Nurse Salary`, href: `/salary/${slug}` },
+    buildWebPageSchema({
+      title: data.headline,
+      description: data.tagline,
+      path: `/salary/${data.slug}`,
+    }),
+    buildBreadcrumbSchema(breadcrumbItems),
   ]
 
   return (
@@ -233,6 +271,14 @@ export default async function SalaryPage({ params }: PageProps) {
               relatedCountrySlugs={data.relatedCountrySlugs}
               relatedPricingSlugs={data.relatedCountrySlugs}
               relatedSalaries={data.relatedSlugs.map((s) => s.replace('-nurse-salary', ''))}
+            />
+
+            <ContentAttribution
+              {...(attribution?.author && { author: attribution.author })}
+              {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={data.lastUpdated}
+              sources={SALARY_SOURCES[data.countrySlug] ?? []}
+              sourceNote="Salary data reviewed against official government wage scales, union-negotiated pay agreements, and regulatory body publications. INR equivalents are indicative and fluctuate with exchange rates."
             />
           </main>
 

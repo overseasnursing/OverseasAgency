@@ -2,6 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPricingData, getAllPricingCountrySlugs } from '@/lib/data/pricing'
+import { buildArticleSchema } from '@/lib/seo/schemas'
 import { FlagIcon } from '@/components/ui/FlagIcon'
 
 import { PricingHero } from './components/PricingHero'
@@ -14,6 +15,38 @@ import { TransparentPricingEducation } from './components/TransparentPricingEduc
 import { PricingFaqAccordion } from './components/PricingFaqAccordion'
 import { RelatedCountryPricing } from './components/RelatedCountryPricing'
 import { PricingRelatedGuides } from './components/PricingRelatedGuides'
+import { ContentAttribution, type AttributionSource } from '@/components/seo/ContentAttribution'
+import { getAttributionProfiles } from '@/lib/admin-profile'
+
+const PRICING_SOURCES: Record<string, AttributionSource[]> = {
+  germany: [
+    { label: 'Federal Employment Agency (Bundesagentur für Arbeit) — Recognition fee schedule' },
+    { label: 'German Embassy India — Visa fee schedule' },
+    { label: 'OET Official — Exam registration fees', url: 'https://oet.com' },
+    { label: 'Goethe-Institut — German language course and exam fees' },
+  ],
+  uk: [
+    { label: 'UK Home Office — Health and Care Worker Visa fee schedule' },
+    { label: 'Nursing and Midwifery Council (NMC) — Registration fees' },
+    { label: 'OET Official — Exam registration fees', url: 'https://oet.com' },
+  ],
+  canada: [
+    { label: 'Immigration, Refugees and Citizenship Canada (IRCC) — Application fees' },
+    { label: 'National Nursing Assessment Service (NNAS) — Assessment fees' },
+    { label: 'National Council of State Boards of Nursing (NCSBN) — NCLEX examination fees' },
+  ],
+  australia: [
+    { label: 'Australian Department of Home Affairs — Visa application fees' },
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA) — Registration fees' },
+    { label: 'OET Official — Exam registration fees', url: 'https://oet.com' },
+    { label: 'Australian Nursing and Midwifery Accreditation Council (ANMAC) — Assessment fees' },
+  ],
+  dubai: [
+    { label: 'Dubai Health Authority (DHA) — Licensing examination and registration fees' },
+    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA) — Visa fees' },
+    { label: 'Ministry of Human Resources & Emiratisation (MOHRE) — Labour card fees' },
+  ],
+}
 
 interface PageProps {
   params: Promise<{ country: string }>
@@ -52,6 +85,14 @@ export default async function PricingPage({ params }: PageProps) {
   const data = getPricingData(country)
   if (!data) notFound()
 
+  const attribution = await getAttributionProfiles()
+
+  const articleSchema = buildArticleSchema({
+    title: `${data.countryName} Nursing Migration Cost 2025 — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L)`,
+    description: `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified 2025 data.`,
+    path: `/pricing/${country}`,
+  })
+
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -74,6 +115,7 @@ export default async function PricingPage({ params }: PageProps) {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
@@ -93,6 +135,14 @@ export default async function PricingPage({ params }: PageProps) {
             <PricingFaqAccordion faqs={data.faqs} countryName={data.countryName} />
             <RelatedCountryPricing data={data} />
             <PricingRelatedGuides data={data} />
+
+            <ContentAttribution
+              {...(attribution?.author && { author: attribution.author })}
+              {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={data.lastUpdated}
+              sources={PRICING_SOURCES[country] ?? []}
+              sourceNote="Fee information reviewed against regulatory publications, nurse-reported migration costs, and publicly available agency fee schedules. Costs are indicative — actual charges vary by agency, visa category, and individual circumstances."
+            />
           </main>
 
           {/* Desktop sidebar */}

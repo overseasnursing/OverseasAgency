@@ -17,6 +17,8 @@ import {
 } from 'lucide-react'
 import { HeroVisual } from '@/components/visuals/HeroVisual'
 import { GlobalSearchBar, type SearchAgency, type SearchCountry, type SearchExam } from '@/components/search/GlobalSearchBar'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
 /* ── Metadata ────────────────────────────────────────────────────── */
 
@@ -32,6 +34,15 @@ export const metadata: Metadata = {
     images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
   },
 }
+
+const HOME_SCHEMAS = [
+  buildWebPageSchema({
+    title: 'Find Trusted Overseas Nursing Agencies — Real Reviews & Pricing',
+    description: 'Compare verified nurse reviews, real migration costs, exam guidance and scam reports. The most trusted platform for Indian nurses migrating to Germany, UK, Canada, Australia & Dubai.',
+    path: '/',
+  }),
+  buildBreadcrumbSchema([{ name: 'Home', href: '/' }]),
+]
 
 /* ── Inline curated data ─────────────────────────────────────────── */
 
@@ -461,6 +472,7 @@ export default function HomePage() {
 
   return (
     <>
+      <MultiJsonLd schemas={HOME_SCHEMAS} />
       {/* ══════════════════════════════════════════════════════════
           §1 — HERO
       ══════════════════════════════════════════════════════════ */}
@@ -690,6 +702,21 @@ export default function HomePage() {
               <CountryCard key={country.slug} country={country} />
             ))}
           </div>
+
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <a
+              href="/compare"
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors"
+            >
+              Compare countries side-by-side <ChevronRight size={12} />
+            </a>
+            <a
+              href="/salary"
+              className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors"
+            >
+              Salary guides by country <ChevronRight size={12} />
+            </a>
+          </div>
         </Container>
       </SectionWrapper>
 
@@ -914,10 +941,10 @@ export default function HomePage() {
               </p>
             </div>
             <a
-              href="/guides"
+              href="/exam"
               className="hidden sm:flex items-center gap-1.5 text-[13.5px] font-semibold text-primary hover:text-primary-hover transition-colors flex-shrink-0"
             >
-              All guides <ArrowRight size={14} />
+              All exam guides <ArrowRight size={14} />
             </a>
           </div>
 
@@ -931,8 +958,8 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6 sm:hidden">
-            <a href="/guides" className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary">
-              See all guides <ArrowRight size={14} />
+            <a href="/exam" className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary">
+              See all exam guides <ArrowRight size={14} />
             </a>
           </div>
         </Container>

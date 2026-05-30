@@ -3,11 +3,14 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CheckCircle, XCircle, Clock, DollarSign, ShieldCheck } from 'lucide-react'
 import { getAllExams, getExam } from '@/lib/data/exams'
+import { getMockTestLocationsForExam } from '@/lib/data/getMockTestData'
 import { buildExamMetadata } from '@/lib/seo/metadata'
-import { buildFaqSchema, buildArticleSchema } from '@/lib/seo/schemas'
+import { buildFaqSchema, buildArticleSchema, buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { ContentCluster } from '@/components/seo/RelatedContent'
+import { ContentAttribution, type AttributionSource } from '@/components/seo/ContentAttribution'
+import { getAttributionProfiles } from '@/lib/admin-profile'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -37,10 +40,72 @@ const EXAM_TYPE_LABELS: Record<string, { label: string; color: string }> = {
   licensing: { label: 'Licensing Exam', color: 'text-[#92400E] bg-[#FEF3C7]' },
 }
 
+const EXAM_EXTRA_SOURCES: Record<string, AttributionSource[]> = {
+  'oet-guide': [
+    { label: 'Nursing and Midwifery Council (NMC), United Kingdom' },
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
+  ],
+  'ielts-guide': [
+    { label: 'Nursing and Midwifery Council (NMC), United Kingdom' },
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
+    { label: 'German Federal Employment Agency (Bundesagentur für Arbeit)' },
+  ],
+  'nclex-rn-guide': [
+    { label: 'National Council of State Boards of Nursing (NCSBN)' },
+    { label: 'Canadian Nurses Association (CNA)' },
+    { label: 'National Nursing Assessment Service (NNAS), Canada' },
+  ],
+  'dha-exam-guide': [
+    { label: 'Dubai Health Authority (DHA) — Health Regulation Sector' },
+    { label: 'Prometric — Authorised Testing Provider' },
+  ],
+  'ahpra-registration-guide': [
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
+    { label: 'Australian Nursing and Midwifery Accreditation Council (ANMAC)' },
+    { label: 'Australian Department of Home Affairs' },
+  ],
+  'cbse-osce-guide': [
+    { label: 'Nursing and Midwifery Council (NMC) — Test of Competence' },
+    { label: 'Pearson VUE — Authorised NMC CBT Provider' },
+  ],
+  'haad-exam-guide': [
+    { label: 'Prometric — Authorised Testing Provider' },
+    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA), Dubai' },
+  ],
+  'moh-exam-guide': [
+    { label: 'Prometric — Authorised Testing Provider' },
+    { label: 'Ministry of Human Resources & Emiratisation (MOHRE), UAE' },
+  ],
+}
+
+// Maps exam guide slug → keywords that match mock_test_locations slug/name in the DB.
+// Only exams with supported mock-test content are listed.
+const MOCK_TEST_KEYWORDS: Record<string, string[]> = {
+  'oet-guide':              ['oet'],
+  'ielts-guide':            ['ielts'],
+  'nclex-rn-guide':         ['nclex'],
+  'dha-exam-guide':         ['dha'],
+  'haad-exam-guide':        ['haad'],
+  'moh-exam-guide':         ['moh'],
+  'cbse-osce-guide':        ['cbse', 'osce', 'nmc', 'cbt'],
+  'ahpra-registration-guide': ['ahpra'],
+}
+
 export default async function ExamPage({ params }: PageProps) {
   const { slug } = await params
   const data = getExam(slug)
   if (!data) notFound()
+
+  const [attribution, mockTestLocations] = await Promise.all([
+    getAttributionProfiles(),
+    getMockTestLocationsForExam(MOCK_TEST_KEYWORDS[slug] ?? []),
+  ])
+
+  const breadcrumbItems = [
+    { name: 'Home', href: '/' },
+    { name: 'Exam Guides', href: '/exam' },
+    { name: data.examName, href: `/exam/${slug}` },
+  ]
 
   const schemas = [
     buildFaqSchema(data.faqs),
@@ -51,12 +116,12 @@ export default async function ExamPage({ params }: PageProps) {
       publishedDate: '2025-01-01',
       modifiedDate: '2025-01-01',
     }),
-  ]
-
-  const breadcrumbItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Exam Guides', href: '/exam' },
-    { name: data.examName, href: `/exam/${slug}` },
+    buildWebPageSchema({
+      title: data.headline,
+      description: data.tagline,
+      path: `/exam/${data.slug}`,
+    }),
+    buildBreadcrumbSchema(breadcrumbItems),
   ]
 
   const examTypeStyle = EXAM_TYPE_LABELS[data.examType] ?? EXAM_TYPE_LABELS.registration
@@ -210,6 +275,50 @@ export default async function ExamPage({ params }: PageProps) {
               </ul>
             </section>
 
+            {/* Practice This Exam — only rendered when matching mock-test content exists in DB */}
+            {mockTestLocations.length > 0 && (
+              <section aria-labelledby="practice-heading">
+                <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl p-6">
+                  <h2 id="practice-heading" className="text-[18px] font-bold text-slate-800 mb-2">
+                    Practice This Exam
+                  </h2>
+                  <p className="text-[13.5px] text-slate-600 leading-relaxed mb-4">
+                    Reading the guide is step one. Scoring consistently under timed conditions is step two.
+                    Take a free {data.examName} mock test to benchmark your readiness and identify weak areas before your actual sitting.
+                  </p>
+                  <ul className="flex flex-col gap-2 mb-5">
+                    {[
+                      'Timed simulation — mirrors the real exam format',
+                      'Instant results with full explanations after submission',
+                      'No negative marking — attempt every question confidently',
+                      'Free to take — no subscription required',
+                    ].map((benefit) => (
+                      <li key={benefit} className="flex items-center gap-2.5 text-[13px] text-slate-600">
+                        <CheckCircle size={13} className="text-[#166534] flex-shrink-0" />
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap gap-3">
+                    {mockTestLocations.map((loc) => (
+                      <a
+                        key={loc.slug}
+                        href={`/mock-tests/${loc.slug}`}
+                        className="inline-flex items-center gap-2 h-11 px-6 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors"
+                      >
+                        Take {data.examName} Mock Test
+                        {loc.test_count > 0 && (
+                          <span className="text-[11px] font-medium bg-white/20 px-1.5 py-0.5 rounded-full">
+                            {loc.test_count} free
+                          </span>
+                        )}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* FAQ */}
             <section aria-labelledby="faq-heading">
               <h2 id="faq-heading" className="text-[20px] font-bold text-slate-800 mb-5">
@@ -234,6 +343,19 @@ export default async function ExamPage({ params }: PageProps) {
                 name: s.replace(/-guide$/, '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
                 countries: 'Multiple countries',
               }))}
+            />
+
+            <ContentAttribution
+              {...(attribution?.author && { author: attribution.author })}
+              {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={data.lastUpdated}
+              sources={[
+                ...(data.registrationUrl
+                  ? [{ label: `${data.examName} — Official Registration`, url: data.registrationUrl }]
+                  : []),
+                ...(EXAM_EXTRA_SOURCES[data.slug] ?? []),
+              ]}
+              sourceNote="Information reviewed against official exam body publications, candidate handbooks, and regulatory guidelines. Fees and timelines are indicative and should be verified against the issuing authority before applying."
             />
           </main>
 

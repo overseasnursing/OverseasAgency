@@ -40,7 +40,7 @@ const GERMANY: PricingPageData = {
   totalMax: 944000,
   totalTypical: 720000,
   transparencyStatement: 'Germany migration costs are dominated by agency fees and German language training. Language (B2) adds 8–14 months and ₹70,000–₹1.5L that most agencies do not mention in their headline fee.',
-  lastUpdated: 'May 2025',
+  lastUpdated: 'May 2026',
 
   costLineItems: [
     { label: 'Agency Fee', category: 'agency', min: 350000, max: 550000, notes: 'End-to-end service: employer matching, Berufsanerkennung support, visa filing', optional: false },
@@ -283,7 +283,7 @@ const UK: PricingPageData = {
   totalMax: 750000,
   totalTypical: 560000,
   transparencyStatement: 'UK migration is relatively straightforward in cost — no secondary language needed. The main variable is whether your NHS employer covers OSCE fees and relocation allowances, which can reduce total cost by ₹60,000–₹1L.',
-  lastUpdated: 'May 2025',
+  lastUpdated: 'May 2026',
 
   costLineItems: [
     { label: 'Agency Fee', category: 'agency', min: 300000, max: 500000, notes: 'NMC registration support, CBT coaching, employer matching, visa filing', optional: false },
@@ -419,7 +419,7 @@ const CANADA: PricingPageData = {
   totalMax: 1100000,
   totalTypical: 820000,
   transparencyStatement: 'Canada has higher immigration processing fees than UK or Germany and the highest relocation costs due to long-haul flights and expensive cities. However, the PR pathway and world-class quality of life make it the strongest long-term value proposition.',
-  lastUpdated: 'May 2025',
+  lastUpdated: 'May 2026',
 
   costLineItems: [
     { label: 'Agency Fee', category: 'agency', min: 400000, max: 600000, notes: 'NCLEX coaching, Express Entry profile, provincial registration, employer matching', optional: false },
@@ -500,7 +500,7 @@ const AUSTRALIA: PricingPageData = {
   totalMax: 1200000,
   totalTypical: 940000,
   transparencyStatement: 'Australia has the highest visa fees of all major nursing destinations — the subclass 482/190 visa alone costs ₹90,000+. However, Australian government hospitals frequently provide relocation allowances and some cover AHPRA costs.',
-  lastUpdated: 'May 2025',
+  lastUpdated: 'May 2026',
 
   costLineItems: [
     { label: 'Agency Fee', category: 'agency', min: 400000, max: 700000, notes: 'AHPRA support, visa application, employer matching, skills assessment', optional: false },
@@ -579,7 +579,7 @@ const DUBAI: PricingPageData = {
   totalMax: 460000,
   totalTypical: 270000,
   transparencyStatement: 'Dubai offers the lowest migration cost of any major nursing destination. Many employers cover visa and medical fees directly, reducing out-of-pocket costs further. The low cost combined with tax-free salary makes Dubai the fastest ROI destination.',
-  lastUpdated: 'May 2025',
+  lastUpdated: 'May 2026',
 
   costLineItems: [
     { label: 'Agency Fee', category: 'agency', min: 100000, max: 300000, notes: 'DHA/MOH exam support, DataFlow, employer matching, visa coordination', optional: false },

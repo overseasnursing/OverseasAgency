@@ -65,14 +65,16 @@ export const metadata: Metadata = {
 
 const FOOTER_LINKS = {
   Discover: [
-    ['Agencies',  '/agencies'],
-    ['Pricing',   '/pricing'],
-    ['Reviews',   '/reviews'],
-    ['Guides',    '/guides'],
+    ['Agencies',       '/agencies'],
+    ['Pricing',        '/pricing'],
+    ['Salary Guides',  '/salary'],
+    ['Compare',        '/compare'],
+    ['Reviews',        '/reviews'],
+    ['Guides',         '/guides'],
   ],
   Safety: [
-    ['Scam Reports',    '/scam-reports'],
-    ['Exam Guides',     '/guides'],
+    ['Scam Reports',   '/scam-reports'],
+    ['Exam Guides',    '/exam'],
   ],
   'Countries': [
     ['Germany',   '/country/germany'],
@@ -153,8 +155,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <p className="text-[13px] text-slate-400">
                 © {new Date().getFullYear()} OverseasNursing. All rights reserved.
               </p>
-              <div className="flex items-center gap-5">
-                {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                {[['About', '/about'], ['Editorial Policy', '/editorial-policy'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(
                   ([label, href]) => (
                     <a
                       key={href}

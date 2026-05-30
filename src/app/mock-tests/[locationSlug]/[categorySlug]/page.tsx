@@ -8,6 +8,8 @@ import {
   type PublicTest,
 } from '@/lib/data/getMockTestData'
 import { CategoryPageClient } from './_components/CategoryPageClient'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
 export const revalidate = 3600
 
@@ -47,8 +49,23 @@ export default async function CategoryPage({ params }: PageProps) {
     ? Math.round(tests.reduce((s, t) => s + t.passing_percentage, 0) / tests.length)
     : 0
 
+  const pageTitle = category.seo_title || `${category.name} — Free Mock Tests | OverseasNursing`
+  const pageDesc  = category.seo_description || category.description ||
+    `Practice ${category.name} with free timed mock tests. Part of ${location.name} licensing preparation.`
+
+  const schemas = [
+    buildWebPageSchema({ title: pageTitle, description: pageDesc, path: `/mock-tests/${locationSlug}/${categorySlug}` }),
+    buildBreadcrumbSchema([
+      { name: 'Home', href: '/' },
+      { name: 'Mock Tests', href: '/mock-tests' },
+      { name: location.name, href: `/mock-tests/${locationSlug}` },
+      { name: category.name, href: `/mock-tests/${locationSlug}/${categorySlug}` },
+    ]),
+  ]
+
   return (
     <div className="bg-surface-page min-h-screen">
+      <MultiJsonLd schemas={schemas} />
 
       {/* Header */}
       <div className="bg-white border-b border-slate-100">

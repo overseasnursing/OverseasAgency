@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   X, Clock, HelpCircle, Target, Play, Info,
   Lock, Mail, Eye, EyeOff, ChevronRight, Chrome, Loader2,
-  BookOpen, Crown,
+  BookOpen,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { startExamSession } from '@/app/actions/exam-sessions'
@@ -238,7 +238,7 @@ function AuthModal({
 
 /* ── Test Card ──────────────────────────────────────────────────────── */
 function TestCard({
-  test, index, isStarting, locationSlug, categorySlug, onDetails, onStart, onPremium,
+  test, index, isStarting, locationSlug, categorySlug, onDetails, onStart,
 }: {
   test:         PublicTest
   index:        number
@@ -247,41 +247,24 @@ function TestCard({
   categorySlug: string
   onDetails:    () => void
   onStart:      () => void
-  onPremium:    () => void
 }) {
   const diff      = getDiff(test.passing_percentage)
   const passMarks = Math.ceil(test.total_questions * test.passing_percentage / 100)
-  const isPremium = test.is_premium
   const studyHref = `/mock-tests/${locationSlug}/${categorySlug}/${test.slug}/study`
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card hover:shadow-card-md hover:border-slate-300 transition-all overflow-hidden relative">
-      {/* Premium overlay */}
-      {isPremium && (
-        <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-center gap-3 p-6">
-          <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center">
-            <Crown size={22} className="text-amber-600" />
-          </div>
-          <p className="text-[14px] font-bold text-slate-800">Premium Test</p>
-          <p className="text-[12.5px] text-slate-500 text-center">Subscribe to unlock this mock test and access all premium content.</p>
-          <button onClick={onPremium}
-            className="flex items-center gap-2 h-9 px-5 bg-amber-500 hover:bg-amber-600 text-white text-[12.5px] font-semibold rounded-xl transition-colors">
-            <Crown size={12} /> Unlock Premium
-          </button>
-        </div>
-      )}
-
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-card hover:shadow-card-md hover:border-slate-300 transition-all overflow-hidden">
       {/* Number strip */}
       <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-slate-100">
         <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-[12px] font-bold flex items-center justify-center flex-shrink-0">
           {String(index + 1).padStart(2, '0')}
         </span>
-        <h3 className="text-[15px] font-bold text-slate-800 flex-1 leading-tight">{test.name}</h3>
-        {isPremium && (
-          <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-700 border border-amber-200 rounded-full flex items-center gap-1">
-            <Crown size={9} /> Premium
-          </span>
-        )}
+        <Link
+          href={`/mock-tests/${locationSlug}/${categorySlug}/${test.slug}`}
+          className="text-[15px] font-bold text-slate-800 flex-1 leading-tight hover:text-primary transition-colors"
+        >
+          {test.name}
+        </Link>
       </div>
 
       <div className="px-5 pb-5 pt-3 flex flex-col gap-3">
@@ -302,7 +285,7 @@ function TestCard({
         <div className="flex flex-wrap gap-2">
           <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-badge border ${diff.cls}`}>{diff.label}</span>
           <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-violet-50 text-violet-700 border border-violet-100">⚡ Instant Results</span>
-          {!isPremium && <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-green-50 text-green-700 border border-green-100">🆓 Free</span>}
+          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-green-50 text-green-700 border border-green-100">🆓 Free</span>
         </div>
 
         {/* Actions */}
@@ -323,47 +306,6 @@ function TestCard({
             }
           </button>
         </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── Subscription Modal (placeholder) ──────────────────────────────── */
-function SubscriptionModal({ onClose }: { onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: 'rgba(15,23,42,0.65)' }}>
-      <div className="bg-white rounded-2xl shadow-card-lg w-full max-w-sm p-6 animate-slide-up">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Crown size={18} className="text-amber-500" />
-            <h2 className="text-[15px] font-bold text-slate-800">Premium Access</h2>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={16} /></button>
-        </div>
-
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-4 text-center">
-          <p className="text-[28px] font-black text-amber-600">Coming Soon</p>
-          <p className="text-[12.5px] text-amber-700 mt-1">Premium subscriptions will be available shortly.</p>
-        </div>
-
-        <div className="flex flex-col gap-2 mb-5">
-          {[
-            'Unlimited premium mock tests',
-            'Detailed explanations & learning notes',
-            'Advanced performance analytics',
-            'Priority access to new test releases',
-          ].map(f => (
-            <div key={f} className="flex items-center gap-2 text-[12.5px] text-slate-600">
-              <span className="text-emerald-500">✓</span> {f}
-            </div>
-          ))}
-        </div>
-
-        <button onClick={onClose}
-          className="w-full h-10 border border-slate-200 text-slate-600 text-[13px] font-medium rounded-xl hover:bg-slate-50 transition-colors">
-          Close
-        </button>
       </div>
     </div>
   )
@@ -406,7 +348,6 @@ export function CategoryPageClient({
   const router = useRouter()
   const [detailsTest, setDetailsTest]         = useState<PublicTest | null>(null)
   const [showAuthModal, setShowAuthModal]     = useState(false)
-  const [showSubModal, setShowSubModal]       = useState(false)
   const [pendingTest, setPendingTest]         = useState<PublicTest | null>(null)
   const [startError, setStartError]           = useState<string | null>(null)
   const [startingId, setStartingId]           = useState<string | null>(null)
@@ -430,7 +371,6 @@ export function CategoryPageClient({
   }
 
   function handleStart(test: PublicTest) {
-    if (test.is_premium) { setShowSubModal(true); return }
     if (user) {
       setStartingId(test.id)   // immediate — shows spinner on click
       launchSession(test)
@@ -468,10 +408,6 @@ export function CategoryPageClient({
           onClose={() => { setShowAuthModal(false); setPendingTest(null) }}
         />
       )}
-      {showSubModal && (
-        <SubscriptionModal onClose={() => setShowSubModal(false)} />
-      )}
-
       {/* Session start error */}
       {startError && (
         <div className="mb-5 flex items-center gap-2 p-3 bg-[#FEE2E2] border border-[#FECACA] rounded-xl text-[13px] text-[#B91C1C]">
@@ -508,7 +444,6 @@ export function CategoryPageClient({
               categorySlug={categorySlug}
               onDetails={() => setDetailsTest(test)}
               onStart={() => handleStart(test)}
-              onPremium={() => setShowSubModal(true)}
             />
           ))}
         </div>

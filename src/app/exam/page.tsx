@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ChevronRight, Clock, Globe } from 'lucide-react'
+import { ChevronRight, Clock, Globe, TrendingUp, BarChart2 } from 'lucide-react'
 import { getAllExams } from '@/lib/data/exams'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
 export const metadata: Metadata = {
   title: 'Nursing Exam Guides — OET, IELTS, NCLEX, DHA, MOH & More | OverseasNursing',
@@ -20,12 +22,25 @@ const EXAM_TYPE_LABELS: Record<string, { label: string; bg: string; text: string
   licensing:           { label: 'Licensing Exam',      bg: 'bg-[#FEF3C7]', text: 'text-[#92400E]' },
 }
 
+const EXAM_HUB_SCHEMAS = [
+  buildWebPageSchema({
+    title: 'Nursing Exam Guides — OET, IELTS, NCLEX, DHA, MOH & More | OverseasNursing',
+    description: 'Complete guides for every nursing exam required for overseas migration — OET, IELTS, NCLEX-RN, DHA, MOH, HAAD, Prometric and more. Fees, prep tips, pass rates.',
+    path: '/exam',
+  }),
+  buildBreadcrumbSchema([
+    { name: 'Home', href: '/' },
+    { name: 'Exam Guides', href: '/exam' },
+  ]),
+]
+
 export default function ExamIndexPage() {
   const exams = getAllExams()
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
 
+      <MultiJsonLd schemas={EXAM_HUB_SCHEMAS} />
       {/* Header */}
       <div className="bg-white border-b border-slate-100">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
@@ -89,6 +104,22 @@ export default function ExamIndexPage() {
               </Link>
             )
           })}
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-slate-200 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <span className="text-[12.5px] text-slate-400 font-medium">Related resources:</span>
+          <a
+            href="/salary"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors"
+          >
+            <TrendingUp size={13} /> Salary Guides by Country
+          </a>
+          <a
+            href="/compare"
+            className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors"
+          >
+            <BarChart2 size={13} /> Compare Nursing Destinations
+          </a>
         </div>
       </div>
     </div>

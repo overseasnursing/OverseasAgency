@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ChevronRight, BookOpen, Clock, MapPin } from 'lucide-react'
 import { getMockTestLocations } from '@/lib/data/getMockTestData'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
 export const revalidate = 3600
 
@@ -26,6 +28,18 @@ const REGION_COLORS = [
   { bg: 'bg-cyan-50', border: 'border-cyan-100', icon: 'bg-cyan-100 text-cyan-700', bar: 'bg-cyan-500' },
 ]
 
+const HUB_SCHEMAS = [
+  buildWebPageSchema({
+    title: 'Free Nursing Mock Tests — Practice Licensing Exams Online | OverseasNursing',
+    description: 'Prepare for DHA, HAAD, MOH, PROMETRIC, NCLEX & more with free nursing mock tests. Timed, scored, instant results.',
+    path: '/mock-tests',
+  }),
+  buildBreadcrumbSchema([
+    { name: 'Home', href: '/' },
+    { name: 'Mock Tests', href: '/mock-tests' },
+  ]),
+]
+
 export default async function MockTestsPage() {
   const locations = await getMockTestLocations()
 
@@ -34,6 +48,7 @@ export default async function MockTestsPage() {
 
   return (
     <div className="bg-surface-page min-h-screen">
+      <MultiJsonLd schemas={HUB_SCHEMAS} />
 
       {/* Hero */}
       <div className="bg-white border-b border-slate-100">

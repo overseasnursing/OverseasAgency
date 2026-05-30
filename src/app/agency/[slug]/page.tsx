@@ -1,6 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { LAST_REVIEWED } from '@/lib/data/freshness'
 
 // ISR: revalidate agency pages every hour.
 // New reviews/scam reports within that window appear on next regeneration.
@@ -19,6 +20,10 @@ import { TimelineSection } from './components/TimelineSection'
 import { BranchesSection } from './components/BranchesSection'
 import { FaqAccordion } from './components/FaqAccordion'
 import { RelatedAgencies } from './components/RelatedAgencies'
+import { ContentAttribution } from '@/components/seo/ContentAttribution'
+import { getAttributionProfiles } from '@/lib/admin-profile'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema, buildReviewSchema } from '@/lib/seo/schemas'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
@@ -75,6 +80,8 @@ export default async function AgencyDetailPage({ params }: PageProps) {
   const agency = await getAgencyDetail(slug)
   if (!agency) notFound()
 
+  const attribution = await getAttributionProfiles()
+
   const votes = await getVoteCountsWithUserVote(agency.id)
   const voteTotal = votes.thumbsUp + votes.thumbsDown
   const liveRecommendPercent = voteTotal === 0 ? 100 : Math.round((votes.thumbsUp / voteTotal) * 100)
@@ -99,12 +106,38 @@ export default async function AgencyDetailPage({ params }: PageProps) {
     ...(agency.website ? { url: agency.website } : {}),
   }
 
+  const agencySchemas = [
+    buildWebPageSchema({
+      title: `${agency.name} Reviews, Fees & Scam Reports — OverseasNursing.com`,
+      description: `Read verified nurse reviews of ${agency.name}. See agency fees, scam reports, visa success rate, and transparency score before you pay.`,
+      path: `/agency/${agency.slug}`,
+    }),
+    buildBreadcrumbSchema([
+      { name: 'Home', href: '/' },
+      { name: 'Agencies', href: '/agencies' },
+      { name: agency.name, href: `/agency/${agency.slug}` },
+    ]),
+    ...agency.reviews
+      .filter(r => r.body)
+      .slice(0, 5)
+      .map(r => buildReviewSchema({
+        authorName: r.authorName,
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        date: r.date,
+        agencyName: agency.name,
+        agencySlug: agency.slug,
+      })),
+  ]
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <MultiJsonLd schemas={agencySchemas} />
 
       <AgencyHero agency={agency} recommendationPercent={liveRecommendPercent} />
 
@@ -345,6 +378,19 @@ export default async function AgencyDetailPage({ params }: PageProps) {
 
             {/* ── 11. Compare Similar Agencies ─────────────────────────── */}
             <RelatedAgencies currentId={agency.id} city={agency.city} state={agency.state} />
+
+            <ContentAttribution
+              {...(attribution?.author && { author: attribution.author })}
+              {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={LAST_REVIEWED.agencies}
+              sources={[
+                { label: 'Ministry of External Affairs (MEA), India — ePOE Overseas Recruiter Register' },
+                { label: 'State Nursing Council Registration Databases' },
+                { label: 'Protector General of Emigrants (PGE), India — Recruitment Agent Licensing' },
+                { label: 'Nurse-submitted reviews and direct agency verification' },
+              ]}
+              sourceNote="Agency information compiled from public business records, official licensing databases, MEA filings, and nurse-submitted reviews. Pricing and timelines are self-reported and independently verified where possible."
+            />
           </main>
 
           {/* Desktop sidebar */}

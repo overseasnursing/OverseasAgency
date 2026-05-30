@@ -90,7 +90,7 @@ const EXAMS: ExamPageData[] = [
     ],
     relatedExamSlugs: ['ielts-guide', 'cbse-osce-guide', 'ahpra-registration-guide'],
     relatedCountrySlugs: ['uk', 'australia'],
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
   },
   {
     slug: 'nclex-rn-guide',
@@ -169,7 +169,7 @@ const EXAMS: ExamPageData[] = [
     ],
     relatedExamSlugs: ['oet-guide', 'ielts-guide'],
     relatedCountrySlugs: ['canada'],
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
   },
   {
     slug: 'dha-exam-guide',
@@ -234,7 +234,7 @@ const EXAMS: ExamPageData[] = [
     ],
     relatedExamSlugs: ['oet-guide', 'nclex-rn-guide'],
     relatedCountrySlugs: ['dubai'],
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
   },
   {
     slug: 'ahpra-registration-guide',
@@ -303,7 +303,100 @@ const EXAMS: ExamPageData[] = [
     ],
     relatedExamSlugs: ['oet-guide', 'ielts-guide'],
     relatedCountrySlugs: ['australia'],
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
+  },
+  {
+    slug: 'ielts-guide',
+    examName: 'IELTS Academic',
+    examFullName: 'International English Language Testing System — Academic',
+    examType: 'language',
+    applicableCountries: ['United Kingdom', 'Australia', 'Germany', 'Canada'],
+    applicableCountrySlugs: ['uk', 'australia', 'germany', 'canada'],
+    headline: 'IELTS Exam Guide 2025 — Complete Preparation for Indian Nurses Going to UK, Australia & Germany',
+    tagline: 'Academic IELTS 7.0 — the most widely accepted English proficiency test for nursing migration across 4 countries',
+    overview:
+      "IELTS Academic (International English Language Testing System) is the world's most widely recognised English proficiency exam for nursing migration. For Indian nurses, IELTS Academic is accepted by the UK NMC, Australian AHPRA, and nursing regulators in Germany and Canada. The exam tests Listening, Reading, Writing, and Speaking across four separate sub-tests. A minimum score of 7.0 in every band is required for NMC (UK) and AHPRA (Australia) registration. Unlike OET, IELTS is a general academic test not specific to healthcare — but it is accepted by more countries and more immigration bodies.",
+    isMandatory: true,
+    validity: '2 years from the date of results',
+    registrationFeeINR: 16500,
+    prepTimeMonths: { min: 2, max: 4 },
+    passingScore: '7.0 in all four bands — Listening, Reading, Writing, and Speaking (Academic IELTS only)',
+    passRate: 'Approximately 65-72% for Indian nurses achieving 7.0 in all bands on first attempt with 2-3 months preparation',
+    registrationUrl: 'https://www.ielts.org',
+    sections: [
+      {
+        name: 'Listening',
+        description: 'Four recordings — two conversations and two monologues on social and academic topics. 40 questions. Recordings play once only.',
+        scoreRequired: '7.0 band (approximately 30/40 correct answers)',
+        duration: '30 minutes + 10 minutes transfer time',
+      },
+      {
+        name: 'Reading (Academic)',
+        description: 'Three long reading passages from academic journals, books, or magazines. Includes True/False/Not Given, matching, sentence completion, and multiple choice.',
+        scoreRequired: '7.0 band (approximately 30/40 correct answers)',
+        duration: '60 minutes',
+      },
+      {
+        name: 'Writing (Academic)',
+        description: 'Task 1: Describe a graph, chart, diagram, or map in at least 150 words. Task 2: Essay responding to a point of view or argument in at least 250 words.',
+        scoreRequired: '7.0 band — requires coherent argument, vocabulary range, and grammatical accuracy',
+        duration: '60 minutes',
+      },
+      {
+        name: 'Speaking',
+        description: 'Three-part interview with a certified IELTS examiner. Part 1: personal questions. Part 2: long turn on a given topic card. Part 3: abstract discussion related to Part 2 topic.',
+        scoreRequired: '7.0 band — requires fluency, coherence, and lexical resource',
+        duration: '11–14 minutes',
+      },
+    ],
+    prepTips: [
+      'Use the official Cambridge IELTS Practice Tests (books 1–18) — the closest simulation of actual exam content',
+      'Focus on IELTS Academic, not IELTS General Training — nursing registration bodies require Academic only',
+      'Writing Task 1 is the most underestimated section — practise describing graphs, charts, and process diagrams daily',
+      'Reading requires time management — spend no more than 20 minutes per passage',
+      'Listening recordings play once only — practise active listening with British and Australian English accents',
+      'For Speaking, practise answering questions fluently for 1-2 minutes without long pauses',
+      'Take at least 3 full-length timed mock tests before the actual exam — each section must be done under real conditions',
+      'Target 7.5 in your strongest bands to create a buffer against weaker bands — you need 7.0 in every single band',
+    ],
+    commonMistakes: [
+      'Achieving 7.0 overall but scoring 6.5 in one band — even one band below 7.0 fails NMC and AHPRA requirements',
+      'Practising General Training IELTS instead of Academic — different Reading and Writing tasks',
+      'Writing under 250 words in Task 2 — automatic band penalty',
+      'Not practising Writing Task 1 enough — nurses who prepare only Task 2 essays often fail Task 1',
+      'Waiting until IELTS is passed before starting agency or visa applications — start paperwork in parallel',
+      'Not considering OET as an alternative — OET is healthcare-specific and many Indian nurses find it easier than IELTS',
+    ],
+    faqs: [
+      {
+        question: 'What IELTS score is required for UK nursing (NMC)?',
+        answer:
+          'The NMC requires a minimum of 7.0 in all four IELTS Academic bands: Listening, Reading, Writing, and Speaking. The overall band score must also be 7.0 or above. A score of 6.5 in any single band — even if the overall is 7.5 — does not meet the NMC requirement. Results must be from IELTS Academic, not IELTS General Training.',
+      },
+      {
+        question: 'Is IELTS or OET better for Indian nurses going to the UK?',
+        answer:
+          "Both are accepted by the NMC. OET is healthcare-specific and many Indian nurses find the clinical context (patient letters, ward briefings) more familiar than IELTS's academic essays and graph descriptions. However, IELTS is accepted by more immigration pathways and countries simultaneously. If you only plan to go to the UK, OET may be easier. If you want to keep options open for Germany or Canada, IELTS score supports more applications.",
+      },
+      {
+        question: 'What IELTS score does AHPRA require for Australia?',
+        answer:
+          'AHPRA requires a minimum of 7.0 in all four IELTS Academic bands. The requirement is identical to the NMC: each of Listening, Reading, Writing, and Speaking must score 7.0 individually. One IELTS result can satisfy both NMC (UK) and AHPRA (Australia) if you are considering both countries.',
+      },
+      {
+        question: 'How long does IELTS preparation take for Indian nurses?',
+        answer:
+          'Most Indian nurses need 2-4 months of structured preparation to achieve 7.0 in all bands. The Writing sub-test — particularly Task 1 graph descriptions — requires the most targeted practice. Nurses with strong English from English-medium nursing colleges often clear IELTS in 2 months. Those who studied in regional-medium institutions may need 4-6 months.',
+      },
+      {
+        question: 'How much does the IELTS exam cost in India in 2025?',
+        answer:
+          'The IELTS Academic exam fee in India is approximately ₹16,500–₹17,000 per sitting, administered by the British Council or IDP. If you retake the full exam, the fee applies again. You can also apply for a Section Re-sit (EOR — Enquiry on Results) if you believe a band was marked incorrectly, but this costs approximately ₹9,000 and rarely changes scores significantly.',
+      },
+    ],
+    relatedExamSlugs: ['oet-guide', 'nclex-rn-guide', 'ahpra-registration-guide', 'cbse-osce-guide'],
+    relatedCountrySlugs: ['uk', 'australia', 'germany', 'canada'],
+    lastUpdated: 'May 2026',
   },
   {
     slug: 'cbse-osce-guide',
@@ -368,7 +461,151 @@ const EXAMS: ExamPageData[] = [
     ],
     relatedExamSlugs: ['oet-guide', 'ielts-guide'],
     relatedCountrySlugs: ['uk'],
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
+  },
+  {
+    slug: 'haad-exam-guide',
+    examName: 'DOH / HAAD',
+    examFullName: 'Department of Health Abu Dhabi — Prometric Licensing Examination (formerly HAAD)',
+    examType: 'licensing',
+    applicableCountries: ['United Arab Emirates'],
+    applicableCountrySlugs: ['dubai'],
+    headline: 'DOH / HAAD Exam Guide 2025 — Abu Dhabi Nursing License for Indian Nurses',
+    tagline: 'Abu Dhabi licensing exam for nurses — required before you can work in any Abu Dhabi health facility',
+    overview:
+      'The Department of Health Abu Dhabi (DOH) — formerly the Health Authority Abu Dhabi (HAAD) — runs the Prometric-based licensing examination for nurses and other healthcare professionals wishing to practice in Abu Dhabi. HAAD officially merged into DOH in 2018, but the exam is still widely referred to as the HAAD exam. If you plan to work in Abu Dhabi (as opposed to Dubai or other emirates), you must pass the DOH exam and obtain a DOH licence before beginning work. Indian nurses with a BSc in Nursing and minimum two years of clinical experience are eligible to apply.',
+    isMandatory: true,
+    validity: '3 years from date of licensure (renewable)',
+    registrationFeeINR: 12000,
+    prepTimeMonths: { min: 1, max: 3 },
+    passingScore: '65% or above (Prometric adaptive scoring — exact pass mark varies by version)',
+    passRate: 'Approximately 55-65% first-attempt pass rate for Indian nurses with 4-6 weeks focused preparation',
+    registrationUrl: 'https://doh.gov.ae',
+    sections: [
+      {
+        name: 'Prometric Computer-Based Exam',
+        description: 'Multiple choice questions covering clinical nursing, pharmacology, infection control, patient safety, and professional ethics. The exam is adaptive — question difficulty adjusts based on your answers.',
+        duration: 'Approximately 2.5–3 hours',
+      },
+    ],
+    prepTips: [
+      'Use the official DOH candidate handbook to understand the exam blueprint before starting preparation',
+      'Practice with Prometric nursing question banks — the question style is US-NCLEX adjacent, favouring critical thinking over rote recall',
+      'Focus on pharmacology and drug calculations — these appear heavily in Gulf licensing exams',
+      'Infection control, patient safety, and ethical/legal nursing are high-weightage domains',
+      'HAAD/DOH questions often use scenario-based format — practice identifying the best nursing action, not just the correct fact',
+      'Many Indian nurses complete preparation in 4-6 weeks of focused study using Gulf-specific question banks',
+      'Book your Prometric slot early — centres in India (Pearson VUE) can fill up in busy months',
+    ],
+    commonMistakes: [
+      'Preparing using Indian exam question banks only — Gulf licensing exams use a US/international standard that differs from Indian BSc curricula',
+      'Ignoring pharmacology — drug-name recognition and safe dosage calculations are regularly tested',
+      'Underestimating infection control content — WHO hand hygiene protocol and standard precautions appear frequently',
+      'Confusing DOH (Abu Dhabi) jurisdiction with DHA (Dubai) — they are separate licences for separate emirates',
+      'Not checking eligibility before booking — DOH requires a minimum of two years post-graduation clinical experience',
+    ],
+    faqs: [
+      {
+        question: 'Is the HAAD exam the same as the DOH exam?',
+        answer:
+          'Yes. HAAD (Health Authority Abu Dhabi) merged into DOH (Department of Health Abu Dhabi) in 2018. The licensing examination was transferred to DOH and is now officially called the DOH exam, though it is still commonly referred to as the HAAD exam. The format, Prometric delivery, and preparation approach are the same.',
+      },
+      {
+        question: 'Can I take the DOH exam in India?',
+        answer:
+          'Yes. The exam is administered by Prometric at their authorised test centres in India. Most major cities have Prometric centres. You do not need to travel to the UAE to sit the exam.',
+      },
+      {
+        question: 'What is the difference between DOH (HAAD), DHA, and MOH licences?',
+        answer:
+          'Each UAE licensing authority covers a different jurisdiction. DOH (formerly HAAD) covers Abu Dhabi emirate. DHA (Dubai Health Authority) covers Dubai emirate only. MOH (Ministry of Health) covers all remaining emirates — Sharjah, Ajman, Ras Al Khaimah, Fujairah, and Umm Al Quwain. You need the licence that matches the emirate where you will work. Most Indian nurses in Dubai hold a DHA licence.',
+      },
+      {
+        question: 'How long is the DOH licence valid?',
+        answer:
+          'The DOH nursing licence is valid for three years and must be renewed before expiry. Renewal requires proof of continuing professional development (CPD) hours completed during the licence period.',
+      },
+      {
+        question: 'What documents do Indian nurses need to apply for the DOH exam?',
+        answer:
+          'You will need: a valid nursing degree certificate (BSc Nursing or equivalent), transcripts, a Good Standing Certificate from the State Nursing Council, proof of minimum two years post-graduation clinical experience, a valid passport copy, and a recent passport photograph. All documents must be attested as required by DOH.',
+      },
+    ],
+    relatedExamSlugs: ['dha-exam-guide', 'moh-exam-guide'],
+    relatedCountrySlugs: ['dubai'],
+    lastUpdated: 'May 2026',
+  },
+  {
+    slug: 'moh-exam-guide',
+    examName: 'MOH UAE',
+    examFullName: 'Ministry of Health UAE — Prometric Nursing Licensing Examination',
+    examType: 'licensing',
+    applicableCountries: ['United Arab Emirates'],
+    applicableCountrySlugs: ['dubai'],
+    headline: 'MOH UAE Exam Guide 2025 — Northern Emirates Nursing Licence for Indian Nurses',
+    tagline: 'Required for nursing practice in Sharjah, Ajman, Ras Al Khaimah, Fujairah, and Umm Al Quwain',
+    overview:
+      'The Ministry of Health (MOH) UAE Prometric exam is the nursing licensing examination for the Northern Emirates — Sharjah, Ajman, Ras Al Khaimah, Fujairah, and Umm Al Quwain. It is distinct from the DHA licence (Dubai only) and the DOH / HAAD licence (Abu Dhabi only). Indian nurses who secure employment in hospitals, clinics, or healthcare facilities in any of the Northern Emirates must obtain an MOH licence before starting work. The exam is computer-based and delivered through Prometric at centres in India and the UAE.',
+    isMandatory: true,
+    validity: '2 years from date of registration (renewable)',
+    registrationFeeINR: 10000,
+    prepTimeMonths: { min: 1, max: 3 },
+    passingScore: '60% or above (Prometric scoring — pass mark confirmed in candidate handbook)',
+    passRate: 'Approximately 60-70% first-attempt pass rate for Indian nurses with 4-6 weeks preparation',
+    registrationUrl: 'https://mohap.gov.ae',
+    sections: [
+      {
+        name: 'Prometric Computer-Based Exam',
+        description: 'Multiple choice questions covering adult health nursing, paediatric nursing, obstetric and gynaecological nursing, mental health nursing, community health, pharmacology, and professional ethics.',
+        duration: 'Approximately 2–2.5 hours',
+      },
+    ],
+    prepTips: [
+      'Download the MOH exam blueprint from the MOHAP portal — it lists the exact content domains and weightages',
+      'Use Prometric-style nursing question banks — MOH questions are scenario-based and reward clinical judgement over memory',
+      'Pay particular attention to obstetric and paediatric nursing — these are weighted more heavily in the MOH exam than in DHA or NCLEX',
+      'Community health and primary care content appears frequently — revise preventive care, health promotion, and immunisation schedules',
+      'Pharmacology is a high-yield domain — focus on safe drug administration, contraindications, and common drug classes used in clinical nursing',
+      'Most Indian nurses find 4-6 weeks of daily study sufficient for a first-attempt pass',
+      'The MOH exam is generally considered slightly more accessible than the DHA exam — preparation time requirements are similar',
+    ],
+    commonMistakes: [
+      'Assuming MOH and DHA preparation are identical — MOH has a different exam blueprint with different domain weightings',
+      'Neglecting maternal and child health content — this is a significantly larger section in the MOH exam than in Gulf peers',
+      'Using NCLEX-only question banks — while helpful, NCLEX does not cover the MOH-specific obstetric and community health weightings',
+      'Not verifying which emirate your employer is in before choosing which licence to pursue — MOH does not cover Dubai or Abu Dhabi',
+      'Delaying document attestation — MOH requires attested documents and this process can take several weeks from India',
+    ],
+    faqs: [
+      {
+        question: 'Which emirates require the MOH licence?',
+        answer:
+          'The MOH licence covers Sharjah, Ajman, Ras Al Khaimah, Fujairah, and Umm Al Quwain. It does not cover Dubai (DHA jurisdiction) or Abu Dhabi (DOH / HAAD jurisdiction). Check with your employer which emirate your facility is in before applying for the correct licence.',
+      },
+      {
+        question: 'Can I use my MOH licence to work in Dubai?',
+        answer:
+          'No. The MOH licence is not valid in Dubai. Dubai is covered exclusively by the DHA (Dubai Health Authority). If you wish to transfer to a Dubai facility, you will need to obtain a DHA licence separately. Some nurses hold both — MOH for a Northern Emirates position and DHA if they later transfer to Dubai.',
+      },
+      {
+        question: 'Can I take the MOH exam in India?',
+        answer:
+          'Yes. The MOH exam is administered by Prometric at authorised test centres across India. You can book through the Prometric portal once your MOH application is approved and you receive an authorisation-to-test.',
+      },
+      {
+        question: 'What is the difference in difficulty between DHA, MOH, and DOH exams?',
+        answer:
+          'All three use Prometric delivery and similar multiple-choice formats. The DHA exam is widely considered the most challenging due to a larger question bank and more complex clinical scenarios. The MOH exam has heavier maternal and child health content. The DOH exam is similar in difficulty to DHA but specific to Abu Dhabi\'s healthcare standards. Most nurses who study with Prometric-specific question banks for 4-6 weeks pass on the first attempt regardless of which exam they sit.',
+      },
+      {
+        question: 'How do I verify my State Nursing Council registration for MOH attestation?',
+        answer:
+          'Your State Nursing Council registration certificate must be attested by the State Home Department, then by the Ministry of External Affairs (MEA) in India, and finally by the UAE Embassy in India. This process typically takes 2-4 weeks depending on your state. Some agencies assist with the attestation process — confirm this with your recruitment agency before signing a contract.',
+      },
+    ],
+    relatedExamSlugs: ['dha-exam-guide', 'haad-exam-guide'],
+    relatedCountrySlugs: ['dubai'],
+    lastUpdated: 'May 2026',
   },
 ]
 
@@ -382,4 +619,29 @@ export function getExam(slug: string): ExamPageData | undefined {
 
 export function getAllExamSlugs(): string[] {
   return EXAMS.map((e) => e.slug)
+}
+
+// Keywords that identify a mock-test location as belonging to each exam.
+const EXAM_LOCATION_KEYWORDS: Record<string, string[]> = {
+  'oet-guide':                  ['oet'],
+  'ielts-guide':                ['ielts'],
+  'nclex-rn-guide':             ['nclex'],
+  'dha-exam-guide':             ['dha'],
+  'haad-exam-guide':            ['haad'],
+  'moh-exam-guide':             ['moh'],
+  'cbse-osce-guide':            ['cbse', 'osce', 'nmc', 'cbt'],
+  'ahpra-registration-guide':   ['ahpra'],
+}
+
+// Returns exam guides whose keywords match a given mock-test location slug/name.
+// Used to render reciprocal exam-guide links on mock-test pages.
+export function getExamGuidesForLocation(
+  locationSlug: string,
+  locationName: string,
+): ExamPageData[] {
+  const haystack = `${locationSlug} ${locationName}`.toLowerCase()
+  return EXAMS.filter((exam) => {
+    const keywords = EXAM_LOCATION_KEYWORDS[exam.slug] ?? []
+    return keywords.some((kw) => haystack.includes(kw))
+  })
 }
