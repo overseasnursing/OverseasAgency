@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { redirect, notFound } from 'next/navigation'
 import { createClient }        from '@/lib/supabase/server'
 import { createAdminClient }   from '@/lib/supabase/admin'
@@ -5,6 +6,10 @@ import { getBookmarkStatusForQuestions } from '@/app/actions/bookmarks'
 import { StudyEngine }         from './_components/StudyEngine'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 type PageProps = {
   params: Promise<{

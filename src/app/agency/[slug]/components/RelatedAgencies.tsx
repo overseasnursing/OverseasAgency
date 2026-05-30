@@ -34,6 +34,8 @@ export async function RelatedAgencies({ currentId, city, state }: RelatedAgencie
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
+  type AgencyRow = { id: string; slug: string; name: string; city: string | null; state: string | null; trust_level: string | null; rating: number | null; review_count: number | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null }
+
   const SELECT = 'id, slug, name, city, state, trust_level, rating, review_count, pricing_min_lakhs, pricing_max_lakhs'
 
   // 1. Fetch agencies in the same city (excluding current)
@@ -46,13 +48,13 @@ export async function RelatedAgencies({ currentId, city, state }: RelatedAgencie
     .order('rating', { ascending: false })
     .limit(3)
 
-  const cityAgencies: any[] = cityRows ?? []
+  const cityAgencies: AgencyRow[] = cityRows ?? []
 
-  let stateAgencies: any[] = []
+  let stateAgencies: AgencyRow[] = []
 
   // 2. If city gave fewer than 3, top up from same state (excluding city ones already picked)
   if (cityAgencies.length < 3) {
-    const excludeIds = [currentId, ...cityAgencies.map((a: any) => a.id)]
+    const excludeIds = [currentId, ...cityAgencies.map((a: AgencyRow) => a.id)]
     const needed = 3 - cityAgencies.length
 
     const { data: stateRows } = await db
@@ -83,14 +85,14 @@ export async function RelatedAgencies({ currentId, city, state }: RelatedAgencie
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {agencies.map((agency: any) => {
+        {agencies.map((agency: AgencyRow) => {
           const initials = agency.name
             .split(' ')
             .slice(0, 2)
             .map((w: string) => w[0])
             .join('')
 
-          const isStateOnly = !cityAgencies.find((c: any) => c.id === agency.id)
+          const isStateOnly = !cityAgencies.find((c: AgencyRow) => c.id === agency.id)
 
           return (
             <a
@@ -112,7 +114,7 @@ export async function RelatedAgencies({ currentId, city, state }: RelatedAgencie
                 </div>
               </div>
 
-              <MiniTrustBadge level={agency.trust_level} />
+              <MiniTrustBadge level={agency.trust_level ?? ''} />
 
               <div className="flex items-center gap-1.5 mt-3">
                 <Star size={12} fill="#F59E0B" className="text-[#F59E0B]" />

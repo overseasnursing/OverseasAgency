@@ -16,7 +16,8 @@ export default async function MockTestLocationsPage() {
     `)
     .order('created_at', { ascending: false })
 
-  const rows = (locations ?? []).map((l: any) => ({
+  type LocationRow = { id: string; name: string; slug: string; description: string | null; is_active: boolean; created_at: string; mock_test_categories: { count: number }[] }
+  const rows = (locations ?? [] as LocationRow[]).map((l: LocationRow) => ({
     id:         l.id,
     name:       l.name,
     slug:       l.slug,

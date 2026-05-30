@@ -16,6 +16,9 @@ function formatCostText(raw: string | null): string {
   return raw
 }
 
+type BranchDbRow = { agency_id: string; city: string | null; state: string | null }
+type ReviewDbRow = { agency_id: string; author_name: string; author_from: string | null; country_placed: string | null; overall_rating: number; recommends: boolean; surprise_charges: boolean; review_text: string; actual_cost_paid: string | null; timeline_months: number | null; created_at: string }
+
 export async function getAgencies(): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
@@ -29,7 +32,8 @@ export async function getAgencies(): Promise<Agency[]> {
 
   // Will sort by computed rating after review stats are built
 
-  const agencyIds: string[] = agencyRows.map((a: any) => a.id)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agencyIds: string[] = agencyRows.map((a: any) => a.id as string)
 
   // Fetch all branches for branch-location filtering
   const { data: branchRows } = await db
@@ -38,7 +42,7 @@ export async function getAgencies(): Promise<Agency[]> {
     .in('agency_id', agencyIds)
 
   const branchMap = new Map<string, { cities: string[]; states: string[] }>()
-  for (const b of (branchRows ?? []) as any[]) {
+  for (const b of (branchRows ?? []) as BranchDbRow[]) {
     if (!branchMap.has(b.agency_id)) branchMap.set(b.agency_id, { cities: [], states: [] })
     const entry = branchMap.get(b.agency_id)!
     if (b.city  && !entry.cities.includes(b.city))  entry.cities.push(b.city)
@@ -54,8 +58,8 @@ export async function getAgencies(): Promise<Agency[]> {
     .order('created_at', { ascending: false })
 
   // Build per-agency maps
-  const allReviews = (reviewRows ?? []) as any[]
-  const snippetMap = new Map<string, any>()
+  const allReviews = (reviewRows ?? []) as ReviewDbRow[]
+  const snippetMap = new Map<string, ReviewDbRow>()
   const statsMap = new Map<string, { ratings: number[]; recommends: number; hidden: number }>()
 
   for (const r of allReviews) {

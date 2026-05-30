@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Shield, Star, TrendingUp, CheckCircle, ArrowRight } from 'lucide-react'
+import { MailtoLink } from '@/components/ui/MailtoLink'
 
 export const metadata: Metadata = {
   title: 'For Agencies — List Your Agency on OverseasNursing',
@@ -25,13 +26,13 @@ export default function ForAgenciesPage() {
             Thousands of Indian nurses visit OverseasNursing.com every month researching agencies.
             Build trust, showcase your track record, and get discovered.
           </p>
-          <a
-            href="mailto:hello@overseasnursing.com?subject=Agency Listing Enquiry"
+          <MailtoLink
+            email="hello@overseasnursing.com"
+            subject="Agency Listing Enquiry"
             className="inline-flex items-center gap-2 h-12 px-7 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors"
           >
-            Get in touch
-            <ArrowRight size={15} />
-          </a>
+            Get in touch <ArrowRight size={15} />
+          </MailtoLink>
         </div>
       </div>
 
@@ -105,13 +106,13 @@ export default function ForAgenciesPage() {
           <p className="text-[14px] text-primary-100 mb-6 opacity-80">
             Email us with your agency name and MEA license number to get started.
           </p>
-          <a
-            href="mailto:hello@overseasnursing.com?subject=Agency Listing Enquiry"
+          <MailtoLink
+            email="hello@overseasnursing.com"
+            subject="Agency Listing Enquiry"
             className="inline-flex items-center gap-2 h-11 px-6 bg-white text-primary text-[14px] font-bold rounded-xl hover:bg-slate-50 transition-colors"
           >
-            Email us to get listed
-            <ArrowRight size={14} />
-          </a>
+            Email us to get listed <ArrowRight size={14} />
+          </MailtoLink>
         </div>
 
       </div>

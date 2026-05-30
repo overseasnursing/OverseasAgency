@@ -20,7 +20,8 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
 
   if (locError || !location) notFound()
 
-  const rows = (categories ?? []).map((c: any) => ({
+  type CategoryRow = { id: string; name: string; slug: string; description: string | null; seo_title: string | null; seo_description: string | null; is_active: boolean; created_at: string; mock_tests: { count: number }[] }
+  const rows = (categories ?? [] as CategoryRow[]).map((c: CategoryRow) => ({
     id:              c.id,
     name:            c.name,
     slug:            c.slug,

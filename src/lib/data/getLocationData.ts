@@ -1,6 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { LocationAgencyListing, LocationPageData } from '@/types/location'
 
+type CityRow    = { city: string | null; state: string | null }
+type AgencyRow  = CityRow & { id: string; slug: string; name: string; location: string | null; countries: string[] | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null; trust_level: string | null }
+type BranchRow  = CityRow & { agency_id: string; address: string | null }
+type ReviewRow  = { agency_id: string; overall_rating: number }
+
 export function toSlug(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
 }
@@ -19,12 +24,12 @@ export async function getAllLocationCitiesFromDb(): Promise<Array<{ city: string
   // slug -> { city, state }
   const seen = new Map<string, { city: string; state: string }>()
 
-  for (const a of (agencyRows ?? []) as any[]) {
+  for (const a of (agencyRows ?? []) as CityRow[]) {
     const city  = a.city?.trim()
     const state = a.state?.trim()
     if (city && state) seen.set(toSlug(city), { city, state })
   }
-  for (const b of (branchRows ?? []) as any[]) {
+  for (const b of (branchRows ?? []) as CityRow[]) {
     const city  = b.city?.trim()
     const state = b.state?.trim()
     if (city && state) seen.set(toSlug(city), { city, state })
@@ -48,8 +53,8 @@ export async function getLocationsByState(): Promise<
     db.from('branches').select('agency_id, city, state'),
   ])
 
-  const agencies = (agencyRows ?? []) as any[]
-  const branches = (branchRows ?? []) as any[]
+  const agencies = (agencyRows ?? []) as AgencyRow[]
+  const branches = (branchRows ?? []) as BranchRow[]
 
   // Build: citySlug -> { city, state, Set<agencyId> }
   const cityMap = new Map<string, { city: string; state: string; ids: Set<string> }>()
@@ -65,7 +70,7 @@ export async function getLocationsByState(): Promise<
 
   for (const a of agencies) addToCity(a.city, a.state, a.id)
   for (const b of branches) {
-    const parentAgency = agencies.find((a: any) => a.id === b.agency_id)
+    const parentAgency = agencies.find((a) => a.id === b.agency_id)
     if (parentAgency) addToCity(b.city, b.state, b.agency_id)
   }
 
@@ -97,7 +102,7 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
 
   if (error || !agencyRows?.length) return null
 
-  const agencyIds: string[] = agencyRows.map((a: any) => a.id)
+  const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)
 
   const [{ data: branchRows }, { data: reviewRows }] = await Promise.all([
     db.from('branches').select('*').in('agency_id', agencyIds),
@@ -109,7 +114,7 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
 
   // Build rating stats per agency
   const statsMap = new Map<string, number[]>()
-  for (const r of (reviewRows ?? []) as any[]) {
+  for (const r of (reviewRows ?? []) as ReviewRow[]) {
     if (!statsMap.has(r.agency_id)) statsMap.set(r.agency_id, [])
     statsMap.get(r.agency_id)!.push(r.overall_rating)
   }
@@ -118,17 +123,17 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
   let stateName = ''
   const matchingAgencies: LocationAgencyListing[] = []
 
-  for (const a of agencyRows as any[]) {
-    const branches = ((branchRows ?? []) as any[]).filter((b: any) => b.agency_id === a.id)
+  for (const a of agencyRows as AgencyRow[]) {
+    const branches = ((branchRows ?? []) as BranchRow[]).filter((b) => b.agency_id === a.id)
 
     const hqMatches     = a.city   && toSlug(a.city) === citySlug
-    const matchingBranch = branches.find((b: any) => b.city && toSlug(b.city) === citySlug)
+    const matchingBranch = branches.find((b) => b.city && toSlug(b.city) === citySlug)
 
     if (!hqMatches && !matchingBranch) continue
 
     if (!cityName) {
-      cityName  = hqMatches ? a.city : matchingBranch.city
-      stateName = hqMatches ? a.state : (matchingBranch.state || a.state)
+      cityName  = hqMatches ? (a.city ?? '') : (matchingBranch?.city ?? '')
+      stateName = hqMatches ? (a.state ?? '') : (matchingBranch?.state || a.state || '')
     }
 
     const ratings     = statsMap.get(a.id) ?? []
@@ -174,13 +179,11 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
 
   // Nearby locations: other cities in same state
   const nearbySeen = new Map<string, string>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const a of agencyRows as any[]) {
+  for (const a of agencyRows as AgencyRow[]) {
     if (a.state === stateName && a.city && toSlug(a.city) !== citySlug)
       nearbySeen.set(toSlug(a.city), a.city)
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const b of (branchRows ?? []) as any[]) {
+  for (const b of (branchRows ?? []) as BranchRow[]) {
     if (b.state === stateName && b.city && toSlug(b.city) !== citySlug)
       nearbySeen.set(toSlug(b.city), b.city)
   }

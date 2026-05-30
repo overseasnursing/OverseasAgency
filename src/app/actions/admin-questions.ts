@@ -209,6 +209,20 @@ export async function reorderQuestions(
   return { error: null }
 }
 
+export async function deleteMultipleQuestions(
+  ids: string[],
+  mockTestId: string,
+): Promise<{ error: string | null; deleted: number }> {
+  await requireAdmin()
+  if (!ids.length) return { error: null, deleted: 0 }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { error } = await db.from('mock_test_questions').delete().in('id', ids)
+  if (error) return { error: error.message, deleted: 0 }
+  revalidate(mockTestId)
+  return { error: null, deleted: ids.length }
+}
+
 export async function bulkImportQuestions(
   questions: BulkQuestionRow[],
   mockTestId: string,

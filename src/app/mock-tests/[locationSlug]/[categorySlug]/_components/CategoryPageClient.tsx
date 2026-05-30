@@ -412,7 +412,6 @@ export function CategoryPageClient({
   const [startingId, setStartingId]           = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser]                       = useState<any>(null)
-  const [, startT]                            = useTransition()
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data: { user } }) => setUser(user))
@@ -420,17 +419,21 @@ export function CategoryPageClient({
 
   async function launchSession(test: PublicTest) {
     setStartError(null)
-    setStartingId(test.id)
     const res = await startExamSession(test.id)
-    setStartingId(null)
-    if (res.error) { setStartError(res.error); return }
+    if (res.error) {
+      setStartError(res.error)
+      setStartingId(null)
+      return
+    }
     router.push(`/mock-tests/${locationSlug}/${categorySlug}/${test.slug}/attempt/${res.attemptId}`)
+    // Keep spinner showing during page transition — new page unmounts this component
   }
 
   function handleStart(test: PublicTest) {
     if (test.is_premium) { setShowSubModal(true); return }
     if (user) {
-      startT(() => { launchSession(test) })
+      setStartingId(test.id)   // immediate — shows spinner on click
+      launchSession(test)
     } else {
       setPendingTest(test)
       setShowAuthModal(true)
@@ -442,7 +445,8 @@ export function CategoryPageClient({
     if (pendingTest) {
       const t = pendingTest
       setPendingTest(null)
-      startT(() => { launchSession(t) })
+      setStartingId(t.id)      // immediate — shows spinner on click
+      launchSession(t)
     }
   }
 
