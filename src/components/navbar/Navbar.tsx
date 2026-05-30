@@ -4,15 +4,13 @@ import { Container } from '@/components/layout/Container'
 import { NavbarClient } from './NavbarClient'
 
 const NAV_LINKS = [
-  { href: '/countries',    label: 'Countries' },
+  { href: '/',             label: 'Home' },
   { href: '/agencies',     label: 'Agencies' },
   { href: '/mock-tests',   label: 'Mock Test' },
-  { href: '/pricing',      label: 'Check Eligibility' },
-  { href: '/reviews',      label: 'Reviews' },
-  { href: '/scam-reports', label: 'Scam Reports' },
-  { href: '/guides',       label: 'Guides' },
+  { href: '/eligibility',  label: 'Check Eligibility' },
+  { href: '/scam-reports', label: 'Scam Report' },
+  { href: '/countries',    label: 'Countries' },
   { href: '/exam',         label: 'Exams' },
-  { href: '/compare',      label: 'Compare' },
 ]
 
 export function Navbar() {
@@ -49,16 +47,6 @@ export function Navbar() {
                 {label}
               </a>
             ))}
-          </div>
-
-          {/* For Agencies link (desktop) */}
-          <div className="hidden lg:flex items-center gap-2">
-            <a
-              href="/for-agencies"
-              className="px-3 py-2 text-[13.5px] font-medium text-slate-500 hover:text-primary hover:bg-slate-50 rounded-lg transition-colors"
-            >
-              For Agencies
-            </a>
           </div>
 
           {/* Client island — owns all auth state */}

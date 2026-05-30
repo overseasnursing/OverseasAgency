@@ -6,15 +6,13 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const NAV_LINKS = [
-  { href: '/countries',    label: 'Countries' },
+  { href: '/',             label: 'Home' },
   { href: '/agencies',     label: 'Agencies' },
   { href: '/mock-tests',   label: 'Mock Test' },
-  { href: '/pricing',      label: 'Check Eligibility' },
-  { href: '/reviews',      label: 'Reviews' },
-  { href: '/scam-reports', label: 'Scam Reports' },
-  { href: '/guides',       label: 'Guides' },
+  { href: '/eligibility',  label: 'Check Eligibility' },
+  { href: '/scam-reports', label: 'Scam Report' },
+  { href: '/countries',    label: 'Countries' },
   { href: '/exam',         label: 'Exams' },
-  { href: '/compare',      label: 'Compare' },
 ]
 
 export function NavbarClient() {
@@ -165,7 +163,7 @@ export function NavbarClient() {
       {menuOpen && (
         <div className="lg:hidden absolute top-[68px] left-0 right-0 bg-white border-t border-b border-slate-100 shadow-card-md z-30">
           <div className="max-w-content mx-auto px-5 sm:px-6 py-3 flex flex-col">
-            {[...NAV_LINKS, { href: '/for-agencies', label: 'For Agencies' }].map(({ href, label }) => (
+            {NAV_LINKS.map(({ href, label }) => (
               <a
                 key={href}
                 href={href}

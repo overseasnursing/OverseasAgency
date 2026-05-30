@@ -64,17 +64,22 @@ export const metadata: Metadata = {
 }
 
 const FOOTER_LINKS = {
+  Navigate: [
+    ['Home',              '/'],
+    ['Agencies',          '/agencies'],
+    ['Mock Test',         '/mock-tests'],
+    ['Check Eligibility', '/eligibility'],
+    ['Scam Reports',      '/scam-reports'],
+    ['Countries',         '/countries'],
+    ['Exams',             '/exam'],
+  ],
   Discover: [
-    ['Agencies',       '/agencies'],
-    ['Pricing',        '/pricing'],
     ['Salary Guides',  '/salary'],
     ['Compare',        '/compare'],
     ['Reviews',        '/reviews'],
     ['Guides',         '/guides'],
-  ],
-  Safety: [
-    ['Scam Reports',   '/scam-reports'],
     ['Exam Guides',    '/exam'],
+    ['Pricing',        '/pricing'],
   ],
   'Countries': [
     ['Germany',   '/country/germany'],
