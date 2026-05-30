@@ -100,7 +100,7 @@ function DeleteTestModal({ testName, onConfirm, onCancel, pending }: { testName:
         <p className="text-[13px] text-slate-500 mb-1">
           You are about to permanently delete:
         </p>
-        <p className="text-[14px] font-semibold text-slate-800 mb-4 px-2 truncate">"{testName}"</p>
+        <p className="text-[14px] font-semibold text-slate-800 mb-4 px-2 truncate">&ldquo;{testName}&rdquo;</p>
         <p className="text-[12px] text-[#B91C1C] bg-[#FEF2F2] border border-[#FECACA] rounded-lg px-3 py-2 mb-5">
           This will also delete ALL questions and cannot be undone.
         </p>
