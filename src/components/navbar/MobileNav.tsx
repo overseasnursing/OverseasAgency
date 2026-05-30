@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { usePathname } from 'next/navigation'
-import { ShieldAlert, Home, Building2, Star, BookOpen } from 'lucide-react'
+import { ShieldAlert, Home, Building2, ClipboardCheck, FileText } from 'lucide-react'
 
 interface NavItem {
   href: string
@@ -11,11 +11,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/',             label: 'Home',     Icon: Home       },
-  { href: '/agencies',     label: 'Agencies', Icon: Building2  },
-  { href: '/reviews',      label: 'Reviews',  Icon: Star       },
-  { href: '/guides',       label: 'Guides',   Icon: BookOpen   },
-  { href: '/scam-reports', label: 'Scams',    Icon: ShieldAlert },
+  { href: '/',             label: 'Home',        Icon: Home           },
+  { href: '/agencies',     label: 'Agencies',    Icon: Building2      },
+  { href: '/mock-tests',   label: 'Mock Test',   Icon: FileText       },
+  { href: '/eligibility',  label: 'Eligibility', Icon: ClipboardCheck },
+  { href: '/scam-reports', label: 'Scams',       Icon: ShieldAlert    },
 ]
 
 export function MobileNav() {
@@ -48,7 +48,7 @@ export function MobileNav() {
                 size={22}
                 strokeWidth={isActive ? 2.5 : 1.75}
                 className={isActive ? 'text-primary' : 'text-slate-400'}
-                fill={isActive && label === 'Reviews' ? '#0F4C81' : 'none'}
+                fill="none"
               />
               <span className={`text-[10.5px] leading-none ${isActive ? 'font-semibold text-primary' : 'font-medium text-slate-400'}`}>
                 {label}
