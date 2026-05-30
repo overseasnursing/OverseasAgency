@@ -19,7 +19,7 @@ export function BranchesSection({ agency }: BranchesSectionProps) {
           <div
             key={branch.id}
             className="bg-white border border-slate-200 rounded-2xl p-5"
-          >
+>
             <div className="flex items-start justify-between gap-3 mb-3">
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
