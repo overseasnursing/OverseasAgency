@@ -90,6 +90,12 @@ export function ExamRequirements({ country }: ExamRequirementsProps) {
           </p>
         </div>
       )}
+
+      <p className="text-[12.5px] text-slate-400 mt-5">
+        For full pass mark criteria, preparation guides, and fee schedules, see our{' '}
+        <a href="/exam" className="text-primary hover:underline font-medium">exam requirement guides</a>
+        {' '}— the authoritative source for all exam details cited on this page.
+      </p>
     </section>
   )
 }

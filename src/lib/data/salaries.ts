@@ -15,7 +15,7 @@ const SALARIES: SalaryPageData[] = [
     inrMonthlyMin: 310000,
     inrMonthlyMax: 460000,
     taxFree: false,
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
     byExperience: [
       {
         level: 'Entry Level (Berufsanerkennung stage)',
@@ -110,7 +110,7 @@ const SALARIES: SalaryPageData[] = [
     inrMonthlyMin: 250000,
     inrMonthlyMax: 380000,
     taxFree: false,
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
     byExperience: [
       {
         level: 'Band 5 — Newly Registered',
@@ -193,7 +193,7 @@ const SALARIES: SalaryPageData[] = [
     inrMonthlyMin: 115000,
     inrMonthlyMax: 230000,
     taxFree: true,
-    lastUpdated: 'January 2025',
+    lastUpdated: 'May 2026',
     byExperience: [
       {
         level: 'Entry Level (1-2 years experience)',
@@ -258,6 +258,194 @@ const SALARIES: SalaryPageData[] = [
     ],
     relatedSlugs: ['uk-nurse-salary', 'germany-nurse-salary', 'canada-nurse-salary'],
     relatedCountrySlugs: ['dubai', 'uk', 'germany', 'canada'],
+  },
+  {
+    slug: 'canada-nurse-salary',
+    countrySlug: 'canada',
+    countryName: 'Canada',
+    countryFlag: '🇨🇦',
+    headline: 'Canada Nurse Salary 2025 — Complete Guide for Indian Nurses',
+    tagline: 'Earn CAD 62,000–100,000/year with full benefits, union protection, and a direct PR pathway',
+    currency: 'CAD',
+    currencySymbol: 'CAD',
+    averageSalary: 'CAD 62,000–100,000/year',
+    salaryRangeDisplay: 'CAD 62,000–100,000/year (gross)',
+    inrMonthlyMin: 200000,
+    inrMonthlyMax: 380000,
+    taxFree: false,
+    lastUpdated: 'May 2026',
+    byExperience: [
+      {
+        level: 'New Graduate RN',
+        yearsExperience: '0-1 year in Canada',
+        localSalary: 'CAD 55,000–65,000/year',
+        inrAnnual: '₹28L–₹33L/year',
+        inrMonthly: '₹2.0L–₹2.3L/month (after tax)',
+      },
+      {
+        level: 'Registered Nurse',
+        yearsExperience: '1-5 years',
+        localSalary: 'CAD 65,000–82,000/year',
+        inrAnnual: '₹33L–₹42L/year',
+        inrMonthly: '₹2.3L–₹2.9L/month (after tax)',
+      },
+      {
+        level: 'Experienced RN',
+        yearsExperience: '5-10 years',
+        localSalary: 'CAD 80,000–96,000/year',
+        inrAnnual: '₹41L–₹49L/year',
+        inrMonthly: '₹2.8L–₹3.3L/month (after tax)',
+      },
+      {
+        level: 'Senior / Specialist RN',
+        yearsExperience: '10+ years',
+        localSalary: 'CAD 92,000–110,000/year',
+        inrAnnual: '₹47L–₹56L/year',
+        inrMonthly: '₹3.2L–₹3.8L/month (after tax)',
+      },
+    ],
+    bySpecialty: [
+      { specialty: 'ICU / Critical Care', localSalary: 'CAD 80,000–105,000/year', inrMonthly: '₹2.8L–₹3.7L', demandLevel: 'very-high' },
+      { specialty: 'Operating Theatre', localSalary: 'CAD 76,000–100,000/year', inrMonthly: '₹2.6L–₹3.5L', demandLevel: 'very-high' },
+      { specialty: 'Emergency / ER', localSalary: 'CAD 73,000–97,000/year', inrMonthly: '₹2.5L–₹3.4L', demandLevel: 'very-high' },
+      { specialty: 'General Medical-Surgical', localSalary: 'CAD 62,000–82,000/year', inrMonthly: '₹2.2L–₹2.9L', demandLevel: 'high' },
+      { specialty: 'Community / Home Care', localSalary: 'CAD 60,000–80,000/year', inrMonthly: '₹2.1L–₹2.8L', demandLevel: 'high' },
+      { specialty: 'Mental Health / Psychiatry', localSalary: 'CAD 64,000–85,000/year', inrMonthly: '₹2.2L–₹3.0L', demandLevel: 'high' },
+    ],
+    byCity: [
+      { city: 'Toronto (Ontario)', localSalary: 'CAD 60,000–96,000/year', note: 'Largest nursing market in Canada. Regulated by CNO. High cost of living.' },
+      { city: 'Vancouver (British Columbia)', localSalary: 'CAD 65,000–100,000/year', note: 'BCCNM regulated. High demand, high cost of living, strong Indian community.' },
+      { city: 'Calgary / Edmonton (Alberta)', localSalary: 'CAD 68,000–105,000/year', note: 'Highest base salaries. No provincial income tax. Regulated by CARNA.' },
+      { city: 'Ottawa (Ontario)', localSalary: 'CAD 60,000–95,000/year', note: 'Federal capital. Strong hospital network. Lower cost of living than Toronto.' },
+      { city: 'Montreal (Quebec)', localSalary: 'CAD 54,000–82,000/year', note: 'French language required for provincial registration. OIIQ regulated.' },
+    ],
+    comparisonNote:
+      'Canada is one of the top two destinations for Indian nurses globally, alongside the UK. Salaries are unionised in most provinces — negotiated by CUPE, ONA, or BCNU. Union membership ensures consistent pay scales, overtime protection, and shift premiums. Alberta has no provincial income tax, making it the highest net-take-home province despite similar gross salaries.',
+    deductionsNote:
+      'Canadian income tax is federal + provincial. For CAD $75,000/year: federal tax ≈ $12,500 + Ontario provincial tax ≈ $8,000 = approximately $20,500 total tax. Net take-home ≈ $54,500/year ($4,540/month, ₹2.8L/month). Alberta nurses take home more due to zero provincial income tax. Also note: Canada Pension Plan (CPP) and Employment Insurance (EI) deductions apply — approximately $4,500/year combined.',
+    faqs: [
+      {
+        question: 'What is the average salary for Indian nurses in Canada in 2025?',
+        answer:
+          'Indian nurses working in Canada typically start at CAD $55,000–$65,000/year as new graduates, moving to CAD $65,000–$82,000 within 1-5 years. After federal and provincial taxes, a nurse earning CAD $75,000/year takes home approximately CAD $4,500/month (₹2.8L/month at current rates). Senior and specialist nurses with 10+ years earn CAD $90,000–$110,000/year.',
+      },
+      {
+        question: 'Which Canadian province has the highest nurse salary?',
+        answer:
+          'Alberta consistently offers the highest net nursing salaries because it has no provincial income tax. Gross salaries in Alberta are comparable to BC and Ontario (CAD $68,000–$105,000/year), but net take-home is approximately CAD $3,000–$5,000 higher per year than equivalent roles in Ontario. British Columbia follows closely due to high union-negotiated wages.',
+      },
+      {
+        question: 'How does Canada nurse salary compare to UK and Australia?',
+        answer:
+          'Canada and Australia offer comparable gross salaries. A mid-career Canadian RN earns CAD $78,000–$90,000/year. An equivalent Australian RN earns AUD $82,000–$100,000/year. Australia has the edge in total compensation due to penalty rates and 11% employer superannuation. UK Band 5-6 nurses earn significantly less (£28,000–£42,000/year) but benefit from NHS job security and PR via ILR.',
+      },
+      {
+        question: 'Do Indian nurses qualify for Canadian PR through nursing?',
+        answer:
+          "Yes. Nursing is on Canada's Federal Skilled Worker list and several Provincial Nominee Programs (PNPs). Most Indian nurses gain PR through Express Entry (CEC or FSW stream) after 1-2 years of Canadian work experience. Ontario, British Columbia, and Alberta all have active PNP streams for nurses. The PR timeline is typically 12-24 months after gaining Canadian work experience.",
+      },
+      {
+        question: 'Is NCLEX-RN required for Indian nurses to work in Canada?',
+        answer:
+          'Yes. All Canadian provincial nursing colleges require internationally educated nurses to pass the NCLEX-RN exam as part of registration. Canada adopted NCLEX in 2015. The exam has a 50-60% first-attempt pass rate for internationally educated nurses. Structured preparation with resources like UWorld for 3-5 months is strongly recommended before attempting NCLEX.',
+      },
+    ],
+    relatedSlugs: ['australia-nurse-salary', 'uk-nurse-salary', 'germany-nurse-salary'],
+    relatedCountrySlugs: ['canada', 'australia', 'uk', 'germany'],
+  },
+  {
+    slug: 'australia-nurse-salary',
+    countrySlug: 'australia',
+    countryName: 'Australia',
+    countryFlag: '🇦🇺',
+    headline: 'Australia Nurse Salary 2025 — Complete Guide for Indian Nurses',
+    tagline: 'AUD 70,000–115,000/year plus weekend penalty rates and 11% employer superannuation',
+    currency: 'AUD',
+    currencySymbol: 'AUD',
+    averageSalary: 'AUD 70,000–115,000/year',
+    salaryRangeDisplay: 'AUD 70,000–115,000/year (plus super)',
+    inrMonthlyMin: 240000,
+    inrMonthlyMax: 400000,
+    taxFree: false,
+    lastUpdated: 'May 2026',
+    byExperience: [
+      {
+        level: 'Graduate RN (Year 1-2)',
+        yearsExperience: '0-2 years in Australia',
+        localSalary: 'AUD 65,000–74,000/year',
+        inrAnnual: '₹30L–₹34L/year',
+        inrMonthly: '₹2.0L–₹2.3L/month (after tax)',
+      },
+      {
+        level: 'Registered Nurse Grade 2',
+        yearsExperience: '2-5 years',
+        localSalary: 'AUD 74,000–90,000/year',
+        inrAnnual: '₹34L–₹41L/year',
+        inrMonthly: '₹2.3L–₹2.8L/month (after tax)',
+      },
+      {
+        level: 'Senior Registered Nurse',
+        yearsExperience: '5-10 years',
+        localSalary: 'AUD 88,000–108,000/year',
+        inrAnnual: '₹40L–₹50L/year',
+        inrMonthly: '₹2.7L–₹3.4L/month (after tax)',
+      },
+      {
+        level: 'Nurse Unit Manager / Clinical Nurse Specialist',
+        yearsExperience: '10+ years',
+        localSalary: 'AUD 105,000–130,000/year',
+        inrAnnual: '₹48L–₹60L/year',
+        inrMonthly: '₹3.3L–₹4.0L/month (after tax)',
+      },
+    ],
+    bySpecialty: [
+      { specialty: 'ICU / Critical Care', localSalary: 'AUD 88,000–115,000/year', inrMonthly: '₹2.7L–₹3.6L', demandLevel: 'very-high' },
+      { specialty: 'Operating Theatre', localSalary: 'AUD 84,000–110,000/year', inrMonthly: '₹2.6L–₹3.4L', demandLevel: 'very-high' },
+      { specialty: 'Emergency Department', localSalary: 'AUD 80,000–105,000/year', inrMonthly: '₹2.5L–₹3.2L', demandLevel: 'very-high' },
+      { specialty: 'General Medical-Surgical', localSalary: 'AUD 68,000–90,000/year', inrMonthly: '₹2.1L–₹2.8L', demandLevel: 'high' },
+      { specialty: 'Mental Health', localSalary: 'AUD 72,000–95,000/year', inrMonthly: '₹2.2L–₹3.0L', demandLevel: 'high' },
+      { specialty: 'Aged Care', localSalary: 'AUD 65,000–85,000/year', inrMonthly: '₹2.0L–₹2.6L', demandLevel: 'very-high' },
+    ],
+    byCity: [
+      { city: 'Sydney (NSW)', localSalary: 'AUD 70,000–112,000/year', note: 'Largest hospital network. High cost of living. Strong demand from public and private sectors.' },
+      { city: 'Melbourne (VIC)', localSalary: 'AUD 70,000–108,000/year', note: 'Strong public hospital system. AHPRA headquarters. Large Indian nursing community.' },
+      { city: 'Brisbane (QLD)', localSalary: 'AUD 68,000–105,000/year', note: 'Growing healthcare sector. Lower cost of living than Sydney or Melbourne.' },
+      { city: 'Perth (WA)', localSalary: 'AUD 70,000–112,000/year', note: 'High demand driven by mining sector workforce. Shortage of nurses relative to need.' },
+      { city: 'Adelaide (SA)', localSalary: 'AUD 65,000–98,000/year', note: 'Most affordable major city. Good work-life balance. Smaller Indian nursing community.' },
+    ],
+    comparisonNote:
+      'Australian nursing salaries are set by enterprise agreements (EAs) negotiated by unions (ANMF). Weekend and public holiday penalty rates can add 50–150% to base pay — a Saturday shift pays 1.5× and a Sunday 1.75×. Additionally, employers must contribute 11% of gross salary as superannuation (retirement fund) — this is on top of the quoted salary. Total remuneration package is typically 20-30% higher than the base annual salary figure.',
+    deductionsNote:
+      'Australian income tax uses a progressive scale. For AUD $80,000/year: tax is approximately $18,067 + Medicare Levy $1,600 = ~$19,667 total. Net take-home ≈ $60,333/year ($5,028/month, ₹2.8L/month). At AUD $100,000: tax ≈ $26,000, net ≈ $74,000/year ($6,167/month, ₹3.4L/month). Superannuation (11%) is paid by your employer on top of your salary and is accessible at retirement.',
+    faqs: [
+      {
+        question: 'What is the average salary for Indian nurses in Australia in 2025?',
+        answer:
+          'Indian nurses working in Australia typically earn AUD $70,000–$115,000/year depending on experience and specialty. Entry-level graduate nurses start at AUD $65,000–$74,000. After Australian income tax and Medicare Levy, a nurse earning AUD $80,000/year takes home approximately AUD $60,000/year (AUD $5,000/month, ₹2.8L/month). Weekend penalty rates can add significantly to base pay.',
+      },
+      {
+        question: 'What are Australian nursing penalty rates and how do they work?',
+        answer:
+          'Australian enterprise agreements mandate penalty rates for unsocial hours. A standard public hospital Saturday shift pays 1.5× base rate. Sunday shifts pay 1.75×. Public holidays pay 2.5×. For a nurse earning AUD $38/hour base, a Sunday shift pays AUD $66.50/hour. Nurses who regularly work evenings and weekends can earn an additional AUD $8,000–$15,000/year in penalty pay above their base salary.',
+      },
+      {
+        question: 'What is superannuation and how does it benefit Indian nurses in Australia?',
+        answer:
+          'Superannuation (super) is Australia\'s mandatory employer-funded retirement contribution — currently 11% of gross salary, rising to 12% by 2025-26. Employers pay super on top of your salary. A nurse earning AUD $80,000/year receives an additional AUD $8,800/year in super contributions. If you return to India permanently before retirement age, you can claim your superannuation as a departing Australia superannuation payment (DASP), minus withholding tax.',
+      },
+      {
+        question: 'Is Australia nurse salary better than Canada or UK?',
+        answer:
+          'Australia generally offers the highest total compensation package among English-speaking nursing destinations, mainly due to penalty rates and superannuation. Gross salary is similar to Canada (AUD $70,000–$115,000 vs CAD $62,000–$100,000), but Australia\'s weekend penalty rates and 11% super make the total remuneration package significantly higher. UK NHS nurses earn considerably less (£28,000–£50,000/year) but benefit from free healthcare and subsidised housing schemes.',
+      },
+      {
+        question: 'Do I need NCLEX to work as a nurse in Australia?',
+        answer:
+          'No. Australia does not require NCLEX-RN. Instead, you must complete an ANMAC skills assessment of your Indian nursing qualification and then apply for AHPRA registration. If your Indian BSc Nursing degree meets ANMAC standards, no clinical exam is required. You will need OET Grade B or IELTS 7.0 in all bands as your English proficiency evidence.',
+      },
+    ],
+    relatedSlugs: ['canada-nurse-salary', 'uk-nurse-salary', 'germany-nurse-salary'],
+    relatedCountrySlugs: ['australia', 'canada', 'uk', 'germany'],
   },
 ]
 

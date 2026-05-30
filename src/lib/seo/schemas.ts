@@ -41,16 +41,58 @@ export function buildFaqSchema(faqs: { question: string; answer: string }[]) {
 
 // ─── Organization ──────────────────────────────────────────────────────────────
 
+const ORGANIZATION_ENTITY = {
+  '@type': 'Organization',
+  name: 'OverseasNursing',
+  alternateName: 'OverseasNursing.com',
+  url: BASE_URL,
+  logo: {
+    '@type': 'ImageObject',
+    url: `${BASE_URL}/og-image.svg`,
+  },
+  description:
+    'OverseasNursing is the independent comparison and review platform for Indian nurses migrating to Germany, UK, Australia, Canada, and Dubai. Real nurse reviews, transparent agency pricing, scam alerts, and expert exam guides.',
+  foundingDate: '2024',
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    email: 'hello@overseasnursing.com',
+    availableLanguage: ['English'],
+  },
+  sameAs: ['https://twitter.com/overseasnursing', 'https://instagram.com/overseasnursing'],
+  knowsAbout: [
+    'Overseas nursing migration',
+    'Indian nurse visa',
+    'OET exam preparation',
+    'NCLEX-RN exam',
+    'Germany nursing migration',
+    'UK NMC registration',
+    'Australia AHPRA registration',
+    'Nursing agency reviews',
+    'Migration agency scams',
+  ],
+  areaServed: { '@type': 'Country', name: 'India' },
+  audience: {
+    '@type': 'Audience',
+    audienceType: 'Indian registered nurses planning overseas migration',
+  },
+}
+
 export function buildOrganizationSchema() {
+  return { '@context': 'https://schema.org', ...ORGANIZATION_ENTITY }
+}
+
+export function buildAboutPageSchema() {
   return {
     '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: SITE_NAME,
-    url: BASE_URL,
-    logo: `${BASE_URL}/logo.png`,
+    '@type': 'AboutPage',
+    name: 'About OverseasNursing — Independent Nursing Migration Platform',
+    url: `${BASE_URL}/about`,
     description:
-      'OverseasNursing.com is the trusted comparison and review platform for Indian nurses migrating abroad. We cover agency fees, visa processes, exam guides, and verified nurse experiences.',
-    sameAs: [],
+      'Learn about OverseasNursing — the independent search and review platform helping Indian nurses safely navigate overseas migration through verified reviews, transparent pricing, and expert guides.',
+    inLanguage: 'en-IN',
+    isPartOf: { '@type': 'WebSite', name: 'OverseasNursing', url: BASE_URL },
+    mainEntity: ORGANIZATION_ENTITY,
   }
 }
 
@@ -153,7 +195,7 @@ export function buildArticleSchema(article: {
       '@type': 'Organization',
       name: SITE_NAME,
       url: BASE_URL,
-      logo: { '@type': 'ImageObject', url: `${BASE_URL}/logo.png` },
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.svg` },
     },
   }
 }
@@ -172,6 +214,72 @@ export function buildWebPageSchema(page: {
     description: page.description,
     url: abs(page.path),
     isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: BASE_URL },
+  }
+}
+
+// ─── Person (Author) ──────────────────────────────────────────────────────────
+
+export function buildAuthorPersonSchema(author: {
+  slug: string
+  fullName: string
+  roleTitle: string
+  shortBio: string
+  profileImage?: string
+  expertiseAreas: string[]
+  socialLinks?: { platform: string; url: string }[]
+  website?: string
+}) {
+  const sameAs = [
+    ...(author.website ? [author.website] : []),
+    ...(author.socialLinks?.map((l) => l.url) ?? []),
+  ]
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: author.fullName,
+    description: author.shortBio,
+    ...(author.profileImage ? { image: abs(author.profileImage) } : {}),
+    url: `${BASE_URL}/authors/${author.slug}`,
+    jobTitle: author.roleTitle,
+    knowsAbout: author.expertiseAreas,
+    ...(sameAs.length > 0 && { sameAs }),
+    worksFor: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
+  }
+}
+
+// ─── Person (Reviewer) ────────────────────────────────────────────────────────
+
+export function buildReviewerPersonSchema(reviewer: {
+  slug: string
+  fullName: string
+  reviewerTitle: string
+  shortBio: string
+  credentialSummary: string
+  profileImage?: string
+  expertiseAreas: string[]
+  registrationNumber?: string
+  issuingBody?: string
+  socialLinks?: { platform: string; url: string }[]
+}) {
+  const sameAs = reviewer.socialLinks?.map((l) => l.url) ?? []
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: reviewer.fullName,
+    description: `${reviewer.shortBio} ${reviewer.credentialSummary}`.trim(),
+    ...(reviewer.profileImage ? { image: abs(reviewer.profileImage) } : {}),
+    url: `${BASE_URL}/reviewers/${reviewer.slug}`,
+    jobTitle: reviewer.reviewerTitle,
+    knowsAbout: reviewer.expertiseAreas,
+    ...(reviewer.registrationNumber && {
+      identifier: {
+        '@type': 'PropertyValue',
+        name: reviewer.issuingBody ?? 'Professional Registration',
+        value: reviewer.registrationNumber,
+      },
+    }),
+    ...(sameAs.length > 0 && { sameAs }),
+    worksFor: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
   }
 }
 

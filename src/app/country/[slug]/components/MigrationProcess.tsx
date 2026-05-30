@@ -12,11 +12,11 @@ export function MigrationProcess({ country }: MigrationProcessProps) {
         How to Migrate to {country.name} as a Nurse
       </h2>
       <p className="text-[14px] text-slate-500 mb-8">
-        Step-by-step migration pathway for Indian nurses. Estimated total timeline:{' '}
+        Step-by-step migration pathway for Indian nurses. Estimated full migration timeline (exam preparation through visa grant):{' '}
         <span className="font-semibold text-slate-700">
           {country.visaProcessingWeeks.min + 8}–{country.visaProcessingWeeks.max + 24} weeks
         </span>{' '}
-        depending on language preparation and exam results.
+        — visa processing alone is {country.visaProcessingWeeks.min}–{country.visaProcessingWeeks.max} weeks; remaining time covers exam preparation, registration, and employer matching.
       </p>
 
       <ol className="flex flex-col gap-0 relative">

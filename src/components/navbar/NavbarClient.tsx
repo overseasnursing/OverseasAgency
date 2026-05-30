@@ -13,6 +13,8 @@ const NAV_LINKS = [
   { href: '/reviews',      label: 'Reviews' },
   { href: '/scam-reports', label: 'Scam Reports' },
   { href: '/guides',       label: 'Guides' },
+  { href: '/exam',         label: 'Exams' },
+  { href: '/compare',      label: 'Compare' },
 ]
 
 export function NavbarClient() {

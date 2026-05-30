@@ -8,6 +8,15 @@ export interface ComparisonMetric {
   context?: string
 }
 
+export interface ComparisonDecisionSupport {
+  salaryWinner: string
+  migrationCostWinner: string
+  licensingWinner: string
+  familySettlementWinner: string
+  longTermCareerWinner: string
+  overallRecommendation: string
+}
+
 export interface ComparisonPageData {
   slug: string
   countryASlug: string
@@ -26,4 +35,5 @@ export interface ComparisonPageData {
   faqs: { question: string; answer: string }[]
   relatedComparisons: string[]
   relatedCountrySlugs: string[]
+  decisionSupport?: ComparisonDecisionSupport
 }

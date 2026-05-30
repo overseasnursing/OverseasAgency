@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Clock, ArrowRight, ChevronRight } from 'lucide-react'
 import { getAllGuideSlugs, getGuide } from '@/lib/data/guides'
+import { buildArticleSchema, buildFaqSchema } from '@/lib/seo/schemas'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -45,8 +47,18 @@ export default async function GuidePage({ params }: PageProps) {
 
   const badge = CATEGORY_BADGE[guide.category] ?? { label: 'Guide', className: 'bg-slate-100 text-slate-600' }
 
+  const schemas = [
+    buildArticleSchema({
+      title: guide.title,
+      description: guide.metaDescription,
+      path: `/guides/${guide.slug}`,
+    }),
+    ...(guide.faqs.length > 0 ? [buildFaqSchema(guide.faqs)] : []),
+  ]
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <MultiJsonLd schemas={schemas} />
 
       {/* Breadcrumb */}
       <div className="bg-white border-b border-slate-100">

@@ -28,8 +28,9 @@ const GERMANY: CountryDetail = {
   languageBarrier: 'high',
   nursingDemand: '35,000+ unfilled nursing positions nationwide',
   recommendationPercent: 89,
-  totalMigrationCostMin: 500000,
-  totalMigrationCostMax: 900000,
+  // SOURCE OF TRUTH: pricing.ts (germany) — totalMin/totalMax
+  totalMigrationCostMin: 542000,
+  totalMigrationCostMax: 944000,
 
   exams: [
     {
@@ -44,11 +45,11 @@ const GERMANY: CountryDetail = {
     {
       name: 'IELTS Academic',
       category: 'language',
-      minimumScore: '7.0 overall, 6.5 each band',
+      minimumScore: '7.0 overall, 6.5 each band (German visa)',
       prepTimeMonths: '3–6 months',
       approxCostINR: 17000,
       mandatory: false,
-      description: 'International English Language Testing System. Accepted for German visa documentation and employer communication. OET or IELTS required — not both.',
+      description: 'IELTS is accepted for German visa documentation only — not for nursing licensure (which requires German B2). The German visa threshold (7.0 overall, 6.5 per band) differs from NMC/AHPRA nursing registration (7.0 in all four bands). OET or IELTS required — not both.',
     },
     {
       name: 'TestDaF / Goethe B2',
@@ -121,8 +122,8 @@ const GERMANY: CountryDetail = {
     relocationMax: 150000,
     accommodationSetupMin: 60000,
     accommodationSetupMax: 120000,
-    totalMin: 572000,
-    totalMax: 926000,
+    totalMin: 542000,
+    totalMax: 944000,
     disclaimer: 'Figures are estimates based on 2024 market data. Agency fees vary. German government covers healthcare and social security after joining — no ongoing insurance cost.',
   },
 
@@ -262,11 +263,11 @@ const UK: CountryDetail = {
     {
       name: 'IELTS Academic',
       category: 'language',
-      minimumScore: '7.0 overall, 6.5 in each band',
+      minimumScore: '7.0 in all four bands',
       prepTimeMonths: '2–4 months',
       approxCostINR: 17000,
       mandatory: false,
-      description: 'Alternative to OET for NMC registration. Academic version required. Overall 7.0 with minimum 6.5 in each of the four components.',
+      description: 'Alternative to OET for NMC registration. Academic IELTS only — 7.0 in all four bands (Listening, Reading, Writing, Speaking). A score of 6.5 in any single band fails the NMC requirement. See /exam/ielts-guide for full requirements.',
     },
     {
       name: 'CBT (NMC)',
@@ -311,8 +312,8 @@ const UK: CountryDetail = {
     relocationMax: 130000,
     accommodationSetupMin: 50000,
     accommodationSetupMax: 100000,
-    totalMin: 527000,
-    totalMax: 837000,
+    totalMin: 400000,
+    totalMax: 750000,
     disclaimer: 'Many NHS trusts reimburse OSCE fees and offer relocation allowances of £1,000–£3,000. Check your employment contract for reimbursements before finalizing agency fee.',
   },
 
@@ -354,7 +355,7 @@ const UK: CountryDetail = {
   ],
 
   faqs: [
-    { question: 'Do I need to know German or any other language for UK nursing?', answer: 'No. English is the working language of NHS. You need to demonstrate English proficiency through OET (Grade B) or IELTS Academic (7.0 overall, 6.5 per band). No other language is required.' },
+    { question: 'Do I need to know German or any other language for UK nursing?', answer: 'No. English is the working language of NHS. You need to demonstrate English proficiency through OET (Grade B in all four sub-tests) or IELTS Academic (7.0 in all four bands — Listening, Reading, Writing, and Speaking). No other language is required.' },
     { question: 'What is the NMC OSCE and when does it happen?', answer: 'The OSCE (Objective Structured Clinical Examination) is a practical nursing skills test conducted in the UK after you arrive. It is organized and usually funded by your NHS employer. You are paid your salary from day one — the OSCE is done on company time within your first few weeks. It tests clinical skills like medication administration, wound care, handover communication, and patient assessment.' },
     { question: 'How long does UK permanent residency (ILR) take?', answer: 'Indefinite Leave to Remain (ILR) is available after 5 continuous years of legal residence on a valid visa. With a Health and Care Worker Visa, you are eligible to apply after 5 years. British citizenship can be applied for 12 months after receiving ILR.' },
     { question: 'Can I work outside NHS in the UK?', answer: 'Yes. Your NMC registration (PIN) is not tied to a specific employer — it is your personal registration. Once you have full NMC registration, you can work for any NHS trust, private hospital, care home, or agency in the UK. Many nurses do bank shifts (additional hours) for extra income.' },
@@ -400,7 +401,8 @@ const CANADA: CountryDetail = {
   languageBarrier: 'low',
   nursingDemand: '60,000+ nursing vacancies across provinces',
   recommendationPercent: 87,
-  totalMigrationCostMin: 600000,
+  // SOURCE OF TRUTH: pricing.ts (canada) — totalMin/totalMax
+  totalMigrationCostMin: 620000,
   totalMigrationCostMax: 1100000,
 
   exams: [
@@ -455,8 +457,8 @@ const CANADA: CountryDetail = {
     relocationMax: 200000,
     accommodationSetupMin: 80000,
     accommodationSetupMax: 160000,
-    totalMin: 671000,
-    totalMax: 1051000,
+    totalMin: 620000,
+    totalMax: 1100000,
     disclaimer: 'Canada immigration fees are paid in CAD. Relocation costs are higher due to long-haul flights. Toronto and Vancouver are expensive cities — consider settling in smaller cities like Calgary, Edmonton, or Winnipeg for better cost of living.',
   },
 
@@ -524,8 +526,9 @@ const AUSTRALIA: CountryDetail = {
   languageBarrier: 'low',
   nursingDemand: '30,000+ nursing vacancies, rising demand in regional areas',
   recommendationPercent: 85,
-  totalMigrationCostMin: 550000,
-  totalMigrationCostMax: 1000000,
+  // SOURCE OF TRUTH: pricing.ts (australia) — totalMin/totalMax
+  totalMigrationCostMin: 690000,
+  totalMigrationCostMax: 1200000,
 
   exams: [
     {
@@ -544,7 +547,7 @@ const AUSTRALIA: CountryDetail = {
       prepTimeMonths: '3–5 months',
       approxCostINR: 17000,
       mandatory: false,
-      description: 'AHPRA requires IELTS Academic 7.0 in ALL four bands — stricter than UK requirements. OET Grade B is generally easier to achieve for nurses.',
+      description: 'AHPRA requires IELTS Academic 7.0 in ALL four bands — the same requirement as UK NMC. OET Grade B is generally easier to achieve for nurses. See /exam/ielts-guide for full requirements.',
     },
     {
       name: 'AHPRA Registration Assessment',
@@ -588,8 +591,8 @@ const AUSTRALIA: CountryDetail = {
     relocationMax: 180000,
     accommodationSetupMin: 70000,
     accommodationSetupMax: 150000,
-    totalMin: 748000,
-    totalMax: 1218000,
+    totalMin: 690000,
+    totalMax: 1200000,
     disclaimer: 'Australian visa fees are significantly higher than European destinations. Regional area nomination (subclass 190) offers faster processing and additional CRS-equivalent points. Consider Melbourne, Brisbane, or Adelaide over Sydney for cost-of-living balance.',
   },
 
@@ -656,8 +659,9 @@ const DUBAI: CountryDetail = {
   languageBarrier: 'low',
   nursingDemand: '15,000+ healthcare positions in Dubai, Abu Dhabi, and Sharjah',
   recommendationPercent: 78,
-  totalMigrationCostMin: 150000,
-  totalMigrationCostMax: 400000,
+  // SOURCE OF TRUTH: pricing.ts (dubai) — totalMin/totalMax
+  totalMigrationCostMin: 160000,
+  totalMigrationCostMax: 460000,
 
   exams: [
     {
@@ -718,7 +722,7 @@ const DUBAI: CountryDetail = {
     relocationMax: 60000,
     accommodationSetupMin: 30000,
     accommodationSetupMax: 70000,
-    totalMin: 190000,
+    totalMin: 160000,
     totalMax: 460000,
     disclaimer: 'UAE is the most cost-effective migration destination. Many employers cover flight, visa, and accommodation — check your employment contract carefully. Avoid agencies charging more than ₹2L total for UAE placement.',
   },

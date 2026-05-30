@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ChevronRight, BookOpen, Clock, HelpCircle } from 'lucide-react'
 import { getMockTestLocationWithCategories, getAllMockTestLocationSlugs } from '@/lib/data/getMockTestData'
+import { getExamGuidesForLocation } from '@/lib/data/exams'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
 export const revalidate = 3600
 
@@ -40,8 +43,24 @@ export default async function LocationPage({ params }: PageProps) {
   if (!data) notFound()
   const { location, categories } = data
 
+  const examGuides = getExamGuidesForLocation(location.slug, location.name)
+
+  const schemas = [
+    buildWebPageSchema({
+      title: `${location.name} — Free Nursing Mock Tests | OverseasNursing`,
+      description: location.description || `Practice ${location.name} nursing licensing exams with free timed mock tests.`,
+      path: `/mock-tests/${locationSlug}`,
+    }),
+    buildBreadcrumbSchema([
+      { name: 'Home', href: '/' },
+      { name: 'Mock Tests', href: '/mock-tests' },
+      { name: location.name, href: `/mock-tests/${locationSlug}` },
+    ]),
+  ]
+
   return (
     <div className="bg-surface-page min-h-screen">
+      <MultiJsonLd schemas={schemas} />
 
       {/* Header */}
       <div className="bg-white border-b border-slate-100">
@@ -135,6 +154,30 @@ export default async function LocationPage({ params }: PageProps) {
               })}
             </div>
           </>
+        )}
+
+        {/* Exam guide links — reciprocal link to theory prep */}
+        {examGuides.length > 0 && (
+          <div className="mt-10 pt-8 border-t border-slate-200">
+            <h2 className="text-[14px] font-bold text-slate-700 mb-4">Study the Theory First</h2>
+            <div className="flex flex-col gap-3">
+              {examGuides.map((guide) => (
+                <Link
+                  key={guide.slug}
+                  href={`/exam/${guide.slug}`}
+                  className="flex items-center justify-between px-5 py-4 bg-white border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.02] rounded-2xl transition-all group"
+                >
+                  <div>
+                    <p className="text-[14px] font-semibold text-slate-800 group-hover:text-primary transition-colors">
+                      {guide.examName} Exam Guide
+                    </p>
+                    <p className="text-[12.5px] text-slate-400 mt-0.5">{guide.examFullName}</p>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-400 group-hover:text-primary transition-colors flex-shrink-0" />
+                </Link>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
