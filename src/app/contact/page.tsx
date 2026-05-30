@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Mail, MessageSquare, Shield } from 'lucide-react'
+import { MailtoLink } from '@/components/ui/MailtoLink'
 
 export const metadata: Metadata = {
   title: 'Contact Us — OverseasNursing',
@@ -45,13 +46,14 @@ export default function ContactPage() {
               icon: Mail,
               title: 'General Enquiries',
               desc: 'For corrections, partnership enquiries, data removal requests, or anything else — email us directly.',
-              link: 'mailto:hello@overseasnursing.com',
+              link: null,
+              email: 'hello@overseasnursing.com',
               label: 'hello@overseasnursing.com',
               bg: 'bg-[#EFF6FF]',
               iconColor: 'text-primary',
               iconBg: 'bg-[#DBEAFE]',
             },
-          ].map(({ icon: Icon, title, desc, link, label, bg, iconColor, iconBg }) => (
+          ].map(({ icon: Icon, title, desc, link, email, label, bg, iconColor, iconBg }) => (
             <div key={title} className={`${bg} rounded-2xl border border-slate-100 p-6 flex gap-4`}>
               <div className={`w-11 h-11 ${iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
                 <Icon size={20} className={iconColor} />
@@ -59,12 +61,15 @@ export default function ContactPage() {
               <div className="flex-1 min-w-0">
                 <h2 className="text-[15px] font-bold text-slate-800 mb-1">{title}</h2>
                 <p className="text-[13.5px] text-slate-500 leading-relaxed mb-3">{desc}</p>
-                <a
-                  href={link}
-                  className="inline-flex items-center text-[13px] font-semibold text-primary hover:underline"
-                >
-                  {label} →
-                </a>
+                {email ? (
+                  <MailtoLink email={email} className="inline-flex items-center text-[13px] font-semibold text-primary hover:underline">
+                    {label} →
+                  </MailtoLink>
+                ) : (
+                  <a href={link!} className="inline-flex items-center text-[13px] font-semibold text-primary hover:underline">
+                    {label} →
+                  </a>
+                )}
               </div>
             </div>
           ))}

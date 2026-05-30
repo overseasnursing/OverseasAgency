@@ -1,6 +1,7 @@
 import React from 'react'
 import { MapPin, Phone, Mail, ExternalLink, Clock } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { MailtoLink } from '@/components/ui/MailtoLink'
 
 interface BranchesSectionProps {
   agency: AgencyDetail
@@ -63,13 +64,13 @@ export function BranchesSection({ agency }: BranchesSectionProps) {
                 WhatsApp
               </a>
 
-              <a
-                href={`mailto:${branch.email}`}
+              <MailtoLink
+                email={branch.email}
                 className="inline-flex items-center gap-2 px-3.5 py-2 border border-slate-200 rounded-xl text-[13px] font-medium text-slate-600 hover:border-slate-300 hover:text-slate-800 transition-colors"
               >
                 <Mail size={13} />
                 {branch.email}
-              </a>
+              </MailtoLink>
 
               {branch.googleMapsUrl && (
                 <a
