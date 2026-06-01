@@ -9,7 +9,18 @@ import {
 } from '@/lib/data/getMockTestData'
 import { CategoryPageClient } from './_components/CategoryPageClient'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
-import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
+import {
+  buildWebPageSchema,
+  buildBreadcrumbSchema,
+  buildFaqSchema,
+  buildArticleSchema,
+  buildOrganizationSchema,
+  buildLearningResourceSchema,
+  buildQuizItemListSchema,
+  buildGuidePersonSchema,
+} from '@/lib/seo/schemas'
+import { getMockTestContent } from '@/lib/data/getMockTestContent'
+import { ExamGuideContent } from './_components/ExamGuideContent'
 
 export const revalidate = 3600
 
@@ -53,15 +64,76 @@ export default async function CategoryPage({ params }: PageProps) {
   const pageDesc  = category.seo_description || category.description ||
     `Practice ${category.name} with free timed mock tests. Part of ${location.name} licensing preparation.`
 
-  const schemas = [
-    buildWebPageSchema({ title: pageTitle, description: pageDesc, path: `/mock-tests/${locationSlug}/${categorySlug}` }),
+  const content = await getMockTestContent(category.id, categorySlug)
+
+  const pagePath = `/mock-tests/${locationSlug}/${categorySlug}`
+
+  // Build all schemas; nulls are filtered at the end
+  const rawSchemas: (Record<string, unknown> | null)[] = [
+    // 1. WebPage
+    buildWebPageSchema({ title: pageTitle, description: pageDesc, path: pagePath }),
+
+    // 2. BreadcrumbList
     buildBreadcrumbSchema([
-      { name: 'Home', href: '/' },
+      { name: 'Home',       href: '/' },
       { name: 'Mock Tests', href: '/mock-tests' },
       { name: location.name, href: `/mock-tests/${locationSlug}` },
-      { name: category.name, href: `/mock-tests/${locationSlug}/${categorySlug}` },
+      { name: category.name, href: pagePath },
     ]),
+
+    // 3. Organization
+    buildOrganizationSchema(),
+
+    // 4. LearningResource
+    buildLearningResourceSchema({
+      name:        pageTitle,
+      description: pageDesc,
+      path:        pagePath,
+      examName:    category.name,
+      testCount:   tests.length,
+    }),
+
+    // 5. ItemList of Quiz items — one per test, auto-generated
+    tests.length > 0
+      ? buildQuizItemListSchema(tests, pagePath, category.name)
+      : null,
+
+    // 6. Article — only when guide content exists
+    content
+      ? buildArticleSchema({
+          title:         pageTitle,
+          description:   pageDesc,
+          path:          pagePath,
+          publishedDate: content.meta.publishedDate ?? '2025-01-01',
+          modifiedDate:  content.meta.modifiedDate,
+        })
+      : null,
+
+    // 7. FAQPage — only when FAQs exist in guide
+    content?.meta.faqs?.length
+      ? buildFaqSchema(content.meta.faqs.map(f => ({ question: f.q, answer: f.a })))
+      : null,
+
+    // 8. Person (Author) — only when guide has author name
+    content?.meta.author?.name
+      ? buildGuidePersonSchema({
+          name:        content.meta.author.name,
+          description: content.meta.author.credentials ?? '',
+          linkedin:    content.meta.author.linkedin,
+        })
+      : null,
+
+    // 9. Person (Reviewer) — only when guide has reviewer name
+    content?.meta.reviewer?.name
+      ? buildGuidePersonSchema({
+          name:        content.meta.reviewer.name,
+          description: content.meta.reviewer.experience ?? '',
+          jobTitle:    content.meta.reviewer.title,
+        })
+      : null,
   ]
+
+  const schemas = rawSchemas.filter((s): s is Record<string, unknown> => s != null)
 
   return (
     <div className="bg-surface-page min-h-screen">
@@ -125,6 +197,11 @@ export default async function CategoryPage({ params }: PageProps) {
           locationSlug={locationSlug}
           categorySlug={categorySlug}
         />
+
+        {/* SEO guide content — only renders when a .md file exists for this category */}
+        {content && (
+          <ExamGuideContent content={content} categoryName={category.name} />
+        )}
       </div>
     </div>
   )

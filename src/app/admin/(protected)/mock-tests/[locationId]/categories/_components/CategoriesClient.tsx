@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Search, X, ChevronRight, AlertTriangle, ToggleLeft, ToggleRight, Tag } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, X, ChevronRight, AlertTriangle, ToggleLeft, ToggleRight, Tag, BookOpen } from 'lucide-react'
 import { saveCategory, deleteCategory, toggleCategoryStatus, type CategoryInput } from '@/app/actions/admin-mock-tests'
 
 type Category = {
@@ -288,6 +288,12 @@ export function CategoriesClient({ location, categories, dbError }: { location: 
                           className="inline-flex items-center gap-1.5 h-7 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-[12px] font-semibold rounded-lg transition-colors"
                         >
                           <ChevronRight size={12} /> Tests
+                        </a>
+                        <a
+                          href={`/admin/mock-tests/${location.id}/categories/${c.id}/guide`}
+                          className="inline-flex items-center gap-1.5 h-7 px-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 text-[12px] font-semibold rounded-lg transition-colors"
+                        >
+                          <BookOpen size={11} /> Guide
                         </a>
                         <button
                           onClick={() => setEditItem(c)}
