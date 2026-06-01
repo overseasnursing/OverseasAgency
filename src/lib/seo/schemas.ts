@@ -116,7 +116,7 @@ export function buildLocalBusinessSchema(agency: {
     name: agency.name,
     url: agency.url ?? `${BASE_URL}/agency/${agency.slug}`,
     ...(agency.description && { description: agency.description }),
-    ...(agency.rating > 0 && (agency.reviewCount ?? 0) > 0
+    ...((agency.rating ?? 0) > 0 && (agency.reviewCount ?? 0) > 0
       ? {
           aggregateRating: {
             '@type': 'AggregateRating',
