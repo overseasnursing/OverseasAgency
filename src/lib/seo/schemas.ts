@@ -285,6 +285,86 @@ export function buildReviewerPersonSchema(reviewer: {
   }
 }
 
+// ─── LearningResource (mock test category page) ───────────────────────────────
+
+export function buildLearningResourceSchema(page: {
+  name: string
+  description: string
+  path: string
+  examName: string
+  testCount: number
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LearningResource',
+    name: page.name,
+    description: page.description,
+    url: abs(page.path),
+    learningResourceType: ['Practice Problem', 'Quiz'],
+    educationalLevel: 'Professional',
+    teaches: page.examName,
+    inLanguage: 'en',
+    isAccessibleForFree: true,
+    provider: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
+  }
+}
+
+// ─── Quiz ItemList (one item per mock test) ────────────────────────────────────
+
+export function buildQuizItemListSchema(
+  tests: Array<{
+    name: string
+    slug: string
+    duration_minutes: number
+    total_questions: number
+  }>,
+  basePath: string,
+  categoryName: string,
+) {
+  if (!tests.length) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${categoryName} — Mock Test List`,
+    numberOfItems: tests.length,
+    itemListElement: tests.map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': ['Quiz', 'LearningResource'],
+        name: t.name,
+        url: abs(`${basePath}/${t.slug}`),
+        timeRequired: `PT${t.duration_minutes}M`,
+        numberOfItems: t.total_questions,
+        educationalLevel: 'Professional',
+        inLanguage: 'en',
+        isAccessibleForFree: true,
+        provider: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
+      },
+    })),
+  }
+}
+
+// ─── Person — guide author / reviewer ─────────────────────────────────────────
+
+export function buildGuidePersonSchema(person: {
+  name: string
+  description: string
+  jobTitle?: string
+  linkedin?: string
+}) {
+  if (!person.name) return null
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: person.name,
+    description: person.description,
+    ...(person.jobTitle  ? { jobTitle: person.jobTitle }           : {}),
+    ...(person.linkedin  ? { sameAs:  [person.linkedin] }         : {}),
+    worksFor: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
+  }
+}
+
 // ─── Aggregate review (for agency pages) ─────────────────────────────────────
 
 export function buildAggregateRatingSchema(entity: {
