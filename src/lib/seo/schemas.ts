@@ -120,10 +120,10 @@ export function buildLocalBusinessSchema(agency: {
       ? {
           aggregateRating: {
             '@type': 'AggregateRating',
-            ratingValue: agency.rating.toFixed(1),
+            ratingValue: (agency.rating ?? 0).toFixed(1),
             bestRating: '5',
             worstRating: '1',
-            reviewCount: agency.reviewCount,
+            reviewCount: agency.reviewCount ?? 0,
           },
         }
       : {}),
