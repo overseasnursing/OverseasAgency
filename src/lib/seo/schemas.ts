@@ -116,15 +116,17 @@ export function buildLocalBusinessSchema(agency: {
     name: agency.name,
     url: agency.url ?? `${BASE_URL}/agency/${agency.slug}`,
     ...(agency.description && { description: agency.description }),
-    ...(agency.rating && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: agency.rating.toFixed(1),
-        bestRating: '5',
-        worstRating: '1',
-        reviewCount: agency.reviewCount ?? 1,
-      },
-    }),
+    ...((agency.rating ?? 0) > 0 && (agency.reviewCount ?? 0) > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: (agency.rating ?? 0).toFixed(1),
+            bestRating: '5',
+            worstRating: '1',
+            reviewCount: agency.reviewCount ?? 0,
+          },
+        }
+      : {}),
     ...(agency.streetAddress && {
       address: {
         '@type': 'PostalAddress',
@@ -292,6 +294,8 @@ export function buildAggregateRatingSchema(entity: {
   ratingValue: number
   reviewCount: number
 }) {
+  if (entity.reviewCount <= 0 || entity.ratingValue <= 0) return null
+
   const url =
     entity.type === 'agency'
       ? `${BASE_URL}/agency/${entity.slug}`

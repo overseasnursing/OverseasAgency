@@ -96,13 +96,17 @@ export default async function AgencyDetailPage({ params }: PageProps) {
       addressLocality: agency.location,
       addressCountry: 'IN',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: agency.rating,
-      reviewCount: agency.reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    },
+    ...(agency.reviewCount > 0 && agency.rating > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: agency.rating,
+            reviewCount: agency.reviewCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
     ...(agency.website ? { url: agency.website } : {}),
   }
 
