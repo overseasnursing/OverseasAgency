@@ -433,7 +433,7 @@ export function CategoryPageClient({
           <p className="text-[13px] text-slate-400">Tests are being added regularly — check back soon.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tests.map((test, i) => (
             <TestCard
               key={test.id}
