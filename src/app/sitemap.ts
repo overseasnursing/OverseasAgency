@@ -190,19 +190,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   /* ── Mock test category pages (DB-driven) ── */
+  // Priority 0.9 — these are our primary SEO targets (guide + tests + schemas)
   const mockCategoryPages: MetadataRoute.Sitemap = mockCategories.map(c => ({
     url: url(`/mock-tests/${c.locationSlug}/${c.categorySlug}`),
     lastModified: c.updatedAt,
     changeFrequency: 'weekly' as const,
-    priority: 0.85,
+    priority: 0.9,
   }))
 
   /* ── Individual mock test pages (DB-driven) ── */
   const mockTestPages: MetadataRoute.Sitemap = mockTests.map(t => ({
     url: url(`/mock-tests/${t.locationSlug}/${t.categorySlug}/${t.testSlug}`),
     lastModified: t.updatedAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.9,
+    changeFrequency: 'monthly' as const,
+    priority: 0.8,
   }))
 
   return [

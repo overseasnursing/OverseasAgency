@@ -103,10 +103,13 @@ export async function getMockTestLocationWithCategories(locationSlug: string): P
   return { location: loc, categories }
 }
 
+export type SiblingCategory = { id: string; name: string; slug: string }
+
 export async function getMockTestCategoryData(locationSlug: string, categorySlug: string): Promise<{
   location: { id: string; name: string; slug: string }
   category: { id: string; name: string; slug: string; description: string; seo_title: string; seo_description: string }
   tests: PublicTest[]
+  siblingCategories: SiblingCategory[]
 } | null> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
@@ -120,11 +123,19 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
     .eq('slug', categorySlug).eq('location_id', loc.id).eq('is_active', true).single()
   if (!cat) return null
 
-  const { data: tests } = await db
-    .from('mock_tests')
-    .select('id, name, slug, duration_minutes, total_questions, passing_percentage, instructions')
-    .eq('category_id', cat.id).eq('is_active', true)
-    .order('created_at', { ascending: true })
+  // Fetch tests + sibling categories in parallel
+  const [{ data: tests }, { data: siblings }] = await Promise.all([
+    db.from('mock_tests')
+      .select('id, name, slug, duration_minutes, total_questions, passing_percentage, instructions')
+      .eq('category_id', cat.id).eq('is_active', true)
+      .order('created_at', { ascending: true }),
+    db.from('mock_test_categories')
+      .select('id, name, slug')
+      .eq('location_id', loc.id)
+      .neq('id', cat.id)
+      .eq('is_active', true)
+      .order('name'),
+  ])
 
   return {
     location: { id: loc.id, name: loc.name, slug: loc.slug },
@@ -144,6 +155,8 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       is_premium: t.is_premium ?? false,
       status: t.status ?? 'published',
     })),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    siblingCategories: (siblings ?? []).map((s: any) => ({ id: s.id, name: s.name, slug: s.slug })),
   }
 }
 
