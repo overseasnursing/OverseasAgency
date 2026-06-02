@@ -1,35 +1,60 @@
 import React from 'react'
-import { ExternalLink, MapPin, DollarSign, CheckSquare, BookOpen } from 'lucide-react'
+import { ExternalLink, MapPin, DollarSign, CheckSquare, BookOpen, Search } from 'lucide-react'
 import type { SiblingCategory } from '@/lib/data/getMockTestData'
 import { getLocationLinks, getExamAuthority } from '@/lib/data/mockTestMappings'
+
+export type DestinationOverrides = {
+  country?:     { label: string; href: string }
+  salary?:      { label: string; href: string }
+  eligibility?: { label: string; href: string }
+  authority?:   { name: string; url: string }
+}
 
 type Props = {
   locationSlug:      string
   categorySlug:      string
   siblingCategories: SiblingCategory[]
+  destOverrides?:    DestinationOverrides | null
 }
 
-export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategories }: Props) {
-  const destination = getLocationLinks(locationSlug)
-  const authority   = getExamAuthority(categorySlug)
+export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategories, destOverrides }: Props) {
+  const auto        = getLocationLinks(locationSlug)
+  const autoAuth    = getExamAuthority(categorySlug)
+
+  // Merge: manual overrides win over auto-generated
+  const countryLink = destOverrides?.country   ?? (auto ? { label: auto.countryName, href: `/country/${auto.countrySlug}` } : null)
+  const salaryLink  = destOverrides?.salary    ?? (auto ? { label: 'Nurse Salaries', href: `/salary/${auto.salarySlug}` }   : null)
+  const eligLink    = destOverrides?.eligibility ?? { label: 'Check Eligibility', href: '/eligibility' }
+  const authority   = destOverrides?.authority ?? (autoAuth ? { name: autoAuth.label, url: autoAuth.url } : null)
 
   const hasSiblings    = siblingCategories.length > 0
-  const hasDestination = !!destination
-  const hasAuthority   = !!authority
+  const hasDestination = !!(countryLink || salaryLink || eligLink || authority)
 
-  if (!hasSiblings && !hasDestination && !hasAuthority) return null
+  if (!hasSiblings && !hasDestination) return null
+
+  const agenciesHref = auto
+    ? `/agencies?country=${auto.countrySlug}`
+    : '/agencies'
 
   return (
     <div className="mt-8 flex flex-col gap-5">
 
-      {/* ── Related exam categories (same location, from DB) ── */}
+      {/* ── Related exam categories ── */}
       {hasSiblings && (
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen size={14} className="text-primary" />
-            <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
-              Related Nursing Exams
-            </h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <BookOpen size={14} className="text-primary" />
+              <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
+                Related Nursing Exams
+              </h2>
+            </div>
+            <a
+              href={agenciesHref}
+              className="inline-flex items-center gap-1.5 h-8 px-3 bg-primary hover:bg-primary-hover text-white text-[12px] font-semibold rounded-lg transition-colors flex-shrink-0"
+            >
+              <Search size={11} /> Find Agencies
+            </a>
           </div>
           <div className="flex flex-wrap gap-2">
             {siblingCategories.map(sibling => (
@@ -46,72 +71,76 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
       )}
 
       {/* ── Destination + eligibility + official portal ── */}
-      {(hasDestination || hasAuthority) && (
+      {hasDestination && (
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
-          {destination && (
+          {auto && (
             <div className="flex items-center gap-2 mb-4">
-              <MapPin size={14} className="text-primary" />
+              <img
+                src={`https://flagcdn.com/20x15/${auto.flagCode}.png`}
+                alt={auto.countryName}
+                width={20}
+                height={15}
+                className="rounded-sm flex-shrink-0"
+              />
               <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
-                {destination.flag} Planning to Work in {destination.countryName}?
+                Planning to Work in {auto.countryName}?
               </h2>
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
-            {destination && (
-              <>
-                {/* Country guide */}
-                <a
-                  href={`/country/${destination.countrySlug}`}
-                  className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] rounded-xl transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <MapPin size={14} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-slate-400 leading-none mb-0.5">Migration Guide</p>
-                    <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
-                      {destination.countryName}
-                    </p>
-                  </div>
-                </a>
-
-                {/* Salary guide */}
-                <a
-                  href={`/salary/${destination.salarySlug}`}
-                  className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] rounded-xl transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                    <DollarSign size={14} className="text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] text-slate-400 leading-none mb-0.5">Salary Guide</p>
-                    <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
-                      Nurse Salaries
-                    </p>
-                  </div>
-                </a>
-              </>
+            {countryLink && (
+              <a
+                href={countryLink.href}
+                className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] rounded-xl transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin size={14} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-[12px] text-slate-400 leading-none mb-0.5">Migration Guide</p>
+                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
+                    {countryLink.label}
+                  </p>
+                </div>
+              </a>
             )}
 
-            {/* Eligibility — always shown */}
-            <a
-              href="/eligibility"
-              className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] rounded-xl transition-all group"
-            >
-              <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
-                <CheckSquare size={14} className="text-violet-600" />
-              </div>
-              <div>
-                <p className="text-[12px] text-slate-400 leading-none mb-0.5">Free Tool</p>
-                <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
-                  Check Eligibility
-                </p>
-              </div>
-            </a>
+            {salaryLink && (
+              <a
+                href={salaryLink.href}
+                className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] rounded-xl transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                  <DollarSign size={14} className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-[12px] text-slate-400 leading-none mb-0.5">Salary Guide</p>
+                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
+                    {salaryLink.label}
+                  </p>
+                </div>
+              </a>
+            )}
 
-            {/* Official authority portal */}
+            {eligLink && (
+              <a
+                href={eligLink.href}
+                className="flex items-center gap-2.5 px-4 py-3 border border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] rounded-xl transition-all group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
+                  <CheckSquare size={14} className="text-violet-600" />
+                </div>
+                <div>
+                  <p className="text-[12px] text-slate-400 leading-none mb-0.5">Free Tool</p>
+                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
+                    {eligLink.label}
+                  </p>
+                </div>
+              </a>
+            )}
+
             {authority && (
               <a
                 href={authority.url}
@@ -125,7 +154,7 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
                 <div>
                   <p className="text-[12px] text-amber-600 leading-none mb-0.5">Official Source</p>
                   <p className="text-[13px] font-semibold text-amber-800 group-hover:text-amber-900 transition-colors">
-                    {authority.label}
+                    {authority.name}
                   </p>
                 </div>
               </a>

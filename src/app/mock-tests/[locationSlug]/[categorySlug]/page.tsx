@@ -22,6 +22,8 @@ import {
 import { getMockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamGuideContent } from './_components/ExamGuideContent'
 import { AutoInternalLinks } from './_components/AutoInternalLinks'
+import { DestinationAgencyCards } from './_components/DestinationAgencyCards'
+import { getLocationLinks } from '@/lib/data/mockTestMappings'
 
 export const revalidate = 3600
 
@@ -204,7 +206,21 @@ export default async function CategoryPage({ params }: PageProps) {
           locationSlug={locationSlug}
           categorySlug={categorySlug}
           siblingCategories={siblingCategories}
+          destOverrides={content?.meta.destinationOverrides ?? null}
         />
+
+        {/* Top agencies for the destination country */}
+        {(() => {
+          const dest = getLocationLinks(locationSlug)
+          return dest ? (
+            <DestinationAgencyCards
+              countryTerm={dest.agencyCountryTerm}
+              countryName={dest.countryName}
+              countrySlug={dest.countrySlug}
+              flagCode={dest.flagCode}
+            />
+          ) : null
+        })()}
 
         {/* SEO guide content — only renders when guide content has been added */}
         {content && (

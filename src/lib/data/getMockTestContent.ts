@@ -19,6 +19,13 @@ export type MockTestReviewer = {
   license?: string
 }
 
+export type DestinationOverrides = {
+  country?:     { label: string; href: string }
+  salary?:      { label: string; href: string }
+  eligibility?: { label: string; href: string }
+  authority?:   { name: string; url: string }
+}
+
 export type MockTestContentMeta = {
   lastUpdated?: string
   publishedDate?: string
@@ -27,6 +34,7 @@ export type MockTestContentMeta = {
   reviewer?: MockTestReviewer
   faqs?: FaqItem[]
   relatedLinks?: LinkItem[]
+  destinationOverrides?: DestinationOverrides
 }
 
 export type MockTestContent = {
@@ -37,16 +45,20 @@ export type MockTestContent = {
 /** DB row → MockTestContent */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToContent(data: any): MockTestContent {
+  const overrides = data.destination_overrides
   return {
     body: data.body ?? '',
     meta: {
-      lastUpdated:   data.last_updated   ?? undefined,
-      publishedDate: data.published_date ?? undefined,
-      modifiedDate:  data.modified_date  ?? undefined,
-      author:        data.author         ?? undefined,
-      reviewer:      data.reviewer       ?? undefined,
-      faqs:          Array.isArray(data.faqs)          ? data.faqs          : [],
-      relatedLinks:  Array.isArray(data.related_links) ? data.related_links : [],
+      lastUpdated:          data.last_updated   ?? undefined,
+      publishedDate:        data.published_date ?? undefined,
+      modifiedDate:         data.modified_date  ?? undefined,
+      author:               data.author         ?? undefined,
+      reviewer:             data.reviewer       ?? undefined,
+      faqs:                 Array.isArray(data.faqs)          ? data.faqs          : [],
+      relatedLinks:         Array.isArray(data.related_links) ? data.related_links : [],
+      destinationOverrides: (overrides && typeof overrides === 'object' && Object.keys(overrides).length > 0)
+        ? overrides as DestinationOverrides
+        : undefined,
     },
   }
 }

@@ -49,8 +49,9 @@ export default async function GuidePage({ params }: PageProps) {
           experience: meta.reviewer?.experience ?? '',
           license:    meta.reviewer?.license    ?? '',
         },
-        faqs:          (meta.faqs          ?? []).map(f => ({ q: f.q, a: f.a })),
-        related_links: (meta.relatedLinks  ?? []).map(l => ({ label: l.label, href: l.href })),
+        faqs:                  (meta.faqs         ?? []).map(f => ({ q: f.q, a: f.a })),
+        related_links:         (meta.relatedLinks ?? []).map(l => ({ label: l.label, href: l.href })),
+        destination_overrides: meta.destinationOverrides ?? {},
       }
     }
   }

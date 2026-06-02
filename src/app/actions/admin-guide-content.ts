@@ -20,6 +20,13 @@ export type GuideReviewer = {
 export type GuideFaq = { q: string; a: string }
 export type GuideLink = { label: string; href: string }
 
+export type DestinationOverride = {
+  country?:     { label: string; href: string }
+  salary?:      { label: string; href: string }
+  eligibility?: { label: string; href: string }
+  authority?:   { name: string; url: string }
+}
+
 export type GuideInput = {
   category_id: string
   body: string
@@ -30,6 +37,7 @@ export type GuideInput = {
   reviewer: GuideReviewer
   faqs: GuideFaq[]
   related_links: GuideLink[]
+  destination_overrides: DestinationOverride
 }
 
 export async function saveGuideContent(
@@ -46,16 +54,17 @@ export async function saveGuideContent(
       .from('mock_test_category_guides')
       .upsert(
         {
-          category_id:    input.category_id,
-          body:           input.body,
-          last_updated:   input.last_updated   || null,
-          published_date: input.published_date || null,
-          modified_date:  input.modified_date  || null,
-          author:         input.author,
-          reviewer:       input.reviewer,
-          faqs:           input.faqs,
-          related_links:  input.related_links,
-          updated_at:     new Date().toISOString(),
+          category_id:           input.category_id,
+          body:                  input.body,
+          last_updated:          input.last_updated          || null,
+          published_date:        input.published_date        || null,
+          modified_date:         input.modified_date         || null,
+          author:                input.author,
+          reviewer:              input.reviewer,
+          faqs:                  input.faqs,
+          related_links:         input.related_links,
+          destination_overrides: input.destination_overrides,
+          updated_at:            new Date().toISOString(),
         },
         { onConflict: 'category_id' },
       )
@@ -84,15 +93,16 @@ export async function loadGuideContent(
 
     if (error || !data) return null
     return {
-      category_id:    data.category_id,
-      body:           data.body           ?? '',
-      last_updated:   data.last_updated   ?? '',
-      published_date: data.published_date ?? '',
-      modified_date:  data.modified_date  ?? '',
-      author:         data.author         ?? { name: '', credentials: '', linkedin: '' },
-      reviewer:       data.reviewer       ?? { name: '', title: '', experience: '', license: '' },
-      faqs:           data.faqs           ?? [],
-      related_links:  data.related_links  ?? [],
+      category_id:           data.category_id,
+      body:                  data.body                  ?? '',
+      last_updated:          data.last_updated          ?? '',
+      published_date:        data.published_date        ?? '',
+      modified_date:         data.modified_date         ?? '',
+      author:                data.author                ?? { name: '', credentials: '', linkedin: '' },
+      reviewer:              data.reviewer              ?? { name: '', title: '', experience: '', license: '' },
+      faqs:                  data.faqs                  ?? [],
+      related_links:         data.related_links         ?? [],
+      destination_overrides: data.destination_overrides ?? {},
     }
   } catch {
     return null
