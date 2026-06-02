@@ -209,7 +209,12 @@ export default async function CategoryPage({ params }: PageProps) {
           destOverrides={content?.meta.destinationOverrides ?? null}
         />
 
-        {/* Top agencies for the destination country */}
+        {/* SEO guide content — only renders when guide content has been added */}
+        {content && (
+          <ExamGuideContent content={content} categoryName={category.name} />
+        )}
+
+        {/* Top agencies for the destination country — shown at bottom of page */}
         {(() => {
           const dest = getLocationLinks(locationSlug)
           return dest ? (
@@ -221,11 +226,6 @@ export default async function CategoryPage({ params }: PageProps) {
             />
           ) : null
         })()}
-
-        {/* SEO guide content — only renders when guide content has been added */}
-        {content && (
-          <ExamGuideContent content={content} categoryName={category.name} />
-        )}
       </div>
     </div>
   )

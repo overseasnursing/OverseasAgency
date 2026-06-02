@@ -1,5 +1,5 @@
 import React from 'react'
-import { ExternalLink, MapPin, DollarSign, CheckSquare, BookOpen, Search } from 'lucide-react'
+import { ExternalLink, MapPin, DollarSign, CheckSquare, BookOpen } from 'lucide-react'
 import type { SiblingCategory } from '@/lib/data/getMockTestData'
 import { getLocationLinks, getExamAuthority } from '@/lib/data/mockTestMappings'
 
@@ -18,70 +18,29 @@ type Props = {
 }
 
 export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategories, destOverrides }: Props) {
-  const auto        = getLocationLinks(locationSlug)
-  const autoAuth    = getExamAuthority(categorySlug)
+  const auto     = getLocationLinks(locationSlug)
+  const autoAuth = getExamAuthority(categorySlug)
 
   // Merge: manual overrides win over auto-generated
-  const countryLink = destOverrides?.country   ?? (auto ? { label: auto.countryName, href: `/country/${auto.countrySlug}` } : null)
-  const salaryLink  = destOverrides?.salary    ?? (auto ? { label: 'Nurse Salaries', href: `/salary/${auto.salarySlug}` }   : null)
+  const countryLink = destOverrides?.country    ?? (auto ? { label: auto.countryName,    href: `/country/${auto.countrySlug}` } : null)
+  const salaryLink  = destOverrides?.salary     ?? (auto ? { label: 'Nurse Salaries',    href: `/salary/${auto.salarySlug}` }   : null)
   const eligLink    = destOverrides?.eligibility ?? { label: 'Check Eligibility', href: '/eligibility' }
-  const authority   = destOverrides?.authority ?? (autoAuth ? { name: autoAuth.label, url: autoAuth.url } : null)
+  const authority   = destOverrides?.authority  ?? (autoAuth ? { name: autoAuth.label, url: autoAuth.url } : null)
 
   const hasSiblings    = siblingCategories.length > 0
   const hasDestination = !!(countryLink || salaryLink || eligLink || authority)
 
   if (!hasSiblings && !hasDestination) return null
 
-  const agenciesHref = auto
-    ? `/agencies?country=${auto.countrySlug}`
-    : '/agencies'
-
   return (
     <div className="mt-8 flex flex-col gap-5">
 
-      {/* ── Related exam categories ── */}
-      {hasSiblings && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <BookOpen size={14} className="text-primary" />
-              <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
-                Related Nursing Exams
-              </h2>
-            </div>
-            <a
-              href={agenciesHref}
-              className="inline-flex items-center gap-1.5 h-8 px-3 bg-primary hover:bg-primary-hover text-white text-[12px] font-semibold rounded-lg transition-colors flex-shrink-0"
-            >
-              <Search size={11} /> Find Agencies
-            </a>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {siblingCategories.map(sibling => (
-              <a
-                key={sibling.id}
-                href={`/mock-tests/${locationSlug}/${sibling.slug}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 hover:bg-primary/10 border border-slate-200 hover:border-primary/30 text-[13px] font-semibold text-slate-700 hover:text-primary rounded-xl transition-all"
-              >
-                {sibling.name}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── Destination + eligibility + official portal ── */}
+      {/* ── 1. Destination + eligibility + official portal (TOP) ── */}
       {hasDestination && (
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
           {auto && (
             <div className="flex items-center gap-2 mb-4">
-              <img
-                src={`https://flagcdn.com/20x15/${auto.flagCode}.png`}
-                alt={auto.countryName}
-                width={20}
-                height={15}
-                className="rounded-sm flex-shrink-0"
-              />
+              <img src={`https://flagcdn.com/20x15/${auto.flagCode}.png`} alt={auto.countryName} width={20} height={15} className="rounded-sm flex-shrink-0" />
               <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
                 Planning to Work in {auto.countryName}?
               </h2>
@@ -100,9 +59,7 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
                 </div>
                 <div>
                   <p className="text-[12px] text-slate-400 leading-none mb-0.5">Migration Guide</p>
-                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
-                    {countryLink.label}
-                  </p>
+                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">{countryLink.label}</p>
                 </div>
               </a>
             )}
@@ -117,9 +74,7 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
                 </div>
                 <div>
                   <p className="text-[12px] text-slate-400 leading-none mb-0.5">Salary Guide</p>
-                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
-                    {salaryLink.label}
-                  </p>
+                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">{salaryLink.label}</p>
                 </div>
               </a>
             )}
@@ -134,9 +89,7 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
                 </div>
                 <div>
                   <p className="text-[12px] text-slate-400 leading-none mb-0.5">Free Tool</p>
-                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">
-                    {eligLink.label}
-                  </p>
+                  <p className="text-[13px] font-semibold text-slate-700 group-hover:text-primary transition-colors">{eligLink.label}</p>
                 </div>
               </a>
             )}
@@ -153,12 +106,33 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
                 </div>
                 <div>
                   <p className="text-[12px] text-amber-600 leading-none mb-0.5">Official Source</p>
-                  <p className="text-[13px] font-semibold text-amber-800 group-hover:text-amber-900 transition-colors">
-                    {authority.name}
-                  </p>
+                  <p className="text-[13px] font-semibold text-amber-800 group-hover:text-amber-900 transition-colors">{authority.name}</p>
                 </div>
               </a>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── 2. Related exam categories (BELOW destination) ── */}
+      {hasSiblings && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen size={14} className="text-primary" />
+            <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
+              Related Nursing Exams
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {siblingCategories.map(sibling => (
+              <a
+                key={sibling.id}
+                href={`/mock-tests/${locationSlug}/${sibling.slug}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-50 hover:bg-primary/10 border border-slate-200 hover:border-primary/30 text-[13px] font-semibold text-slate-700 hover:text-primary rounded-xl transition-all"
+              >
+                {sibling.name}
+              </a>
+            ))}
           </div>
         </div>
       )}
