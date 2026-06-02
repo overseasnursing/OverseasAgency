@@ -6,28 +6,29 @@
 // ── Destination info ────────────────────────────────────────────────────────
 
 export type DestinationInfo = {
-  countrySlug:        string
-  salarySlug:         string
-  countryName:        string
-  flagCode:           string   // ISO 3166-1 alpha-2, lowercase — used for flagcdn.com
-  agencyCountryTerms: string[] // all terms that match agencies.countries[] values in DB
+  countrySlug:         string
+  salarySlug:          string
+  countryName:         string
+  flagCode:            string   // ISO 3166-1 alpha-2, lowercase — used for flagcdn.com
+  agencyCountryTerms:  string[] // all terms that match agencies.countries[] values in DB
+  agencyFilterCountry: string   // exact country name used in /agencies?country= URL param
 }
 
 // ── Canonical map keyed by country_slug (stored in mock_test_locations.country_slug) ──
 
 const COUNTRY_DESTINATION_MAP: Record<string, DestinationInfo> = {
-  'dubai':       { countrySlug: 'dubai',       salarySlug: 'dubai',       countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerms: ['Dubai', 'UAE'] },
-  'saudi':       { countrySlug: 'saudi',       salarySlug: 'saudi',       countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerms: ['Saudi Arabia', 'KSA'] },
-  'uk':          { countrySlug: 'uk',          salarySlug: 'uk',          countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerms: ['UK', 'United Kingdom'] },
-  'germany':     { countrySlug: 'germany',     salarySlug: 'germany',     countryName: 'Germany',        flagCode: 'de', agencyCountryTerms: ['Germany'] },
-  'australia':   { countrySlug: 'australia',   salarySlug: 'australia',   countryName: 'Australia',      flagCode: 'au', agencyCountryTerms: ['Australia'] },
-  'canada':      { countrySlug: 'canada',      salarySlug: 'canada',      countryName: 'Canada',         flagCode: 'ca', agencyCountryTerms: ['Canada'] },
-  'new-zealand': { countrySlug: 'new-zealand', salarySlug: 'new-zealand', countryName: 'New Zealand',    flagCode: 'nz', agencyCountryTerms: ['New Zealand'] },
-  'ireland':     { countrySlug: 'ireland',     salarySlug: 'ireland',     countryName: 'Ireland',        flagCode: 'ie', agencyCountryTerms: ['Ireland'] },
-  'qatar':       { countrySlug: 'qatar',       salarySlug: 'qatar',       countryName: 'Qatar',          flagCode: 'qa', agencyCountryTerms: ['Qatar'] },
-  'bahrain':     { countrySlug: 'bahrain',     salarySlug: 'bahrain',     countryName: 'Bahrain',        flagCode: 'bh', agencyCountryTerms: ['Bahrain'] },
-  'kuwait':      { countrySlug: 'kuwait',      salarySlug: 'kuwait',      countryName: 'Kuwait',         flagCode: 'kw', agencyCountryTerms: ['Kuwait'] },
-  'singapore':   { countrySlug: 'singapore',   salarySlug: 'singapore',   countryName: 'Singapore',      flagCode: 'sg', agencyCountryTerms: ['Singapore'] },
+  'dubai':       { countrySlug: 'dubai',       salarySlug: 'dubai',       countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerms: ['UAE', 'Dubai'],           agencyFilterCountry: 'UAE' },
+  'saudi':       { countrySlug: 'saudi',       salarySlug: 'saudi',       countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerms: ['Saudi Arabia'],            agencyFilterCountry: 'Saudi Arabia' },
+  'uk':          { countrySlug: 'uk',          salarySlug: 'uk',          countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerms: ['UK', 'United Kingdom'],    agencyFilterCountry: 'UK' },
+  'germany':     { countrySlug: 'germany',     salarySlug: 'germany',     countryName: 'Germany',        flagCode: 'de', agencyCountryTerms: ['Germany'],                 agencyFilterCountry: 'Germany' },
+  'australia':   { countrySlug: 'australia',   salarySlug: 'australia',   countryName: 'Australia',      flagCode: 'au', agencyCountryTerms: ['Australia'],               agencyFilterCountry: 'Australia' },
+  'canada':      { countrySlug: 'canada',      salarySlug: 'canada',      countryName: 'Canada',         flagCode: 'ca', agencyCountryTerms: ['Canada'],                  agencyFilterCountry: 'Canada' },
+  'new-zealand': { countrySlug: 'new-zealand', salarySlug: 'new-zealand', countryName: 'New Zealand',    flagCode: 'nz', agencyCountryTerms: ['New Zealand'],             agencyFilterCountry: 'New Zealand' },
+  'ireland':     { countrySlug: 'ireland',     salarySlug: 'ireland',     countryName: 'Ireland',        flagCode: 'ie', agencyCountryTerms: ['Ireland'],                 agencyFilterCountry: 'Ireland' },
+  'qatar':       { countrySlug: 'qatar',       salarySlug: 'qatar',       countryName: 'Qatar',          flagCode: 'qa', agencyCountryTerms: ['Qatar'],                   agencyFilterCountry: 'Qatar' },
+  'bahrain':     { countrySlug: 'bahrain',     salarySlug: 'bahrain',     countryName: 'Bahrain',        flagCode: 'bh', agencyCountryTerms: ['Bahrain'],                 agencyFilterCountry: 'Bahrain' },
+  'kuwait':      { countrySlug: 'kuwait',      salarySlug: 'kuwait',      countryName: 'Kuwait',         flagCode: 'kw', agencyCountryTerms: ['Kuwait'],                  agencyFilterCountry: 'Kuwait' },
+  'singapore':   { countrySlug: 'singapore',   salarySlug: 'singapore',   countryName: 'Singapore',      flagCode: 'sg', agencyCountryTerms: ['Singapore'],               agencyFilterCountry: 'Singapore' },
 }
 
 /** Look up by country_slug stored in DB — preferred, use this when available */

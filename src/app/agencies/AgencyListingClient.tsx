@@ -126,10 +126,13 @@ function ActiveFilterPills({
 
 interface AgencyListingClientProps {
   agencies: Agency[]
+  initialCountry?: string | null
 }
 
-export function AgencyListingClient({ agencies }: AgencyListingClientProps) {
-  const [filters, setFilters]       = useState<FilterState>(DEFAULT_FILTERS)
+export function AgencyListingClient({ agencies, initialCountry }: AgencyListingClientProps) {
+  const [filters, setFilters] = useState<FilterState>(() =>
+    initialCountry ? { ...DEFAULT_FILTERS, countries: [initialCountry] } : DEFAULT_FILTERS
+  )
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [sortOpen, setSortOpen]     = useState(false)
 

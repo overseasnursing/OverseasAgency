@@ -18,8 +18,8 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function AgenciesPage() {
-  const agencies = await getAgencies()
+export default async function AgenciesPage({ searchParams }: { searchParams: Promise<{ country?: string }> }) {
+  const [agencies, { country }] = await Promise.all([getAgencies(), searchParams])
 
   return (
     <>
@@ -37,7 +37,7 @@ export default async function AgenciesPage() {
 
       {/* Search + filter + results */}
       <div className="bg-[#F8FAFC] min-h-screen">
-        <AgencyListingClient agencies={agencies} />
+        <AgencyListingClient agencies={agencies} initialCountry={country ?? null} />
       </div>
     </>
   )

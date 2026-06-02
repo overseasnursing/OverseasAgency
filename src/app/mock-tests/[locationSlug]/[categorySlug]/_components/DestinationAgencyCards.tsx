@@ -24,30 +24,20 @@ type AgencyCard = {
 async function getTopAgencies(countryTerms: string[]): Promise<AgencyCard[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
+
+  // Use overlaps to filter directly in the DB — avoids the "top 80" limit missing Dubai agencies
   const { data } = await db
     .from('agencies')
     .select('id, name, slug, logo, featured_image, location, established, trust_level, google_rating, google_review_count, transparency_score, countries, pricing_min_lakhs, pricing_max_lakhs, average_timeline_months, placement_count')
     .eq('is_active', true)
+    .overlaps('countries', countryTerms)
     .order('transparency_score', { ascending: false })
-    .limit(80)
+    .limit(3)
 
   if (!data?.length) return []
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filtered = (data as any[])
-    .filter(a => {
-      const countries: string[] = Array.isArray(a.countries) ? a.countries : []
-      return countries.some(c =>
-        countryTerms.some(term =>
-          c.toLowerCase().includes(term.toLowerCase()) ||
-          term.toLowerCase().includes(c.toLowerCase())
-        )
-      )
-    })
-    .slice(0, 3)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return filtered.map((a: any): AgencyCard => ({
+  return (data as any[]).map((a: any): AgencyCard => ({
     id:                a.id,
     name:              a.name,
     slug:              a.slug,
@@ -130,16 +120,17 @@ function CountryChips({ countries }: { countries: string[] }) {
 }
 
 type Props = {
-  countryTerms: string[]
-  countryName:  string
-  countrySlug:  string
-  flagCode:     string
+  countryTerms:        string[]
+  countryName:         string
+  countrySlug:         string
+  flagCode:            string
+  agencyFilterCountry: string
 }
 
-export async function DestinationAgencyCards({ countryTerms, countryName, countrySlug, flagCode }: Props) {
+export async function DestinationAgencyCards({ countryTerms, countryName, countrySlug, flagCode, agencyFilterCountry }: Props) {
   const agencies = await getTopAgencies(countryTerms)
 
-  const agenciesHref = `/agencies?country=${countrySlug}`
+  const agenciesHref = `/agencies?country=${encodeURIComponent(agencyFilterCountry)}`
 
   // No agencies — show plain button only
   if (!agencies.length) {

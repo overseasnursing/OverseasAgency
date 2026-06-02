@@ -226,6 +226,7 @@ export default async function CategoryPage({ params }: PageProps) {
               countryName={dest.countryName}
               countrySlug={dest.countrySlug}
               flagCode={dest.flagCode}
+              agencyFilterCountry={dest.agencyFilterCountry}
             />
           ) : null
         })()}
