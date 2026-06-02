@@ -164,6 +164,7 @@ export async function DestinationAgencyCards({ countryTerms, countryName, countr
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`https://flagcdn.com/20x15/${flagCode}.png`} alt={`${countryName} flag`} width={20} height={15} className="rounded-sm" />
           <h2 className="text-[15px] font-bold text-slate-800">
             Top Agencies for {countryName}
