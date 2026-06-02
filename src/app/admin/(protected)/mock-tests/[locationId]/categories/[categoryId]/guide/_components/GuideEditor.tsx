@@ -18,7 +18,7 @@ const inputCls    = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-[1
 const labelCls    = 'block text-[12px] font-semibold text-slate-600 mb-1'
 const textareaCls = inputCls + ' resize-none leading-relaxed'
 
-type Tab = 'content' | 'faqs' | 'links' | 'author' | 'meta'
+type Tab = 'content' | 'faqs' | 'links' | 'destination' | 'author' | 'meta'
 
 type Props = {
   categoryId:   string
@@ -30,24 +30,26 @@ type Props = {
 }
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'content', label: 'Guide Content' },
-  { id: 'faqs',    label: 'FAQs' },
-  { id: 'links',   label: 'Related Links' },
-  { id: 'author',  label: 'Author & Reviewer' },
-  { id: 'meta',    label: 'Meta / Dates' },
+  { id: 'content',     label: 'Guide Content' },
+  { id: 'faqs',        label: 'FAQs' },
+  { id: 'links',       label: 'Related Links' },
+  { id: 'destination', label: 'Destination Cards' },
+  { id: 'author',      label: 'Author & Reviewer' },
+  { id: 'meta',        label: 'Meta / Dates' },
 ]
 
 function emptyGuide(categoryId: string): GuideInput {
   return {
-    category_id:    categoryId,
-    body:           '',
-    last_updated:   '',
-    published_date: '',
-    modified_date:  '',
-    author:   { name: '', credentials: '', linkedin: '' },
-    reviewer: { name: '', title: '', experience: '', license: '' },
-    faqs:          [],
-    related_links: [],
+    category_id:           categoryId,
+    body:                  '',
+    last_updated:          '',
+    published_date:        '',
+    modified_date:         '',
+    author:                { name: '', credentials: '', linkedin: '' },
+    reviewer:              { name: '', title: '', experience: '', license: '' },
+    faqs:                  [],
+    related_links:         [],
+    destination_overrides: {},
   }
 }
 
@@ -365,6 +367,98 @@ export function GuideEditor({ categoryId, categoryName, locationId, locationSlug
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── DESTINATION CARDS TAB ── */}
+          {tab === 'destination' && (
+            <div className="flex flex-col gap-6">
+              <div>
+                <p className={labelCls}>Destination Link Cards — Manual Override</p>
+                <p className="text-[11px] text-slate-400 mb-4">
+                  These 4 cards are auto-generated from the exam type. Leave a field blank to keep the auto value. Fill it in to override with your own label/link.
+                </p>
+              </div>
+
+              {/* Country Guide override */}
+              <div className="border border-slate-200 rounded-xl p-4">
+                <p className="text-[13px] font-bold text-slate-700 mb-3">1. Migration Guide Card</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Label (e.g. Dubai, UAE)</label>
+                    <input className={inputCls} value={form.destination_overrides?.country?.label ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, country: { label: e.target.value, href: form.destination_overrides?.country?.href ?? '' } })}
+                      placeholder="Auto-generated" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Link (e.g. /country/dubai)</label>
+                    <input className={inputCls} value={form.destination_overrides?.country?.href ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, country: { label: form.destination_overrides?.country?.label ?? '', href: e.target.value } })}
+                      placeholder="Auto-generated" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Salary Guide override */}
+              <div className="border border-slate-200 rounded-xl p-4">
+                <p className="text-[13px] font-bold text-slate-700 mb-3">2. Salary Guide Card</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Label (e.g. Nurse Salaries)</label>
+                    <input className={inputCls} value={form.destination_overrides?.salary?.label ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, salary: { label: e.target.value, href: form.destination_overrides?.salary?.href ?? '' } })}
+                      placeholder="Auto-generated" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Link (e.g. /salary/dubai)</label>
+                    <input className={inputCls} value={form.destination_overrides?.salary?.href ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, salary: { label: form.destination_overrides?.salary?.label ?? '', href: e.target.value } })}
+                      placeholder="Auto-generated" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Eligibility override */}
+              <div className="border border-slate-200 rounded-xl p-4">
+                <p className="text-[13px] font-bold text-slate-700 mb-3">3. Eligibility Card</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Label (e.g. Check Eligibility)</label>
+                    <input className={inputCls} value={form.destination_overrides?.eligibility?.label ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, eligibility: { label: e.target.value, href: form.destination_overrides?.eligibility?.href ?? '/eligibility' } })}
+                      placeholder="Check Eligibility" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Link</label>
+                    <input className={inputCls} value={form.destination_overrides?.eligibility?.href ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, eligibility: { label: form.destination_overrides?.eligibility?.label ?? 'Check Eligibility', href: e.target.value } })}
+                      placeholder="/eligibility" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Official authority override */}
+              <div className="border border-slate-200 rounded-xl p-4">
+                <p className="text-[13px] font-bold text-slate-700 mb-3">4. Official Source Card (amber card)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Portal Name (e.g. DHA Sheryan Portal)</label>
+                    <input className={inputCls} value={form.destination_overrides?.authority?.name ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, authority: { name: e.target.value, url: form.destination_overrides?.authority?.url ?? '' } })}
+                      placeholder="Auto-generated from exam type" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Full URL (https://...)</label>
+                    <input className={inputCls} value={form.destination_overrides?.authority?.url ?? ''}
+                      onChange={e => setField('destination_overrides', { ...form.destination_overrides, authority: { name: form.destination_overrides?.authority?.name ?? '', url: e.target.value } })}
+                      placeholder="Auto-generated from exam type" />
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-400">
+                Tip: Only fill in the fields you want to change. Empty fields fall back to the auto-generated values based on exam type and location.
+              </p>
             </div>
           )}
 

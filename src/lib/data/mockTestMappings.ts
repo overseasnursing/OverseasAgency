@@ -6,44 +6,45 @@
 // ── Location → Country / Salary destination ────────────────────────────────
 
 type DestinationInfo = {
-  countrySlug: string
-  salarySlug:  string
-  countryName: string
-  flag:        string
+  countrySlug:      string
+  salarySlug:       string
+  countryName:      string
+  flagCode:         string   // ISO 3166-1 alpha-2, lowercase — used for flagcdn.com
+  agencyCountryTerm: string  // matches agencies.countries[] values in DB
 }
 
 const LOCATION_MAP: Record<string, DestinationInfo> = {
   // Gulf / UAE
-  'gulf-nursing-exams': { countrySlug: 'dubai',     salarySlug: 'dubai',     countryName: 'Dubai, UAE',      flag: '🇦🇪' },
-  'gulf':               { countrySlug: 'dubai',     salarySlug: 'dubai',     countryName: 'Dubai, UAE',      flag: '🇦🇪' },
-  'dubai':              { countrySlug: 'dubai',     salarySlug: 'dubai',     countryName: 'Dubai, UAE',      flag: '🇦🇪' },
-  'middle-east':        { countrySlug: 'dubai',     salarySlug: 'dubai',     countryName: 'Dubai, UAE',      flag: '🇦🇪' },
-  'uae':                { countrySlug: 'dubai',     salarySlug: 'dubai',     countryName: 'UAE',             flag: '🇦🇪' },
-  'abu-dhabi':          { countrySlug: 'dubai',     salarySlug: 'dubai',     countryName: 'UAE',             flag: '🇦🇪' },
+  'gulf-nursing-exams': { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
+  'gulf':               { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
+  'dubai':              { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
+  'middle-east':        { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
+  'uae':                { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'UAE',            flagCode: 'ae', agencyCountryTerm: 'Dubai' },
+  'abu-dhabi':          { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'UAE',            flagCode: 'ae', agencyCountryTerm: 'Dubai' },
 
   // Saudi Arabia
-  'saudi-arabia':       { countrySlug: 'saudi',     salarySlug: 'saudi',     countryName: 'Saudi Arabia',    flag: '🇸🇦' },
-  'saudi':              { countrySlug: 'saudi',     salarySlug: 'saudi',     countryName: 'Saudi Arabia',    flag: '🇸🇦' },
-  'ksa':                { countrySlug: 'saudi',     salarySlug: 'saudi',     countryName: 'Saudi Arabia',    flag: '🇸🇦' },
+  'saudi-arabia':       { countrySlug: 'saudi',      salarySlug: 'saudi',      countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerm: 'Saudi Arabia' },
+  'saudi':              { countrySlug: 'saudi',      salarySlug: 'saudi',      countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerm: 'Saudi Arabia' },
+  'ksa':                { countrySlug: 'saudi',      salarySlug: 'saudi',      countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerm: 'Saudi Arabia' },
 
   // United Kingdom
-  'united-kingdom':     { countrySlug: 'uk',        salarySlug: 'uk',        countryName: 'United Kingdom',  flag: '🇬🇧' },
-  'uk':                 { countrySlug: 'uk',        salarySlug: 'uk',        countryName: 'United Kingdom',  flag: '🇬🇧' },
+  'united-kingdom':     { countrySlug: 'uk',         salarySlug: 'uk',         countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerm: 'UK' },
+  'uk':                 { countrySlug: 'uk',         salarySlug: 'uk',         countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerm: 'UK' },
 
   // Germany
-  'germany':            { countrySlug: 'germany',   salarySlug: 'germany',   countryName: 'Germany',         flag: '🇩🇪' },
+  'germany':            { countrySlug: 'germany',    salarySlug: 'germany',    countryName: 'Germany',        flagCode: 'de', agencyCountryTerm: 'Germany' },
 
   // Australia
-  'australia':          { countrySlug: 'australia', salarySlug: 'australia', countryName: 'Australia',       flag: '🇦🇺' },
+  'australia':          { countrySlug: 'australia',  salarySlug: 'australia',  countryName: 'Australia',      flagCode: 'au', agencyCountryTerm: 'Australia' },
 
   // Canada
-  'canada':             { countrySlug: 'canada',    salarySlug: 'canada',    countryName: 'Canada',          flag: '🇨🇦' },
+  'canada':             { countrySlug: 'canada',     salarySlug: 'canada',     countryName: 'Canada',         flagCode: 'ca', agencyCountryTerm: 'Canada' },
 
   // New Zealand
-  'new-zealand':        { countrySlug: 'new-zealand', salarySlug: 'new-zealand', countryName: 'New Zealand', flag: '🇳🇿' },
+  'new-zealand':        { countrySlug: 'new-zealand', salarySlug: 'new-zealand', countryName: 'New Zealand',  flagCode: 'nz', agencyCountryTerm: 'New Zealand' },
 
   // Ireland
-  'ireland':            { countrySlug: 'ireland',   salarySlug: 'ireland',   countryName: 'Ireland',         flag: '🇮🇪' },
+  'ireland':            { countrySlug: 'ireland',    salarySlug: 'ireland',    countryName: 'Ireland',        flagCode: 'ie', agencyCountryTerm: 'Ireland' },
 }
 
 export function getLocationLinks(locationSlug: string): DestinationInfo | null {
