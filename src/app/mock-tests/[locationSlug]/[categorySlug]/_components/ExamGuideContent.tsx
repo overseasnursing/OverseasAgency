@@ -4,6 +4,50 @@ import type { MockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamMarkdown } from './ExamMarkdown'
 import { FaqAccordion } from './FaqAccordion'
 
+function buildGuideTitle(categoryName: string, lastUpdated?: string): string {
+  const yearMatch = categoryName.match(/\b(19|20)\d{2}\b/) ?? lastUpdated?.match(/\b(19|20)\d{2}\b/)
+  const year = yearMatch?.[0] ?? String(new Date().getFullYear())
+
+  const base = categoryName
+    .replace(/\s*-\s*practice.*$/i, '')
+    .replace(/\b(19|20)\d{2}\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const nursingMockPattern = /^(.*?)\s+nursing\s+mock\s+test\s+(.*)$/i
+  const parts = base.match(nursingMockPattern)
+
+  let examName = base
+  if (parts) {
+    examName = `${parts[1]} ${parts[2]} Nursing Exam`.replace(/\s+/g, ' ').trim()
+  } else {
+    examName = base.replace(/\bmock\s*test\b/ig, 'Exam').replace(/\s+/g, ' ').trim()
+    if (!/\bexam\b/i.test(examName)) {
+      examName = `${examName} Exam`
+    }
+  }
+
+  return `Comprehensive ${examName} Preparation Guide (${year})`
+}
+
+function buildFaqExamContext(categoryName: string): string {
+  const authorityMatch = categoryName.match(/\b(DHA|DOH|HAAD|MOH|NCLEX|IELTS|OET|AHPRA)\b/i)
+  if (authorityMatch) {
+    return `${authorityMatch[1].toUpperCase()} Nursing License & Exam`
+  }
+
+  const base = categoryName
+    .replace(/\s*-\s*practice.*$/i, '')
+    .replace(/\b(19|20)\d{2}\b/g, '')
+    .replace(/\bmock\s*test\b/ig, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!base) return 'Nursing License & Exam'
+  if (/\bnursing\b/i.test(base)) return `${base} License & Exam`
+  return `${base} Nursing License & Exam`
+}
+
 export function ExamGuideContent({
   content,
   categoryName,
@@ -12,6 +56,8 @@ export function ExamGuideContent({
   categoryName: string
 }) {
   const { meta, body } = content
+  const guideTitle = buildGuideTitle(categoryName, meta.lastUpdated)
+  const faqExamContext = buildFaqExamContext(categoryName)
 
   return (
     <section className="mt-12 pt-10 border-t border-slate-200" aria-label="Exam guide">
@@ -22,7 +68,7 @@ export function ExamGuideContent({
           <BookOpen size={11} /> Complete Guide
         </span>
         <h2 className="text-[22px] font-bold text-slate-900 leading-tight">
-          Everything You Need to Know About {categoryName}
+          {guideTitle}
         </h2>
 
         {/* Author + last updated bar */}
@@ -74,7 +120,7 @@ export function ExamGuideContent({
               Frequently Asked Questions
             </h2>
             <p className="text-[13.5px] text-slate-400 mt-1">
-              {meta.faqs.length} common questions about {categoryName}
+              {meta.faqs.length} Frequently Asked Questions About the {faqExamContext}
             </p>
           </div>
           <FaqAccordion faqs={meta.faqs} />
