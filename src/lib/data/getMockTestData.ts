@@ -114,9 +114,18 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data: loc } = await db
-    .from('mock_test_locations').select('id, name, slug, country_slug')
+    .from('mock_test_locations').select('id, name, slug')
     .eq('slug', locationSlug).eq('is_active', true).single()
   if (!loc) return null
+
+  // Fetch country_slug separately — column may not exist yet on older deployments
+  let countrySlug: string | null = null
+  try {
+    const { data: extra } = await db
+      .from('mock_test_locations').select('country_slug')
+      .eq('id', loc.id).single()
+    countrySlug = extra?.country_slug ?? null
+  } catch { /* column not yet migrated */ }
 
   const { data: cat } = await db
     .from('mock_test_categories').select('id, name, slug, description, seo_title, seo_description')
@@ -138,7 +147,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
   ])
 
   return {
-    location: { id: loc.id, name: loc.name, slug: loc.slug, country_slug: loc.country_slug ?? null },
+    location: { id: loc.id, name: loc.name, slug: loc.slug, country_slug: countrySlug },
     category: {
       id: cat.id, name: cat.name, slug: cat.slug,
       description: cat.description ?? '',
