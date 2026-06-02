@@ -21,7 +21,7 @@ type AgencyCard = {
   placements:         number | null
 }
 
-async function getTopAgencies(countryTerm: string): Promise<AgencyCard[]> {
+async function getTopAgencies(countryTerms: string[]): Promise<AgencyCard[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data } = await db
@@ -38,8 +38,10 @@ async function getTopAgencies(countryTerm: string): Promise<AgencyCard[]> {
     .filter(a => {
       const countries: string[] = Array.isArray(a.countries) ? a.countries : []
       return countries.some(c =>
-        c.toLowerCase().includes(countryTerm.toLowerCase()) ||
-        countryTerm.toLowerCase().includes(c.toLowerCase())
+        countryTerms.some(term =>
+          c.toLowerCase().includes(term.toLowerCase()) ||
+          term.toLowerCase().includes(c.toLowerCase())
+        )
       )
     })
     .slice(0, 3)
@@ -128,14 +130,14 @@ function CountryChips({ countries }: { countries: string[] }) {
 }
 
 type Props = {
-  countryTerm: string
-  countryName: string
-  countrySlug: string
-  flagCode:    string
+  countryTerms: string[]
+  countryName:  string
+  countrySlug:  string
+  flagCode:     string
 }
 
-export async function DestinationAgencyCards({ countryTerm, countryName, countrySlug, flagCode }: Props) {
-  const agencies = await getTopAgencies(countryTerm)
+export async function DestinationAgencyCards({ countryTerms, countryName, countrySlug, flagCode }: Props) {
+  const agencies = await getTopAgencies(countryTerms)
 
   const agenciesHref = `/agencies?country=${countrySlug}`
 

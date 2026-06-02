@@ -3,64 +3,94 @@
  * No manual input needed — every new category gets these automatically.
  */
 
-// ── Location → Country / Salary destination ────────────────────────────────
+// ── Destination info ────────────────────────────────────────────────────────
 
-type DestinationInfo = {
-  countrySlug:      string
-  salarySlug:       string
-  countryName:      string
-  flagCode:         string   // ISO 3166-1 alpha-2, lowercase — used for flagcdn.com
-  agencyCountryTerm: string  // matches agencies.countries[] values in DB
+export type DestinationInfo = {
+  countrySlug:        string
+  salarySlug:         string
+  countryName:        string
+  flagCode:           string   // ISO 3166-1 alpha-2, lowercase — used for flagcdn.com
+  agencyCountryTerms: string[] // all terms that match agencies.countries[] values in DB
 }
+
+// ── Canonical map keyed by country_slug (stored in mock_test_locations.country_slug) ──
+
+const COUNTRY_DESTINATION_MAP: Record<string, DestinationInfo> = {
+  'dubai':       { countrySlug: 'dubai',       salarySlug: 'dubai',       countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerms: ['Dubai', 'UAE'] },
+  'saudi':       { countrySlug: 'saudi',       salarySlug: 'saudi',       countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerms: ['Saudi Arabia', 'KSA'] },
+  'uk':          { countrySlug: 'uk',          salarySlug: 'uk',          countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerms: ['UK', 'United Kingdom'] },
+  'germany':     { countrySlug: 'germany',     salarySlug: 'germany',     countryName: 'Germany',        flagCode: 'de', agencyCountryTerms: ['Germany'] },
+  'australia':   { countrySlug: 'australia',   salarySlug: 'australia',   countryName: 'Australia',      flagCode: 'au', agencyCountryTerms: ['Australia'] },
+  'canada':      { countrySlug: 'canada',      salarySlug: 'canada',      countryName: 'Canada',         flagCode: 'ca', agencyCountryTerms: ['Canada'] },
+  'new-zealand': { countrySlug: 'new-zealand', salarySlug: 'new-zealand', countryName: 'New Zealand',    flagCode: 'nz', agencyCountryTerms: ['New Zealand'] },
+  'ireland':     { countrySlug: 'ireland',     salarySlug: 'ireland',     countryName: 'Ireland',        flagCode: 'ie', agencyCountryTerms: ['Ireland'] },
+  'qatar':       { countrySlug: 'qatar',       salarySlug: 'qatar',       countryName: 'Qatar',          flagCode: 'qa', agencyCountryTerms: ['Qatar'] },
+  'bahrain':     { countrySlug: 'bahrain',     salarySlug: 'bahrain',     countryName: 'Bahrain',        flagCode: 'bh', agencyCountryTerms: ['Bahrain'] },
+  'kuwait':      { countrySlug: 'kuwait',      salarySlug: 'kuwait',      countryName: 'Kuwait',         flagCode: 'kw', agencyCountryTerms: ['Kuwait'] },
+  'singapore':   { countrySlug: 'singapore',   salarySlug: 'singapore',   countryName: 'Singapore',      flagCode: 'sg', agencyCountryTerms: ['Singapore'] },
+}
+
+/** Look up by country_slug stored in DB — preferred, use this when available */
+export function getDestinationByCountrySlug(countrySlug: string): DestinationInfo | null {
+  return COUNTRY_DESTINATION_MAP[countrySlug] ?? null
+}
+
+/** Countries available for selection in the admin location modal */
+export const DESTINATION_COUNTRY_OPTIONS: { slug: string; name: string; flagCode: string }[] =
+  Object.entries(COUNTRY_DESTINATION_MAP).map(([slug, info]) => ({
+    slug,
+    name: info.countryName,
+    flagCode: info.flagCode,
+  }))
+
+// ── Legacy slug-based lookup (fallback for locations without country_slug) ──
 
 const LOCATION_MAP: Record<string, DestinationInfo> = {
   // Gulf / UAE
-  'gulf-nursing-exams': { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
-  'gulf':               { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
-  'dubai':              { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
-  'middle-east':        { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'Dubai, UAE',     flagCode: 'ae', agencyCountryTerm: 'Dubai' },
-  'uae':                { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'UAE',            flagCode: 'ae', agencyCountryTerm: 'Dubai' },
-  'abu-dhabi':          { countrySlug: 'dubai',      salarySlug: 'dubai',      countryName: 'UAE',            flagCode: 'ae', agencyCountryTerm: 'Dubai' },
+  'gulf-nursing-exams': COUNTRY_DESTINATION_MAP['dubai'],
+  'gulf':               COUNTRY_DESTINATION_MAP['dubai'],
+  'dubai':              COUNTRY_DESTINATION_MAP['dubai'],
+  'middle-east':        COUNTRY_DESTINATION_MAP['dubai'],
+  'uae':                { ...COUNTRY_DESTINATION_MAP['dubai'], countryName: 'UAE' },
+  'abu-dhabi':          { ...COUNTRY_DESTINATION_MAP['dubai'], countryName: 'UAE' },
 
   // Saudi Arabia
-  'saudi-arabia':       { countrySlug: 'saudi',      salarySlug: 'saudi',      countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerm: 'Saudi Arabia' },
-  'saudi':              { countrySlug: 'saudi',      salarySlug: 'saudi',      countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerm: 'Saudi Arabia' },
-  'ksa':                { countrySlug: 'saudi',      salarySlug: 'saudi',      countryName: 'Saudi Arabia',   flagCode: 'sa', agencyCountryTerm: 'Saudi Arabia' },
+  'saudi-arabia':       COUNTRY_DESTINATION_MAP['saudi'],
+  'saudi':              COUNTRY_DESTINATION_MAP['saudi'],
+  'ksa':                COUNTRY_DESTINATION_MAP['saudi'],
 
   // United Kingdom
-  'united-kingdom':     { countrySlug: 'uk',         salarySlug: 'uk',         countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerm: 'UK' },
-  'uk':                 { countrySlug: 'uk',         salarySlug: 'uk',         countryName: 'United Kingdom', flagCode: 'gb', agencyCountryTerm: 'UK' },
+  'united-kingdom':     COUNTRY_DESTINATION_MAP['uk'],
+  'uk':                 COUNTRY_DESTINATION_MAP['uk'],
 
   // Germany
-  'germany':            { countrySlug: 'germany',    salarySlug: 'germany',    countryName: 'Germany',        flagCode: 'de', agencyCountryTerm: 'Germany' },
+  'germany':            COUNTRY_DESTINATION_MAP['germany'],
 
   // Australia
-  'australia':          { countrySlug: 'australia',  salarySlug: 'australia',  countryName: 'Australia',      flagCode: 'au', agencyCountryTerm: 'Australia' },
+  'australia':          COUNTRY_DESTINATION_MAP['australia'],
 
   // Canada
-  'canada':             { countrySlug: 'canada',     salarySlug: 'canada',     countryName: 'Canada',         flagCode: 'ca', agencyCountryTerm: 'Canada' },
+  'canada':             COUNTRY_DESTINATION_MAP['canada'],
 
   // New Zealand
-  'new-zealand':        { countrySlug: 'new-zealand', salarySlug: 'new-zealand', countryName: 'New Zealand',  flagCode: 'nz', agencyCountryTerm: 'New Zealand' },
+  'new-zealand':        COUNTRY_DESTINATION_MAP['new-zealand'],
 
   // Ireland
-  'ireland':            { countrySlug: 'ireland',    salarySlug: 'ireland',    countryName: 'Ireland',        flagCode: 'ie', agencyCountryTerm: 'Ireland' },
+  'ireland':            COUNTRY_DESTINATION_MAP['ireland'],
 }
 
 export function getLocationLinks(locationSlug: string): DestinationInfo | null {
-  // Exact match first
   if (LOCATION_MAP[locationSlug]) return LOCATION_MAP[locationSlug]
 
-  // Keyword fallback — handles slugs like "gulf-2026-exams" etc.
   const s = locationSlug.toLowerCase()
   if (/gulf|dubai|uae|emirate/.test(s))  return LOCATION_MAP['gulf-nursing-exams']
   if (/saudi|ksa/.test(s))               return LOCATION_MAP['saudi-arabia']
   if (/uk|britain|kingdom/.test(s))      return LOCATION_MAP['united-kingdom']
   if (/germany|german/.test(s))          return LOCATION_MAP['germany']
-  if (/australia/.test(s))              return LOCATION_MAP['australia']
-  if (/canada/.test(s))                 return LOCATION_MAP['canada']
-  if (/new.zealand/.test(s))            return LOCATION_MAP['new-zealand']
-  if (/ireland/.test(s))               return LOCATION_MAP['ireland']
+  if (/australia/.test(s))               return LOCATION_MAP['australia']
+  if (/canada/.test(s))                  return LOCATION_MAP['canada']
+  if (/new.zealand/.test(s))             return LOCATION_MAP['new-zealand']
+  if (/ireland/.test(s))                 return LOCATION_MAP['ireland']
 
   return null
 }
@@ -82,7 +112,6 @@ export function getExamAuthority(categorySlug: string): AuthorityInfo | null {
   if (/\bdoh\b/.test(s) || /\bhaad\b/.test(s))
     return { name: 'Dept. of Health — Abu Dhabi', url: 'https://doh.gov.ae', label: 'DOH Official Portal' }
 
-  // MOH UAE first (more specific), then MOH Saudi
   if (/\bmoh\b/.test(s) && /uae|emirate|dubai/.test(s))
     return { name: 'Ministry of Health UAE', url: 'https://mohap.gov.ae', label: 'MOHAP Official Portal' }
 

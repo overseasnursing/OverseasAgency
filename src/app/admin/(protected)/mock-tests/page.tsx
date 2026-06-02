@@ -11,19 +11,20 @@ export default async function MockTestLocationsPage() {
   const { data: locations, error } = await db
     .from('mock_test_locations')
     .select(`
-      id, name, slug, description, is_active, created_at,
+      id, name, slug, description, is_active, created_at, country_slug,
       mock_test_categories(count)
     `)
     .order('created_at', { ascending: false })
 
-  type LocationRow = { id: string; name: string; slug: string; description: string | null; is_active: boolean; created_at: string; mock_test_categories: { count: number }[] }
+  type LocationRow = { id: string; name: string; slug: string; description: string | null; is_active: boolean; created_at: string; country_slug: string | null; mock_test_categories: { count: number }[] }
   const rows = (locations ?? [] as LocationRow[]).map((l: LocationRow) => ({
-    id:         l.id,
-    name:       l.name,
-    slug:       l.slug,
-    description: l.description ?? '',
-    is_active:  l.is_active,
-    created_at: l.created_at,
+    id:           l.id,
+    name:         l.name,
+    slug:         l.slug,
+    description:  l.description ?? '',
+    is_active:    l.is_active,
+    created_at:   l.created_at,
+    country_slug: l.country_slug ?? null,
     categoryCount: l.mock_test_categories?.[0]?.count ?? 0,
   }))
 

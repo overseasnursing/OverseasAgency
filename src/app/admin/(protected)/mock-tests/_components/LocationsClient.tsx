@@ -4,6 +4,7 @@ import React, { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2, FolderOpen, Search, X, ChevronRight, AlertTriangle, ToggleLeft, ToggleRight } from 'lucide-react'
 import { saveLocation, deleteLocation, toggleLocationStatus, type LocationInput } from '@/app/actions/admin-mock-tests'
+import { DESTINATION_COUNTRY_OPTIONS } from '@/lib/data/mockTestMappings'
 
 type Location = {
   id: string
@@ -13,6 +14,7 @@ type Location = {
   is_active: boolean
   created_at: string
   categoryCount: number
+  country_slug: string | null
 }
 
 const inputCls  = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all'
@@ -23,7 +25,7 @@ function toSlug(s: string) {
 }
 
 function emptyForm(): Omit<LocationInput, 'id'> {
-  return { name: '', slug: '', description: '', is_active: true }
+  return { name: '', slug: '', description: '', is_active: true, country_slug: null }
 }
 
 /* ── Add / Edit Modal ──────────────────────────────────────────────── */
@@ -37,7 +39,7 @@ function LocationModal({
   const router     = useRouter()
   const [pending, startTransition] = useTransition()
   const [form, setForm] = useState<Omit<LocationInput, 'id'>>(
-    initial ? { name: initial.name, slug: initial.slug, description: initial.description, is_active: initial.is_active }
+    initial ? { name: initial.name, slug: initial.slug, description: initial.description, is_active: initial.is_active, country_slug: initial.country_slug ?? null }
             : emptyForm()
   )
   const [error, setError] = useState<string | null>(null)
@@ -87,6 +89,20 @@ function LocationModal({
           <div>
             <label className={labelCls}>Description</label>
             <textarea className={inputCls + ' resize-none'} rows={3} value={form.description} onChange={e => set('description', e.target.value)} placeholder="Brief description of this location group..." />
+          </div>
+          <div>
+            <label className={labelCls}>Destination Country</label>
+            <select
+              className={inputCls}
+              value={form.country_slug ?? ''}
+              onChange={e => set('country_slug', e.target.value || null)}
+            >
+              <option value="">— Select country —</option>
+              {DESTINATION_COUNTRY_OPTIONS.map(c => (
+                <option key={c.slug} value={c.slug}>{c.name}</option>
+              ))}
+            </select>
+            <p className="text-[11px] text-slate-400 mt-1">Used for agency cards, salary links, and internal linking on mock test pages.</p>
           </div>
           <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
             <span className="text-[13px] font-medium text-slate-700">Active</span>
