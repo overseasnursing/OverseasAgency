@@ -10,26 +10,42 @@ export default function LoginPage() {
   const [loading,  setLoading]  = useState(false)
   const [error,    setError]    = useState('')
 
+  function getSafeNextPath() {
+    const rawNext = new URLSearchParams(window.location.search).get('next')
+    return rawNext && rawNext.startsWith('/') ? rawNext : '/dashboard'
+  }
+
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const { error } = await createClient().auth.signInWithPassword({ email, password })
+    try {
+      const supabase = createClient()
 
-    if (error) {
-      setError(error.message)
+      // Clear any stale local session state before attempting a fresh password login.
+      await supabase.auth.signOut({ scope: 'local' })
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      window.location.href = getSafeNextPath()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to sign in right now. Please try again.')
+    } finally {
       setLoading(false)
-    } else {
-      const params = new URLSearchParams(window.location.search)
-      window.location.href = params.get('next') ?? '/'
     }
   }
 
   async function handleGoogle() {
+    const nextPath = getSafeNextPath()
     await createClient().auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}` },
     })
   }
 

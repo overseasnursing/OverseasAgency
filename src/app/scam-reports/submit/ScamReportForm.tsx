@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertTriangle, AlertCircle } from 'lucide-react'
 import { submitScamReport } from '@/app/actions/submitScamReport'
+import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
 
 type Step = 'agency' | 'incident' | 'details' | 'submit'
 
@@ -22,7 +23,7 @@ const CATEGORIES = [
   { value: 'other', label: 'Other', description: 'Another type of fraud' },
 ]
 
-const COUNTRIES = ['Germany', 'UK', 'Canada', 'Australia', 'USA', 'Dubai', 'Other']
+const COUNTRIES = COUNTRY_FORM_OPTIONS
 
 const initialForm = {
   agencyName: '',

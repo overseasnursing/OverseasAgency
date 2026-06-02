@@ -27,14 +27,14 @@ async function getTopAgencies(countryTerms: string[]): Promise<AgencyCard[]> {
 
   // Fetch top 200 by transparency score, then filter JS-side.
   // Avoids DB-level array operator issues (text[] vs jsonb) and the old 80-limit ceiling.
-  const { data, error } = await db
+  const { data } = await db
     .from('agencies')
-    .select('id, name, slug, logo, featured_image, location, established, trust_level, google_rating, google_review_count, transparency_score, countries, pricing_min_lakhs, pricing_max_lakhs, average_timeline_months, placement_count')
+    .select('*')
     .eq('is_active', true)
     .order('transparency_score', { ascending: false })
     .limit(200)
 
-  if (error || !data?.length) return []
+  if (!data?.length) return []
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const matched = (data as any[])

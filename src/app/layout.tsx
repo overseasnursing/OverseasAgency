@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
         <link rel="preconnect" href="https://cdn.supabase.co" crossOrigin="anonymous" />
       </head>
-      <body className="font-sans bg-[#F8FAFC] text-slate-900 antialiased">
+      <body suppressHydrationWarning className="font-sans bg-[#F8FAFC] text-slate-900 antialiased">
 
         {/* Skip to content — keyboard / screen reader */}
         <a
