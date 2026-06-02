@@ -51,25 +51,39 @@ export type MockTestInput = {
 export async function saveLocation(data: LocationInput): Promise<{ error: string | null; id?: string }> {
   await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db  = createAdminClient() as any
+  const db = createAdminClient() as any
+
+  // Core row — never includes country_slug to avoid errors if column not yet migrated
   const row = {
-    name:         data.name.trim(),
-    slug:         toSlug(data.slug || data.name),
-    description:  data.description || null,
-    is_active:    data.is_active,
-    country_slug: data.country_slug || null,
-    updated_at:   now(),
+    name:        data.name.trim(),
+    slug:        toSlug(data.slug || data.name),
+    description: data.description || null,
+    is_active:   data.is_active,
+    updated_at:  now(),
   }
+
+  let savedId: string
   if (data.id) {
     const { error } = await db.from('mock_test_locations').update(row).eq('id', data.id)
     if (error) return { error: error.message }
-    revalidatePath('/admin/mock-tests')
-    return { error: null, id: data.id }
+    savedId = data.id
+  } else {
+    const { data: r, error } = await db.from('mock_test_locations').insert(row).select('id').single()
+    if (error) return { error: error.message }
+    savedId = r.id
   }
-  const { data: r, error } = await db.from('mock_test_locations').insert(row).select('id').single()
-  if (error) return { error: error.message }
+
+  // Save country_slug separately — column added via migration, may not exist yet
+  if (data.country_slug !== undefined) {
+    try {
+      await db.from('mock_test_locations')
+        .update({ country_slug: data.country_slug || null })
+        .eq('id', savedId)
+    } catch { /* column not yet migrated — silently skip */ }
+  }
+
   revalidatePath('/admin/mock-tests')
-  return { error: null, id: r.id }
+  return { error: null, id: savedId }
 }
 
 export async function deleteLocation(id: string): Promise<{ error: string | null }> {
