@@ -63,7 +63,6 @@ export async function saveGuideContent(
           reviewer:              input.reviewer,
           faqs:                  input.faqs,
           related_links:         input.related_links,
-          destination_overrides: input.destination_overrides,
           updated_at:            new Date().toISOString(),
         },
         { onConflict: 'category_id' },
@@ -89,7 +88,7 @@ export async function loadGuideContent(
       .from('mock_test_category_guides')
       .select('*')
       .eq('category_id', categoryId)
-      .single()
+      .maybeSingle()
 
     if (error || !data) return null
     return {

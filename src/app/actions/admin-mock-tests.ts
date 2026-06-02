@@ -18,6 +18,7 @@ export type LocationInput = {
   slug: string
   description: string
   is_active: boolean
+  country_slug?: string | null
 }
 
 export type CategoryInput = {
@@ -52,11 +53,12 @@ export async function saveLocation(data: LocationInput): Promise<{ error: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db  = createAdminClient() as any
   const row = {
-    name:        data.name.trim(),
-    slug:        toSlug(data.slug || data.name),
-    description: data.description || null,
-    is_active:   data.is_active,
-    updated_at:  now(),
+    name:         data.name.trim(),
+    slug:         toSlug(data.slug || data.name),
+    description:  data.description || null,
+    is_active:    data.is_active,
+    country_slug: data.country_slug || null,
+    updated_at:   now(),
   }
   if (data.id) {
     const { error } = await db.from('mock_test_locations').update(row).eq('id', data.id)

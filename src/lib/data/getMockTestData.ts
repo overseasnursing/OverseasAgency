@@ -106,7 +106,7 @@ export async function getMockTestLocationWithCategories(locationSlug: string): P
 export type SiblingCategory = { id: string; name: string; slug: string }
 
 export async function getMockTestCategoryData(locationSlug: string, categorySlug: string): Promise<{
-  location: { id: string; name: string; slug: string }
+  location: { id: string; name: string; slug: string; country_slug: string | null }
   category: { id: string; name: string; slug: string; description: string; seo_title: string; seo_description: string }
   tests: PublicTest[]
   siblingCategories: SiblingCategory[]
@@ -114,7 +114,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data: loc } = await db
-    .from('mock_test_locations').select('id, name, slug')
+    .from('mock_test_locations').select('id, name, slug, country_slug')
     .eq('slug', locationSlug).eq('is_active', true).single()
   if (!loc) return null
 
@@ -138,7 +138,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
   ])
 
   return {
-    location: { id: loc.id, name: loc.name, slug: loc.slug },
+    location: { id: loc.id, name: loc.name, slug: loc.slug, country_slug: loc.country_slug ?? null },
     category: {
       id: cat.id, name: cat.name, slug: cat.slug,
       description: cat.description ?? '',

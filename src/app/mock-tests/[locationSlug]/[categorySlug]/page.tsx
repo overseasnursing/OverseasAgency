@@ -23,7 +23,7 @@ import { getMockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamGuideContent } from './_components/ExamGuideContent'
 import { AutoInternalLinks } from './_components/AutoInternalLinks'
 import { DestinationAgencyCards } from './_components/DestinationAgencyCards'
-import { getLocationLinks } from '@/lib/data/mockTestMappings'
+import { getLocationLinks, getDestinationByCountrySlug } from '@/lib/data/mockTestMappings'
 
 export const revalidate = 3600
 
@@ -207,6 +207,7 @@ export default async function CategoryPage({ params }: PageProps) {
           categorySlug={categorySlug}
           siblingCategories={siblingCategories}
           destOverrides={content?.meta.destinationOverrides ?? null}
+          destCountrySlug={location.country_slug ?? null}
         />
 
         {/* SEO guide content — only renders when guide content has been added */}
@@ -216,10 +217,12 @@ export default async function CategoryPage({ params }: PageProps) {
 
         {/* Top agencies for the destination country — shown at bottom of page */}
         {(() => {
-          const dest = getLocationLinks(locationSlug)
+          const dest = location.country_slug
+            ? getDestinationByCountrySlug(location.country_slug)
+            : getLocationLinks(locationSlug)
           return dest ? (
             <DestinationAgencyCards
-              countryTerm={dest.agencyCountryTerm}
+              countryTerms={dest.agencyCountryTerms}
               countryName={dest.countryName}
               countrySlug={dest.countrySlug}
               flagCode={dest.flagCode}

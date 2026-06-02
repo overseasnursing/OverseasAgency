@@ -1,7 +1,7 @@
 import React from 'react'
 import { ExternalLink, MapPin, DollarSign, CheckSquare, BookOpen } from 'lucide-react'
 import type { SiblingCategory } from '@/lib/data/getMockTestData'
-import { getLocationLinks, getExamAuthority } from '@/lib/data/mockTestMappings'
+import { getLocationLinks, getDestinationByCountrySlug, getExamAuthority } from '@/lib/data/mockTestMappings'
 
 export type DestinationOverrides = {
   country?:     { label: string; href: string }
@@ -15,10 +15,13 @@ type Props = {
   categorySlug:      string
   siblingCategories: SiblingCategory[]
   destOverrides?:    DestinationOverrides | null
+  destCountrySlug?:  string | null
 }
 
-export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategories, destOverrides }: Props) {
-  const auto     = getLocationLinks(locationSlug)
+export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategories, destOverrides, destCountrySlug }: Props) {
+  const auto = destCountrySlug
+    ? getDestinationByCountrySlug(destCountrySlug)
+    : getLocationLinks(locationSlug)
   const autoAuth = getExamAuthority(categorySlug)
 
   // Merge: manual overrides win over auto-generated
