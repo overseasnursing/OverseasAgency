@@ -21,6 +21,7 @@ import {
 } from '@/lib/seo/schemas'
 import { getMockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamGuideContent } from './_components/ExamGuideContent'
+import { AutoInternalLinks } from './_components/AutoInternalLinks'
 
 export const revalidate = 3600
 
@@ -51,7 +52,7 @@ export default async function CategoryPage({ params }: PageProps) {
   const { locationSlug, categorySlug } = await params
   const data = await getMockTestCategoryData(locationSlug, categorySlug)
   if (!data) notFound()
-  const { location, category, tests } = data
+  const { location, category, tests, siblingCategories } = data
 
   const avgDuration = tests.length
     ? Math.round(tests.reduce((s, t) => s + t.duration_minutes, 0) / tests.length)
@@ -198,7 +199,14 @@ export default async function CategoryPage({ params }: PageProps) {
           categorySlug={categorySlug}
         />
 
-        {/* SEO guide content — only renders when a .md file exists for this category */}
+        {/* Auto-generated internal links — zero manual work, driven by DB + mappings */}
+        <AutoInternalLinks
+          locationSlug={locationSlug}
+          categorySlug={categorySlug}
+          siblingCategories={siblingCategories}
+        />
+
+        {/* SEO guide content — only renders when guide content has been added */}
         {content && (
           <ExamGuideContent content={content} categoryName={category.name} />
         )}
