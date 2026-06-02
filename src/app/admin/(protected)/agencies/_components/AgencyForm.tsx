@@ -14,6 +14,7 @@ import {
   uploadAgencyAsset,
   type AgencyInput, type BranchInput, type FaqInput,
 } from '@/app/actions/admin-agencies'
+import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 
@@ -27,7 +28,7 @@ export type AgencyFullData = AgencyInput & {
 
 const TRUST_LEVELS = ['verified', 'trusted', 'unverified', 'scam-reported'] as const
 const BATCH_TYPES  = ['online', 'offline', 'hybrid'] as const
-const COMMON_COUNTRIES = ['Germany', 'UK', 'Australia', 'Canada', 'Dubai', 'Saudi Arabia', 'Qatar', 'Bahrain', 'Kuwait', 'Ireland', 'New Zealand', 'Singapore']
+const COMMON_COUNTRIES = COUNTRY_FILTER_OPTIONS
 const COMMON_EXAMS     = ['OET', 'IELTS', 'NCLEX', 'CBT (NMC)', 'DHA', 'HAAD', 'PROMETRIC', 'OSCE']
 const COMMON_CERTS     = ['MEA Registered', 'ISO 9001:2015', 'NASSCOM Member', 'APOWS Licensed', 'State Government Approved']
 

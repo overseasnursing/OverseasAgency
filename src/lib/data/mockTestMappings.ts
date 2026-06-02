@@ -2,6 +2,7 @@
  * Auto-generated internal linking and authority mappings for mock test pages.
  * No manual input needed — every new category gets these automatically.
  */
+import { DESTINATION_COUNTRIES } from './countryList'
 
 // ── Destination info ────────────────────────────────────────────────────────
 
@@ -36,13 +37,12 @@ export function getDestinationByCountrySlug(countrySlug: string): DestinationInf
   return COUNTRY_DESTINATION_MAP[countrySlug] ?? null
 }
 
-/** Countries available for selection in the admin location modal */
-export const DESTINATION_COUNTRY_OPTIONS: { slug: string; name: string; flagCode: string }[] =
-  Object.entries(COUNTRY_DESTINATION_MAP).map(([slug, info]) => ({
-    slug,
-    name: info.countryName,
-    flagCode: info.flagCode,
-  }))
+/** Countries available for selection in the admin location modal — derived from countryList */
+export const DESTINATION_COUNTRY_OPTIONS = DESTINATION_COUNTRIES.map(c => ({
+  slug:     c.slug,
+  name:     c.name,
+  flagCode: c.flagCode,
+}))
 
 // ── Legacy slug-based lookup (fallback for locations without country_slug) ──
 

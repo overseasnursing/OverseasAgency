@@ -1,4 +1,5 @@
 import type { Agency } from '@/types/agency'
+import { COUNTRY_FILTER_OPTIONS } from './countryList'
 
 export const MOCK_AGENCIES: Agency[] = [
   {
@@ -289,6 +290,38 @@ export const MOCK_AGENCIES: Agency[] = [
       date: 'Aug 2024',
     },
   },
+  {
+    id: '10',
+    slug: 'uae-career-bridge',
+    name: 'UAE Career Bridge',
+    location: 'Abu Dhabi, UAE',
+    city: 'Abu Dhabi',
+    state: 'Abu Dhabi',
+    established: 2018,
+    trustLevel: 'verified',
+    rating: 4.5,
+    reviewCount: 74,
+    placementCount: 360,
+    transparencyScore: 88,
+    countries: ['UAE'],
+    examsSupported: ['DHA', 'HAAD', 'MOH'],
+    pricing: { minLakhs: 1.8, maxLakhs: 3.2, isApproximate: false },
+    hiddenChargesReported: 0,
+    visaSponsorship: true,
+    averageTimelineMonths: '4–7',
+    tagline: 'UAE-focused nursing migration support with DHA/DOH/MOH exam guidance and direct hospital tie-ups.',
+    featured: false,
+    reviewSnippet: {
+      authorName: 'Aisha P.',
+      authorFrom: 'Kochi, Kerala',
+      countryPlaced: 'UAE',
+      rating: 5,
+      text: 'Reached Abu Dhabi in 6 months. They shared a clear fee sheet before payment and supported my licensing paperwork well.',
+      actualCostPaid: '₹2.6L',
+      timeline: '6 months',
+      date: 'Apr 2026',
+    },
+  },
 ]
 
 export function getAllAgencies() {
@@ -303,7 +336,7 @@ export function getAllAgencySlugs(): string[] {
   return MOCK_AGENCIES.map((a) => a.slug)
 }
 
-export const COUNTRIES = ['Germany', 'UK', 'Canada', 'Australia', 'UAE', 'Qatar', 'Saudi Arabia', 'Austria', 'Switzerland']
+export const COUNTRIES = COUNTRY_FILTER_OPTIONS
 export const EXAMS = ['OET', 'IELTS', 'NCLEX', 'CBT', 'DHA', 'HAAD', 'PROMETRIC', 'Goethe B2', 'TestDaF']
 export const TRENDING_SEARCHES = [
   'Germany nursing agencies',

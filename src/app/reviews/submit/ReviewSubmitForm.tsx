@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertCircle, Building2 } from 'lucide-react'
 import { submitReview } from '@/app/actions/submitReview'
+import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
 
 type Step = 'agency' | 'financial' | 'ratings' | 'written' | 'verify'
 
@@ -14,7 +15,7 @@ const STEPS: { key: Step; label: string }[] = [
   { key: 'verify', label: 'Verify & Submit' },
 ]
 
-const COUNTRIES = ['Germany', 'UK', 'Canada', 'Australia', 'Dubai', 'Other']
+const COUNTRIES = COUNTRY_FORM_OPTIONS
 const HOSPITAL_TYPES = ['University Hospital', 'NHS Trust', 'Public Hospital', 'Private Hospital', 'Community Hospital', 'Other']
 
 const initialForm = {

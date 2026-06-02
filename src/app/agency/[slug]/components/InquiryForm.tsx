@@ -3,10 +3,9 @@
 import React, { useState } from 'react'
 import { Send, CheckCircle } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
 
-const COUNTRIES = [
-  'Germany', 'UK', 'Canada', 'Australia', 'UAE', 'Saudi Arabia', 'Qatar', 'New Zealand', 'USA', 'Other',
-]
+const COUNTRIES = COUNTRY_FORM_OPTIONS
 
 interface InquiryFormProps {
   agency: AgencyDetail

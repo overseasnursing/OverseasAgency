@@ -4,7 +4,8 @@ import React, { useState, useMemo } from 'react'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import type { PlatformReview } from '@/types/review'
 
-const COUNTRIES = ['All Countries', 'Germany', 'UK', 'Canada', 'Australia', 'Dubai']
+import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
+const COUNTRIES = ['All Countries', ...COUNTRY_FILTER_OPTIONS]
 const SORT_OPTIONS = [
   { value: 'helpful', label: 'Most Helpful' },
   { value: 'recent', label: 'Most Recent' },

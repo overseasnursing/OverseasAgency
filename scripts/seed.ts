@@ -156,6 +156,79 @@ async function seedScamReports(agencyRows: { id: string; slug: string }[]) {
 }
 
 // ============================================================
+// SEED MOCK TESTS (UAE)
+// ============================================================
+async function seedUaeMockTest() {
+  console.log('Seeding UAE mock test...')
+
+  const { data: locationRow, error: locationError } = await supabase
+    .from('mock_test_locations')
+    .upsert(
+      [{
+        name: 'UAE Licensing Exams',
+        slug: 'uae',
+        description: 'Mock tests for DHA/DOH/MOH nursing licensing pathways in the UAE.',
+        is_active: true,
+      }],
+      { onConflict: 'slug' },
+    )
+    .select('id')
+    .single()
+
+  if (locationError || !locationRow) {
+    console.error('UAE location seed error:', locationError?.message ?? 'Unable to upsert location')
+    process.exit(1)
+  }
+
+  const { data: categoryRow, error: categoryError } = await supabase
+    .from('mock_test_categories')
+    .upsert(
+      [{
+        location_id: locationRow.id,
+        name: 'DHA Nursing',
+        slug: 'uae-dha-nursing',
+        description: 'DHA-style practice tests for nurses planning to work in Dubai and wider UAE.',
+        seo_title: 'UAE DHA Nursing Mock Test',
+        seo_description: 'Practice UAE DHA nursing exam questions with timed mock tests and answer explanations.',
+        is_active: true,
+      }],
+      { onConflict: 'slug' },
+    )
+    .select('id')
+    .single()
+
+  if (categoryError || !categoryRow) {
+    console.error('UAE category seed error:', categoryError?.message ?? 'Unable to upsert category')
+    process.exit(1)
+  }
+
+  const { error: testError } = await supabase
+    .from('mock_tests')
+    .upsert(
+      [{
+        category_id: categoryRow.id,
+        name: 'UAE DHA Nursing Mock Test 1',
+        slug: 'uae-dha-nursing-mock-test-1',
+        duration_minutes: 60,
+        total_questions: 0,
+        passing_percentage: 60,
+        instructions: 'Answer all questions. Select the best clinical option and review explanations after submission.',
+        seo_title: 'UAE DHA Nursing Mock Test 1',
+        seo_description: 'Free UAE DHA nursing practice set with exam-style MCQs for migration preparation.',
+        is_active: true,
+      }],
+      { onConflict: 'slug' },
+    )
+
+  if (testError) {
+    console.error('UAE mock test seed error:', testError.message)
+    process.exit(1)
+  }
+
+  console.log('  UAE mock test upserted.')
+}
+
+// ============================================================
 // MAIN
 // ============================================================
 async function main() {
@@ -165,6 +238,7 @@ async function main() {
   const agencyRows = await seedAgencies()
   await seedReviews(agencyRows)
   await seedScamReports(agencyRows)
+  await seedUaeMockTest()
 
   console.log('\nSeed complete.')
 }
