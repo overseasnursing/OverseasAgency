@@ -25,19 +25,32 @@ async function getTopAgencies(countryTerms: string[]): Promise<AgencyCard[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  // Use overlaps to filter directly in the DB — avoids the "top 80" limit missing Dubai agencies
-  const { data } = await db
+  // Fetch top 200 by transparency score, then filter JS-side.
+  // Avoids DB-level array operator issues (text[] vs jsonb) and the old 80-limit ceiling.
+  const { data, error } = await db
     .from('agencies')
     .select('id, name, slug, logo, featured_image, location, established, trust_level, google_rating, google_review_count, transparency_score, countries, pricing_min_lakhs, pricing_max_lakhs, average_timeline_months, placement_count')
     .eq('is_active', true)
-    .overlaps('countries', countryTerms)
     .order('transparency_score', { ascending: false })
-    .limit(3)
+    .limit(200)
 
-  if (!data?.length) return []
+  if (error || !data?.length) return []
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any[]).map((a: any): AgencyCard => ({
+  const matched = (data as any[])
+    .filter(a => {
+      const countries: string[] = Array.isArray(a.countries) ? a.countries : []
+      return countries.some(c =>
+        countryTerms.some(term =>
+          c.toLowerCase().includes(term.toLowerCase()) ||
+          term.toLowerCase().includes(c.toLowerCase())
+        )
+      )
+    })
+    .slice(0, 3)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return matched.map((a: any): AgencyCard => ({
     id:                a.id,
     name:              a.name,
     slug:              a.slug,
@@ -186,7 +199,7 @@ export async function DestinationAgencyCards({ countryTerms, countryName, countr
               <div className="flex items-start gap-3">
                 {agency.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={agency.logo} alt={agency.name} className="w-10 h-10 rounded-xl object-contain border border-slate-100 flex-shrink-0" />
+                  <img src={agency.logo} alt={`${agency.name} logo`} width={40} height={40} className="w-10 h-10 rounded-xl object-contain border border-slate-100 flex-shrink-0" />
                 ) : (
                   <Initials name={agency.name} />
                 )}
