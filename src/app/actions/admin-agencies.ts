@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireAdmin, isSuperAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 
 /* ── Types ─────────────────────────────────────────────────────────── */
@@ -222,7 +222,8 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
 }
 
 export async function deleteAgency(id: string): Promise<{ error: string | null }> {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete agencies.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db.from('agencies').delete().eq('id', id)
@@ -252,7 +253,8 @@ export async function saveBranch(data: BranchInput): Promise<{ error: string | n
 }
 
 export async function deleteBranch(id: string): Promise<{ error: string | null }> {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete branches.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db.from('branches').delete().eq('id', id)
@@ -280,7 +282,8 @@ export async function saveFaq(data: FaqInput): Promise<{ error: string | null; i
 }
 
 export async function deleteFaq(id: string): Promise<{ error: string | null }> {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete FAQs.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db.from('agency_faqs').delete().eq('id', id)

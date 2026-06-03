@@ -229,9 +229,9 @@ function DeleteModal({ name, onConfirm, onCancel, pending }: { name: string; onC
 
 /* ── Main ───────────────────────────────────────────────────────────── */
 export function MockTestsClient({
-  location, category, tests, dbError,
+  location, category, tests, dbError, isSuperAdmin,
 }: {
-  location: Info; category: Info; tests: MockTest[]; dbError: string | null
+  location: Info; category: Info; tests: MockTest[]; dbError: string | null; isSuperAdmin: boolean
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -454,12 +454,14 @@ export function MockTestsClient({
                         >
                           <Archive size={11} />
                         </button>
-                        <button
-                          onClick={() => setDeleteItem(t)}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
-                        >
-                          <Trash2 size={11} />
-                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => setDeleteItem(t)}
+                            className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

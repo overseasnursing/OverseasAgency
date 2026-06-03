@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireAdmin, isSuperAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 
 const now = () => new Date().toISOString()
@@ -76,7 +76,8 @@ export async function saveLocation(data: LocationInput): Promise<{ error: string
 }
 
 export async function deleteLocation(id: string): Promise<{ error: string | null }> {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete locations.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db.from('mock_test_locations').delete().eq('id', id)
@@ -124,7 +125,8 @@ export async function saveCategory(data: CategoryInput): Promise<{ error: string
 }
 
 export async function deleteCategory(id: string, locationId: string): Promise<{ error: string | null }> {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete categories.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db.from('mock_test_categories').delete().eq('id', id)
@@ -175,7 +177,8 @@ export async function saveMockTest(data: MockTestInput): Promise<{ error: string
 }
 
 export async function deleteMockTest(id: string): Promise<{ error: string | null }> {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete mock tests.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db.from('mock_tests').delete().eq('id', id)
