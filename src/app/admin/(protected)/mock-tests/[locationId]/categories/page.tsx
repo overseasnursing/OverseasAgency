@@ -1,12 +1,14 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePermission, isSuperAdmin } from '@/lib/require-admin'
 import { CategoriesClient } from './_components/CategoriesClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CategoriesPage({ params }: { params: Promise<{ locationId: string }> }) {
   const { locationId } = await params
+  const admin = await requirePermission('mock-tests')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -39,6 +41,7 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
       location={{ id: location.id, name: location.name, slug: location.slug }}
       categories={rows}
       dbError={catError?.message ?? null}
+      isSuperAdmin={isSuperAdmin(admin)}
     />
   )
 }

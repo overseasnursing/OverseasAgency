@@ -1,6 +1,7 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePermission, isSuperAdmin } from '@/lib/require-admin'
 import { MockTestsClient } from './_components/MockTestsClient'
 import { getAttemptCountsForTests } from '@/app/actions/exam-sessions'
 
@@ -12,6 +13,7 @@ export default async function MockTestsPage({
   params: Promise<{ locationId: string; categoryId: string }>
 }) {
   const { locationId, categoryId } = await params
+  const admin = await requirePermission('mock-tests')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -57,6 +59,7 @@ export default async function MockTestsPage({
       category={{ id: category.id, name: category.name }}
       tests={rows}
       dbError={testError?.message ?? null}
+      isSuperAdmin={isSuperAdmin(admin)}
     />
   )
 }

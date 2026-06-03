@@ -160,7 +160,7 @@ function DeleteModal({ name, onConfirm, onCancel, pending }: { name: string; onC
 }
 
 /* ── Main ───────────────────────────────────────────────────────────── */
-export function CategoriesClient({ location, categories, dbError }: { location: LocationInfo; categories: Category[]; dbError: string | null }) {
+export function CategoriesClient({ location, categories, dbError, isSuperAdmin }: { location: LocationInfo; categories: Category[]; dbError: string | null; isSuperAdmin: boolean }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [search, setSearch]         = useState('')
@@ -301,12 +301,14 @@ export function CategoriesClient({ location, categories, dbError }: { location: 
                         >
                           <Pencil size={11} /> Edit
                         </button>
-                        <button
-                          onClick={() => setDeleteItem(c)}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
-                        >
-                          <Trash2 size={11} />
-                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => setDeleteItem(c)}
+                            className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

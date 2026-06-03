@@ -49,14 +49,18 @@ export async function createEmployee(
 
   const userId = authData.user.id
 
-  // Insert into users table with admin role + permissions
-  const { error: dbError } = await db.from('users').insert({
-    id:                userId,
-    email:             input.email.trim().toLowerCase(),
-    role:              'admin',
-    admin_name:        input.name.trim() || null,
-    admin_permissions: input.permissions,
-  })
+  // Upsert into users table — Supabase triggers may auto-insert a row on auth user creation,
+  // so we upsert to handle both the "row exists" and "row doesn't exist" cases.
+  const { error: dbError } = await db.from('users').upsert(
+    {
+      id:                userId,
+      email:             input.email.trim().toLowerCase(),
+      role:              'admin',
+      admin_name:        input.name.trim() || null,
+      admin_permissions: input.permissions,
+    },
+    { onConflict: 'id' },
+  )
 
   if (dbError) {
     // Rollback: delete the auth user we just created

@@ -150,7 +150,7 @@ function DeleteModal({ name, onConfirm, onCancel, pending }: { name: string; onC
 }
 
 /* ── Main Component ─────────────────────────────────────────────────── */
-export function LocationsClient({ locations, dbError }: { locations: Location[]; dbError: string | null }) {
+export function LocationsClient({ locations, dbError, isSuperAdmin }: { locations: Location[]; dbError: string | null; isSuperAdmin: boolean }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [search, setSearch]         = useState('')
@@ -297,12 +297,14 @@ export function LocationsClient({ locations, dbError }: { locations: Location[];
                         >
                           <Pencil size={11} /> Edit
                         </button>
-                        <button
-                          onClick={() => setDeleteItem(l)}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
-                        >
-                          <Trash2 size={11} />
-                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => setDeleteItem(l)}
+                            className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

@@ -1,12 +1,12 @@
 import React from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requirePermission } from '@/lib/require-admin'
+import { requirePermission, isSuperAdmin } from '@/lib/require-admin'
 import { LocationsClient } from './_components/LocationsClient'
 
 export const dynamic = 'force-dynamic'
 
 export default async function MockTestLocationsPage() {
-  await requirePermission('mock-tests')
+  const admin = await requirePermission('mock-tests')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -42,6 +42,7 @@ export default async function MockTestLocationsPage() {
     <LocationsClient
       locations={rows}
       dbError={error?.message ?? null}
+      isSuperAdmin={isSuperAdmin(admin)}
     />
   )
 }
