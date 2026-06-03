@@ -41,6 +41,7 @@ function empty(): AgencyInput {
     transparency_score: null, placement_count: 0,
     recommendation_percent: null, visa_success_rate: null,
     average_timeline_months: '', hidden_charges_reported: 0,
+    pricing_is_free: false, pricing_free_note: '',
     pricing_min_lakhs: null, pricing_max_lakhs: null, pricing_is_approximate: true,
     pricing_includes: [], pricing_excludes: [],
     pricing_installment_available: false, pricing_installment_note: '',
@@ -657,8 +658,57 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
       <div className={sectionCls}>
         <SectionHeader icon={<DollarSign size={16} />} title="Pricing" subtitle="Shown in the pricing section and listing cards" />
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Min Price (Lakhs INR)" hint="e.g. 3.5 = ₹3.5 Lakh"><input className={inputCls} type="number" step={0.1} min={0} value={num(form.pricing_min_lakhs)} onChange={e => set('pricing_min_lakhs', parseNum(e.target.value))} placeholder="3.5" /></Field>
-          <Field label="Max Price (Lakhs INR)"><input className={inputCls} type="number" step={0.1} min={0} value={num(form.pricing_max_lakhs)} onChange={e => set('pricing_max_lakhs', parseNum(e.target.value))} placeholder="5.5" /></Field>
+          {/* Free placement toggle — spans full width, shown first */}
+          <div className="col-span-2">
+            <Toggle
+              checked={form.pricing_is_free}
+              onChange={v => {
+                set('pricing_is_free', v)
+                if (v) { set('pricing_min_lakhs', null); set('pricing_max_lakhs', null) }
+              }}
+              label="Free Placement (₹0 — agency charges nothing)"
+            />
+          </div>
+
+          {/* Free placement note — only shown when free is ticked */}
+          {form.pricing_is_free && (
+            <div className="col-span-2">
+              <Field label="Free Placement Details">
+                <textarea
+                  className={textareaCls}
+                  rows={2}
+                  value={form.pricing_free_note}
+                  onChange={e => set('pricing_free_note', e.target.value)}
+                  placeholder="e.g. No fees charged — agency earns from employer contracts only"
+                />
+              </Field>
+            </div>
+          )}
+
+          {/* Price fields — grayed out when free */}
+          <Field label="Min Price (Lakhs INR)" hint="e.g. 3.5 = ₹3.5 Lakh">
+            <input
+              className={inputCls}
+              type="number" step={0.1} min={0}
+              value={form.pricing_is_free ? '' : num(form.pricing_min_lakhs)}
+              onChange={e => set('pricing_min_lakhs', parseNum(e.target.value))}
+              placeholder={form.pricing_is_free ? 'Free — not applicable' : '3.5'}
+              disabled={form.pricing_is_free}
+              style={form.pricing_is_free ? { opacity: 0.4, cursor: 'not-allowed', background: '#f8fafc' } : undefined}
+            />
+          </Field>
+          <Field label="Max Price (Lakhs INR)">
+            <input
+              className={inputCls}
+              type="number" step={0.1} min={0}
+              value={form.pricing_is_free ? '' : num(form.pricing_max_lakhs)}
+              onChange={e => set('pricing_max_lakhs', parseNum(e.target.value))}
+              placeholder={form.pricing_is_free ? 'Free — not applicable' : '5.5'}
+              disabled={form.pricing_is_free}
+              style={form.pricing_is_free ? { opacity: 0.4, cursor: 'not-allowed', background: '#f8fafc' } : undefined}
+            />
+          </Field>
+
           <div className="flex flex-col gap-2">
             <label className="text-[12px] font-semibold text-slate-600">Pricing Options</label>
             <div className="flex gap-2 flex-wrap">
