@@ -1,6 +1,7 @@
 import React from 'react'
 import { getAllReviewsAdmin } from '@/lib/db/reviews'
 import { approveReview, rejectReview, holdReview, removeReview } from '@/app/actions/moderate'
+import { requirePermission } from '@/lib/require-admin'
 import { Star, CheckCircle, XCircle, Clock, Trash2, MapPin, Building2 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +24,7 @@ interface PageProps {
 }
 
 export default async function AdminReviewsPage({ searchParams }: PageProps) {
+  await requirePermission('reviews')
   const { status = 'all', agency = '' } = await searchParams
   const reviews = await getAllReviewsAdmin(status, agency || undefined)
 

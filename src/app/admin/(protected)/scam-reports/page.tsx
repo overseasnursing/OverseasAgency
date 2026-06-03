@@ -1,6 +1,7 @@
 ﻿import React from 'react'
 import { getPendingScamReports } from '@/lib/db/scam-reports'
 import { approveScamReport, rejectScamReport } from '@/app/actions/moderate'
+import { requirePermission } from '@/lib/require-admin'
 import { AlertTriangle, CheckCircle, XCircle, DollarSign } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -21,6 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 export default async function AdminScamReportsPage() {
+  await requirePermission('scam-reports')
   const reports = await getPendingScamReports()
 
   return (

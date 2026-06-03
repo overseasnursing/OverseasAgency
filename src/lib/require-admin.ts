@@ -2,6 +2,21 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
+export type AdminPermission =
+  | 'agencies'
+  | 'reviews'
+  | 'scam-reports'
+  | 'mock-tests'
+  | 'settings'
+
+export type AdminUser = {
+  userId:      string
+  email:       string
+  name:        string | null
+  // null = super admin (full access). array = employee restricted to listed keys.
+  permissions: AdminPermission[] | null
+}
+
 async function buildClient() {
   const jar = await cookies()
   return createServerClient(
@@ -17,7 +32,7 @@ async function buildClient() {
   )
 }
 
-async function fetchAdminUser(): Promise<{ userId: string; email: string } | null> {
+async function fetchAdminUser(): Promise<AdminUser | null> {
   try {
     const supabase = await buildClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -25,27 +40,53 @@ async function fetchAdminUser(): Promise<{ userId: string; email: string } | nul
 
     const { data } = await supabase
       .from('users')
-      .select('role')
+      .select('role, admin_name, admin_permissions')
       .eq('id', user.id)
       .single()
 
     if (data?.role !== 'admin') return null
-    return { userId: user.id, email: user.email! }
+
+    return {
+      userId:      user.id,
+      email:       user.email!,
+      name:        data.admin_name   ?? null,
+      permissions: data.admin_permissions ?? null,
+    }
   } catch {
     return null
   }
 }
 
+/** True if this admin has full access (super admin — permissions is null) */
+export function isSuperAdmin(admin: AdminUser): boolean {
+  return admin.permissions === null
+}
+
+/** True if user can access the given page */
+export function hasPermission(admin: AdminUser, key: AdminPermission): boolean {
+  if (isSuperAdmin(admin)) return true
+  return admin.permissions!.includes(key)
+}
+
 /** Use in layouts/pages — returns null instead of redirecting */
-export async function getAdminUser() {
+export async function getAdminUser(): Promise<AdminUser | null> {
   return fetchAdminUser()
 }
 
-/** Use in server actions — throws Unauthorized if not admin */
-export async function requireAdmin(): Promise<{ userId: string; email: string }> {
+/** Use in server actions — redirects if not logged in as admin */
+export async function requireAdmin(): Promise<AdminUser> {
   const admin = await fetchAdminUser()
-  if (!admin) {
-    redirect('/auth/login?next=/admin')
-  }
+  if (!admin) redirect('/auth/login?next=/admin')
+  return admin
+}
+
+/**
+ * Use at the top of each protected admin page.
+ * Super admins always pass. Employees must have the key in their permissions.
+ * Redirects to /admin dashboard if access is denied.
+ */
+export async function requirePermission(key: AdminPermission): Promise<AdminUser> {
+  const admin = await requireAdmin()
+  if (!hasPermission(admin, key)) redirect('/admin')
   return admin
 }
