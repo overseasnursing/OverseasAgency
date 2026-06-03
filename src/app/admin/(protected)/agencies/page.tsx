@@ -1,5 +1,6 @@
 import React from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePermission } from '@/lib/require-admin'
 import { Plus, Pencil, Globe, Star, Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -12,6 +13,7 @@ const TRUST_BADGE: Record<string, { label: string; cls: string; icon: React.Reac
 }
 
 export default async function AdminAgenciesPage() {
+  await requirePermission('agencies')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data: agencies, error } = await db

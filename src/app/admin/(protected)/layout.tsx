@@ -1,6 +1,6 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
-import { getAdminUser } from '@/lib/require-admin'
+import { getAdminUser, isSuperAdmin } from '@/lib/require-admin'
 import { AdminSidebar } from './_components/AdminSidebar'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -9,7 +9,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex h-full">
-      <AdminSidebar email={admin.email} />
+      <AdminSidebar
+        email={admin.email}
+        name={admin.name}
+        isSuperAdmin={isSuperAdmin(admin)}
+        permissions={admin.permissions}
+      />
       <main className="flex-1 min-w-0 overflow-y-auto bg-slate-50">
         <div className="max-w-5xl mx-auto px-8 py-8">
           {children}
