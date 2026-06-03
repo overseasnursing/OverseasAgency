@@ -30,6 +30,8 @@ export type AgencyInput = {
   visa_success_rate: number | null
   average_timeline_months: string
   hidden_charges_reported: number
+  pricing_is_free: boolean
+  pricing_free_note: string
   pricing_min_lakhs: number | null
   pricing_max_lakhs: number | null
   pricing_is_approximate: boolean
@@ -170,8 +172,10 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     visa_success_rate:             data.visa_success_rate         ?? null,
     average_timeline_months:       data.average_timeline_months   || null,
     hidden_charges_reported:       data.hidden_charges_reported,
-    pricing_min_lakhs:             data.pricing_min_lakhs         ?? null,
-    pricing_max_lakhs:             data.pricing_max_lakhs         ?? null,
+    pricing_is_free:               data.pricing_is_free,
+    pricing_free_note:             data.pricing_free_note         || null,
+    pricing_min_lakhs:             data.pricing_is_free ? null : (data.pricing_min_lakhs ?? null),
+    pricing_max_lakhs:             data.pricing_is_free ? null : (data.pricing_max_lakhs ?? null),
     pricing_is_approximate:        data.pricing_is_approximate,
     pricing_includes:              data.pricing_includes,
     pricing_excludes:              data.pricing_excludes,

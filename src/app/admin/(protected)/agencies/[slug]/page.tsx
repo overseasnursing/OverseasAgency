@@ -42,6 +42,8 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
     visa_success_rate:             agency.visa_success_rate          ?? null,
     average_timeline_months:       agency.average_timeline_months    ?? '',
     hidden_charges_reported:       agency.hidden_charges_reported,
+    pricing_is_free:               agency.pricing_is_free            ?? false,
+    pricing_free_note:             agency.pricing_free_note          ?? '',
     pricing_min_lakhs:             agency.pricing_min_lakhs          ?? null,
     pricing_max_lakhs:             agency.pricing_max_lakhs          ?? null,
     pricing_is_approximate:        agency.pricing_is_approximate,
