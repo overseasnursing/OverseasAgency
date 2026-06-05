@@ -24,7 +24,9 @@ export interface Review {
 }
 
 export interface PricingDetail {
-  minCost: number          // in rupees
+  isFree: boolean
+  freeNote: string
+  minCost: number          // in rupees (0 when isFree)
   maxCost: number
   isApproximate: boolean
   includes: string[]

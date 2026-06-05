@@ -28,20 +28,40 @@ export function PricingSection({ agency }: PricingSectionProps) {
             <p className="text-[12px] font-semibold uppercase tracking-widest text-slate-400 mb-1">
               Total Agency Fee
             </p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[40px] font-bold text-slate-800 leading-none">
-                {formatLakhs(pricing.minCost)}
-              </span>
-              <span className="text-[24px] font-bold text-slate-400">
-                — {formatLakhs(pricing.maxCost)}
-              </span>
-            </div>
-            {pricing.isApproximate && (
-              <p className="text-[13px] text-slate-400 mt-1">Approximate — final fee varies by case</p>
+
+            {pricing.isFree ? (
+              /* ── Free placement display ── */
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[40px] font-bold text-[#16A34A] leading-none">
+                    Free Placement
+                  </span>
+                </div>
+                {pricing.freeNote && (
+                  <p className="text-[13px] text-slate-500 mt-2 leading-relaxed max-w-prose">
+                    {pricing.freeNote}
+                  </p>
+                )}
+              </>
+            ) : (
+              /* ── Normal price display ── */
+              <>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[40px] font-bold text-slate-800 leading-none">
+                    {formatLakhs(pricing.minCost)}
+                  </span>
+                  <span className="text-[24px] font-bold text-slate-400">
+                    — {formatLakhs(pricing.maxCost)}
+                  </span>
+                </div>
+                {pricing.isApproximate && (
+                  <p className="text-[13px] text-slate-400 mt-1">Approximate — final fee varies by case</p>
+                )}
+              </>
             )}
           </div>
 
-          {pricing.installmentAvailable && (
+          {!pricing.isFree && pricing.installmentAvailable && (
             <div className="sm:ml-auto flex items-center gap-2 px-4 py-2.5 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl">
               <CreditCard size={16} className="text-[#1D4ED8]" />
               <span className="text-[13px] font-semibold text-[#1D4ED8]">Installment Available</span>
@@ -49,7 +69,7 @@ export function PricingSection({ agency }: PricingSectionProps) {
           )}
         </div>
 
-        {pricing.installmentAvailable && pricing.installmentNote && (
+        {!pricing.isFree && pricing.installmentAvailable && pricing.installmentNote && (
           <p className="text-[13.5px] text-slate-500 border-t border-slate-200 pt-4">
             <span className="font-semibold text-slate-700">Payment plan:</span>{' '}
             {pricing.installmentNote}

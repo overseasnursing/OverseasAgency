@@ -41,6 +41,8 @@ const GLOBAL_NURSING: AgencyDetail = {
     'Post-Arrival Support',
   ],
   pricing: {
+    isFree: false,
+    freeNote: '',
     minCost: 350000,
     maxCost: 550000,
     isApproximate: false,

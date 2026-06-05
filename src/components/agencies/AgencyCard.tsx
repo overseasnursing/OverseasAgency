@@ -227,12 +227,6 @@ export function AgencyCard({ agency }: AgencyCardProps) {
           View Profile <ChevronRight size={14} />
         </a>
         <a
-          href={`/agency-compare?a=${agency.slug}`}
-          className="h-10 px-3.5 flex items-center justify-center border border-slate-200 hover:border-primary hover:text-primary text-slate-600 text-[13px] font-semibold rounded-xl transition-colors"
-        >
-          Compare
-        </a>
-        <a
           href={`https://wa.me/?text=I found ${encodeURIComponent(agency.name)} on OverseasNursing.com`}
           target="_blank"
           rel="noopener noreferrer"
