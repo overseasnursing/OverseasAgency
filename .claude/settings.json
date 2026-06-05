@@ -3,10 +3,13 @@
     "allow": [
       "Bash(mkdir -p /c/Users/shubi/OneDrive/Desktop/OverseasAgency/src/app/agency/\\\\[slug\\\\]/components)",
       "Bash(node -e \"require\\('./src/lib/data/agencies.ts'\\)\")",
-      "Bash(grep -v \"//\\\\|metadata\\\\|description\\\\|title\\\\|alt\\\\|label\\\\|text\")"
+      "Bash(grep -v \"//\\\\|metadata\\\\|description\\\\|title\\\\|alt\\\\|label\\\\|text\")",
+      "Bash(del \"c:\\\\Users\\\\shubi\\\\OneDrive\\\\Desktop\\\\OverseasAgency\\\\src\\\\app\\\\mock-tests\\\\[locationSlug]\\\\[categorySlug]\\\\[testSlug]\\\\_components\\\\TestStartButton.tsx\")",
+      "Bash(rm \"c:/Users/shubi/OneDrive/Desktop/OverseasAgency/src/app/mock-tests/[locationSlug]/[categorySlug]/[testSlug]/_components/TestStartButton.tsx\")"
     ],
     "additionalDirectories": [
-      "C:\\Users\\shubi\\OneDrive\\Desktop\\OverseasAgency\\src\\app\\agency\\[slug]"
+      "C:\\Users\\shubi\\OneDrive\\Desktop\\OverseasAgency\\src\\app\\agency\\[slug]",
+      "c:\\Users\\shubi\\OneDrive\\Desktop\\OverseasAgency\\src\\app\\mock-tests\\[locationSlug]\\[categorySlug]\\[testSlug]\\_components"
     ]
   },
   "hooks": {

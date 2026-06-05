@@ -135,8 +135,7 @@ export const STATIC_SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: '/location',       changeFrequency: 'monthly', priority: 0.7 },
 
   // Tools & landing pages
-  { path: '/agency-compare', changeFrequency: 'monthly', priority: 0.7 },
-  { path: '/for-agencies',   changeFrequency: 'monthly', priority: 0.7 },
+{ path: '/for-agencies',   changeFrequency: 'monthly', priority: 0.7 },
   { path: '/contact',        changeFrequency: 'yearly',  priority: 0.5 },
 
   // User action pages

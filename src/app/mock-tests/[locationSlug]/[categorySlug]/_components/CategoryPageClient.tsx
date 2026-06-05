@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useTransition } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   X, Clock, HelpCircle, Target, Play, Info,
@@ -259,12 +258,12 @@ function TestCard({
         <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-[12px] font-bold flex items-center justify-center flex-shrink-0">
           {String(index + 1).padStart(2, '0')}
         </span>
-        <Link
-          href={`/mock-tests/${locationSlug}/${categorySlug}/${test.slug}`}
-          className="text-[15px] font-bold text-slate-800 flex-1 leading-tight hover:text-primary transition-colors"
+        <button
+          onClick={onDetails}
+          className="text-[15px] font-bold text-slate-800 flex-1 leading-tight hover:text-primary transition-colors text-left"
         >
           {test.name}
-        </Link>
+        </button>
       </div>
 
       <div className="px-5 pb-5 pt-3 flex flex-col gap-3">
@@ -294,10 +293,10 @@ function TestCard({
             className="flex items-center gap-1.5 h-9 px-3 border border-slate-200 hover:border-slate-300 text-slate-600 text-[12.5px] font-medium rounded-xl transition-colors disabled:opacity-50">
             <Info size={12} /> Details
           </button>
-          <Link href={studyHref}
+          <a href={studyHref}
             className="flex items-center gap-1.5 h-9 px-3 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[12.5px] font-semibold rounded-xl transition-colors">
             <BookOpen size={12} /> Study
-          </Link>
+          </a>
           <button onClick={onStart} disabled={isStarting}
             className="flex-1 flex items-center justify-center gap-1.5 h-9 bg-primary hover:bg-primary-hover text-white text-[12.5px] font-semibold rounded-xl transition-colors disabled:opacity-70">
             {isStarting

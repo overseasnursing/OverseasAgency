@@ -54,31 +54,8 @@ async function getMockTestCategoriesFromDb(): Promise<{ locationSlug: string; ca
   }))
 }
 
-async function getMockTestsFromDb(): Promise<{ locationSlug: string; categorySlug: string; testSlug: string; updatedAt: Date }[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createAdminClient() as any
-  const [{ data: locs }, { data: cats }, { data: tests }] = await Promise.all([
-    db.from('mock_test_locations').select('id, slug').eq('is_active', true),
-    db.from('mock_test_categories').select('id, slug, location_id').eq('is_active', true),
-    db.from('mock_tests').select('slug, category_id, updated_at').eq('is_active', true),
-  ])
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const locMap = new Map<string, string>((locs ?? []).map((l: any) => [l.id, l.slug]))
-  const catMap = new Map<string, { slug: string; locSlug: string }>(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (cats ?? []).filter((c: any) => locMap.has(c.location_id)).map((c: any) => [
-      c.id, { slug: c.slug, locSlug: locMap.get(c.location_id)! },
-    ])
-  )
-  return (tests ?? [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .filter((t: any) => catMap.has(t.category_id))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((t: any) => {
-      const cm = catMap.get(t.category_id)!
-      return { locationSlug: cm.locSlug, categorySlug: cm.slug, testSlug: t.slug, updatedAt: new Date(t.updated_at) }
-    })
-}
+// getMockTestsFromDb removed — individual test pages no longer exist.
+// Individual tests redirect to their parent category page.
 
 /* ══════════════════════════════════════════════════════════════════════
    Sitemap
@@ -91,13 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     agencies,
     mockLocations,
     mockCategories,
-    mockTests,
     locationCities,
   ] = await Promise.all([
     getAgenciesFromDb(),
     getMockTestLocationsFromDb(),
     getMockTestCategoriesFromDb(),
-    getMockTestsFromDb(),
     getAllLocationCitiesFromDb(),
   ])
 
@@ -198,14 +173,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }))
 
-  /* ── Individual mock test pages (DB-driven) ── */
-  const mockTestPages: MetadataRoute.Sitemap = mockTests.map(t => ({
-    url: url(`/mock-tests/${t.locationSlug}/${t.categorySlug}/${t.testSlug}`),
-    lastModified: t.updatedAt,
-    changeFrequency: 'monthly' as const,
-    priority: 0.8,
-  }))
-
   return [
     ...staticPages,
     ...countryPages,
@@ -219,6 +186,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...scamPages,
     ...mockLocationPages,
     ...mockCategoryPages,
-    ...mockTestPages,
   ]
 }
