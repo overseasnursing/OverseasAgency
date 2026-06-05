@@ -1,4 +1,5 @@
-import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
+import { permanentRedirect } from 'next/navigation'
 
 // Individual test landing pages removed — they created near-duplicate content and
 // wasted crawl budget. All test-starting happens directly from the category page.
@@ -8,7 +9,16 @@ type PageProps = {
   params: Promise<{ locationSlug: string; categorySlug: string }>
 }
 
+export const metadata: Metadata = {
+  title: 'Mock Test Redirect | OverseasNursing',
+  description: 'Legacy mock test URLs redirect to their category pages.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
+
 export default async function TestLandingPage({ params }: PageProps) {
   const { locationSlug, categorySlug } = await params
-  redirect(`/mock-tests/${locationSlug}/${categorySlug}`)
+  permanentRedirect(`/mock-tests/${locationSlug}/${categorySlug}`)
 }

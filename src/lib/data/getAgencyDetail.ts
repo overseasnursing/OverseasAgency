@@ -136,6 +136,8 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
     googleReviewCount:       a.google_review_count        ?? undefined,
 
     pricing: {
+      isFree:               a.pricing_is_free           ?? false,
+      freeNote:             a.pricing_free_note         ?? '',
       minCost:              (a.pricing_min_lakhs ?? 0) * 100000,
       maxCost:              (a.pricing_max_lakhs ?? 0) * 100000,
       isApproximate:        a.pricing_is_approximate,

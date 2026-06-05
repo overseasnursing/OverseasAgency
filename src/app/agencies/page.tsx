@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
 export const revalidate = 1800
 
@@ -18,11 +20,26 @@ export const metadata: Metadata = {
   },
 }
 
+const AGENCIES_SCHEMAS = [
+  buildWebPageSchema({
+    title: 'Find Overseas Nursing Agencies — Compare Reviews & Pricing',
+    description:
+      'Browse verified overseas nursing agencies and compare real reviews, pricing transparency, and scam alerts.',
+    path: '/agencies',
+  }),
+  buildBreadcrumbSchema([
+    { name: 'Home', href: '/' },
+    { name: 'Agencies', href: '/agencies' },
+  ]),
+]
+
 export default async function AgenciesPage({ searchParams }: { searchParams: Promise<{ country?: string }> }) {
   const [agencies, { country }] = await Promise.all([getAgencies(), searchParams])
 
   return (
     <>
+      <MultiJsonLd schemas={AGENCIES_SCHEMAS} />
+
       {/* Minimal page header */}
       <div className="bg-white border-b border-slate-100">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-7">

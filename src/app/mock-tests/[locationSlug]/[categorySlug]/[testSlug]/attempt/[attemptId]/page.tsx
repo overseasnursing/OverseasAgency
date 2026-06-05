@@ -1,9 +1,17 @@
 import { redirect, notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createAdminClient }   from '@/lib/supabase/admin'
 import { validateAttempt }     from '@/app/actions/exam-sessions'
 import { ExamEngine }          from './_components/ExamEngine'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 type PageProps = {
   params: Promise<{
