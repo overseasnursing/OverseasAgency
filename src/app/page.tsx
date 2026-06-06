@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { HeroVisual } from '@/components/visuals/HeroVisual'
 import { GlobalSearchBar, type SearchAgency, type SearchCountry, type SearchExam } from '@/components/search/GlobalSearchBar'
+import { AgencyCard } from '@/components/agencies/AgencyCard'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 
@@ -255,105 +256,6 @@ function ReviewCard({ review }: { review: PlatformReview }) {
   )
 }
 
-function FeaturedAgencyCard({ agency }: { agency: Agency }) {
-  const initials = agency.name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join('')
-
-  const trustColors: Record<string, string> = {
-    verified: 'bg-[#DCFCE7] text-[#166534]',
-    trusted:  'bg-[#DBEAFE] text-[#1D4ED8]',
-  }
-  const trustColor = trustColors[agency.trustLevel] ?? 'bg-slate-100 text-slate-500'
-
-  const barColor =
-    agency.transparencyScore >= 80 ? 'bg-[#22C55E]'
-    : agency.transparencyScore >= 60 ? 'bg-[#F59E0B]'
-    : 'bg-[#EF4444]'
-
-  return (
-    <article className="bg-white rounded-card shadow-card hover:shadow-card-md transition-shadow border border-slate-100 flex flex-col">
-      <div className="p-5 sm:p-6 flex flex-col gap-4 flex-1">
-        {/* Header */}
-        <div className="flex items-start gap-3">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-[15px] font-bold text-primary">{initials}</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <h3 className="text-[16px] font-bold text-slate-800 leading-tight">{agency.name}</h3>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full flex-shrink-0 ${trustColor}`}>
-                {agency.trustLevel === 'verified' && <CheckCircle size={9} strokeWidth={2.5} />}
-                {agency.trustLevel === 'verified' ? 'Verified' : 'Trusted'}
-              </span>
-            </div>
-            <p className="text-[12px] text-slate-400 mt-0.5">{agency.location} · Est. {agency.established}</p>
-          </div>
-        </div>
-
-        {/* Rating */}
-        <div className="flex items-center gap-2">
-          <StarRow rating={agency.rating} size={12} />
-          <span className="text-[14px] font-bold text-slate-800">{agency.rating.toFixed(1)}</span>
-          <span className="text-[12px] text-slate-400">({agency.reviewCount.toLocaleString()} reviews)</span>
-        </div>
-
-        {/* Transparency score */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Transparency Score</span>
-            <span className="text-[12px] font-bold text-slate-700">{agency.transparencyScore}/100</span>
-          </div>
-          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${agency.transparencyScore}%` }} />
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { icon: Banknote, label: 'Agency fee', value: `₹${agency.pricing.minLakhs}–${agency.pricing.maxLakhs}L` },
-            { icon: Clock,    label: 'Timeline',   value: `${agency.averageTimelineMonths}mo` },
-            { icon: Users,    label: 'Placed',     value: `${agency.placementCount.toLocaleString()}+` },
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="bg-[#F8FAFC] rounded-xl p-2.5 text-center">
-              <Icon size={13} className="text-slate-400 mx-auto mb-1" />
-              <p className="text-[12.5px] font-bold text-slate-800 leading-tight">{value}</p>
-              <p className="text-[10px] text-slate-400 mt-0.5">{label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Countries */}
-        <div className="flex flex-wrap gap-1.5">
-          {agency.countries.slice(0, 3).map((c) => (
-            <span key={c} className="px-2 py-0.5 bg-[#EFF6FF] text-[#1D4ED8] text-[11.5px] font-medium rounded-full">
-              {c}
-            </span>
-          ))}
-          {agency.countries.length > 3 && (
-            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[11.5px] font-medium rounded-full">
-              +{agency.countries.length - 3}
-            </span>
-          )}
-        </div>
-      </div>
-
-      <div className="px-5 sm:px-6 pb-5 pt-0">
-        <a
-          href={`/agency/${agency.slug}`}
-          className="flex items-center justify-center gap-1.5 h-10 bg-primary hover:bg-primary-hover text-white text-[13px] font-semibold rounded-xl transition-colors w-full"
-        >
-          View profile
-          <ChevronRight size={14} />
-        </a>
-      </div>
-    </article>
-  )
-}
-
 function CountryCard({ country }: { country: CountryDetail }) {
   const demand   = getDemandConfig(country.demandLevel)
   const language = getLanguageConfig(country.languageBarrier)
@@ -462,7 +364,7 @@ export default function HomePage() {
   const countries = getAllCountries()
   const exams     = getAllExams()
 
-  const featuredAgencies = agencies.filter((a) => a.featured).slice(0, 3)
+  const featuredAgencies = agencies.filter((a) => a.featured).slice(0, 6)
   const featuredReviews  = PLATFORM_REVIEWS.filter((r) => r.featured).slice(0, 6)
 
   // Lightweight search data — only the fields the GlobalSearchBar needs
@@ -647,13 +549,13 @@ export default function HomePage() {
               href="/agencies"
               className="hidden sm:flex items-center gap-1.5 text-[13.5px] font-semibold text-primary hover:text-primary-hover transition-colors flex-shrink-0"
             >
-              All 600+ agencies <ArrowRight size={14} />
+              All agencies <ArrowRight size={14} />
             </a>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
             {featuredAgencies.map((agency) => (
-              <FeaturedAgencyCard key={agency.id} agency={agency} />
+              <AgencyCard key={agency.id} agency={agency} />
             ))}
           </div>
 
@@ -672,7 +574,7 @@ export default function HomePage() {
               href="/agencies"
               className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary"
             >
-              See all 600+ agencies <ArrowRight size={14} />
+              All agencies <ArrowRight size={14} />
             </a>
           </div>
         </Container>
