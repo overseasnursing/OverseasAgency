@@ -45,9 +45,18 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
     .select('*')
     .eq('slug', slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
 
-  if (error || !a) return null
+  if (error) {
+    console.error('[getAgencyDetail] Failed to fetch agency by slug', {
+      slug,
+      message: error.message,
+      code: error.code,
+    })
+    throw error
+  }
+
+  if (!a) return null
 
   const [
     { data: branches },

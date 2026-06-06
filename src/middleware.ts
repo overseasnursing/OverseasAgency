@@ -50,7 +50,10 @@ export async function middleware(request: NextRequest) {
     if (isRefreshTokenNotFoundError(error)) {
       clearSupabaseAuthCookies(request, supabaseResponse)
     } else {
-      throw error
+      console.error('[middleware] Supabase getUser failed; continuing request', {
+        path: request.nextUrl.pathname,
+        message: error instanceof Error ? error.message : String(error),
+      })
     }
   }
 
