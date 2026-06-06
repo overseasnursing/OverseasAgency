@@ -23,7 +23,7 @@ import { RelatedAgencies } from './components/RelatedAgencies'
 import { ContentAttribution } from '@/components/seo/ContentAttribution'
 import { getAttributionProfiles } from '@/lib/admin-profile'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
-import { buildWebPageSchema, buildBreadcrumbSchema, buildReviewSchema } from '@/lib/seo/schemas'
+import { buildBreadcrumbSchema, buildReviewSchema, buildAgencySchema, buildFaqSchema } from '@/lib/seo/schemas'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
@@ -90,41 +90,34 @@ export default async function AgencyDetailPage({ params }: PageProps) {
   const voteTotal = votes.thumbsUp + votes.thumbsDown
   const liveRecommendPercent = voteTotal === 0 ? 100 : Math.round((votes.thumbsUp / voteTotal) * 100)
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: agency.name,
-    description: agency.description,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: agency.location,
-      addressCountry: 'IN',
-    },
-    ...(agency.reviewCount > 0 && agency.rating > 0
-      ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: agency.rating,
-            reviewCount: agency.reviewCount,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
-    ...(agency.website ? { url: agency.website } : {}),
-  }
+  const headOffice = agency.branches.find(b => b.isHeadOffice) ?? agency.branches[0]
 
   const agencySchemas = [
-    buildWebPageSchema({
-      title: `${agency.name} Reviews, Fees & Scam Reports — OverseasNursing.com`,
-      description: `Read verified nurse reviews of ${agency.name}. See agency fees, scam reports, visa success rate, and transparency score before you pay.`,
-      path: `/agency/${agency.slug}`,
+    buildAgencySchema({
+      name: agency.name,
+      slug: agency.slug,
+      description: agency.description,
+      website: agency.website,
+      telephone: headOffice?.phone,
+      email: agency.email,
+      streetAddress: headOffice?.address,
+      city: agency.city,
+      state: agency.state,
+      rating: agency.rating,
+      reviewCount: agency.reviewCount,
+      pricingIsFree: agency.pricing.isFree,
+      minCost: agency.pricing.minCost,
+      maxCost: agency.pricing.maxCost,
+      meaLicenseNo: agency.meaLicenseNo,
+      meaLicenseExpiry: agency.meaLicenseExpiry,
+      countries: agency.countries,
     }),
     buildBreadcrumbSchema([
       { name: 'Home', href: '/' },
       { name: 'Agencies', href: '/agencies' },
       { name: agency.name, href: `/agency/${agency.slug}` },
     ]),
+    ...(agency.faqs.length > 0 ? [buildFaqSchema(agency.faqs)] : []),
     ...agency.reviews
       .filter(r => r.body)
       .slice(0, 5)
@@ -141,10 +134,6 @@ export default async function AgencyDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <MultiJsonLd schemas={agencySchemas} />
 
       <AgencyHero agency={agency} recommendationPercent={liveRecommendPercent} />

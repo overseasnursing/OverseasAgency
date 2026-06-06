@@ -365,6 +365,100 @@ export function buildGuidePersonSchema(person: {
   }
 }
 
+// ─── Agency (full schema for agency detail pages) ─────────────────────────────
+
+export function buildAgencySchema(agency: {
+  name: string
+  slug: string
+  description?: string
+  website?: string
+  telephone?: string
+  email?: string
+  streetAddress?: string
+  city?: string
+  state?: string
+  rating?: number
+  reviewCount?: number
+  pricingIsFree?: boolean
+  minCost?: number
+  maxCost?: number
+  meaLicenseNo?: string
+  meaLicenseExpiry?: string
+  countries?: string[]
+}) {
+  const priceRange = (() => {
+    if (agency.pricingIsFree) return 'Free'
+    if (!agency.minCost && !agency.maxCost) return undefined
+    const minL = agency.minCost ? (agency.minCost / 100000).toFixed(1) : null
+    const maxL = agency.maxCost ? (agency.maxCost / 100000).toFixed(1) : null
+    if (minL && maxL) return `INR ${agency.minCost} - INR ${agency.maxCost}`
+    return minL ? `INR ${agency.minCost}` : `INR ${agency.maxCost}`
+  })()
+
+  const agencyId = `${BASE_URL}/agency/${agency.slug}#agency`
+  const pageUrl  = `${BASE_URL}/agency/${agency.slug}`
+
+  const medicalBusiness = {
+    '@type': 'MedicalBusiness',
+    '@id': agencyId,
+    name: agency.name,
+    url: agency.website ?? pageUrl,
+    ...(agency.description && { description: agency.description }),
+    ...(agency.telephone && { telephone: agency.telephone }),
+    ...(agency.email && { email: agency.email }),
+    ...(priceRange && { priceRange }),
+    ...((agency.city || agency.streetAddress) && {
+      address: {
+        '@type': 'PostalAddress',
+        ...(agency.streetAddress && { streetAddress: agency.streetAddress }),
+        ...(agency.city && { addressLocality: agency.city }),
+        ...(agency.state && { addressRegion: agency.state }),
+        addressCountry: 'IN',
+      },
+    }),
+    ...((agency.rating ?? 0) > 0 && (agency.reviewCount ?? 0) > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: (agency.rating ?? 0).toFixed(1),
+            reviewCount: agency.reviewCount,
+            bestRating: '5',
+            worstRating: '1',
+          },
+        }
+      : {}),
+    ...(agency.meaLicenseNo && {
+      hasCredential: {
+        '@type': 'EducationalOccupationalCredential',
+        credentialCategory: 'Recruitment License',
+        name: 'Ministry of External Affairs (MEA) Overseas Recruitment License',
+        value: agency.meaLicenseNo,
+        ...(agency.meaLicenseExpiry && { validUntil: agency.meaLicenseExpiry }),
+        recognizedBy: {
+          '@type': 'GovernmentOrganization',
+          name: 'Ministry of External Affairs, Government of India',
+          url: 'https://epoe.mea.gov.in',
+        },
+      },
+    }),
+    ...((agency.countries ?? []).length > 0 && {
+      areaServed: (agency.countries ?? []).map(c => ({ '@type': 'Country', name: c })),
+    }),
+    serviceType: 'Overseas Nursing Recruitment',
+  }
+
+  // ItemPage wraps MedicalBusiness as mainEntity — Google's recommended directory architecture
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemPage',
+    '@id': pageUrl,
+    url: pageUrl,
+    name: `${agency.name} — Reviews, Fees & Verification`,
+    description: agency.description,
+    mainEntity: medicalBusiness,
+  }
+}
+
 // ─── Aggregate review (for agency pages) ─────────────────────────────────────
 
 export function buildAggregateRatingSchema(entity: {
