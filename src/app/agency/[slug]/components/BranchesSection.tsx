@@ -11,7 +11,7 @@ export function BranchesSection({ agency }: BranchesSectionProps) {
   return (
     <section aria-labelledby="branches-heading">
       <h2 id="branches-heading" className="text-[22px] font-bold text-slate-800 mb-6">
-        Office Locations
+        {agency.name} Office Locations
       </h2>
 
       <div className="flex flex-col gap-4">

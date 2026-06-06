@@ -71,6 +71,8 @@ export interface FAQ {
 }
 
 export interface AgencyDetail extends Omit<Agency, 'pricing'> {
+  seoTitle?: string
+  seoDescription?: string
   description: string
   email: string
   website?: string
@@ -89,7 +91,9 @@ export interface AgencyDetail extends Omit<Agency, 'pricing'> {
   // Legal & Credentials
   meaLicenseNo?: string
   meaLicenseExpiry?: string
+  meaLicenseUrl?: string
   companyRegistrationNo?: string
+  companyRegistrationUrl?: string
   certifications: string[]
   // Language Academy
   languageInstituteName?: string

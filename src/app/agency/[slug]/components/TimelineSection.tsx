@@ -46,11 +46,11 @@ const STEPS = [
   },
 ]
 
-export function TimelineSection() {
+export function TimelineSection({ agencyName }: { agencyName: string }) {
   return (
     <section aria-labelledby="timeline-heading">
       <h2 id="timeline-heading" className="text-[22px] font-bold text-slate-800 mb-6">
-        Migration Process Timeline
+        How {agencyName} Works — Overseas Nursing Migration Process
       </h2>
 
       <div className="relative">

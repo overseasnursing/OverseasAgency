@@ -6,6 +6,7 @@ import type { AgencyDetail } from '@/types/agencyDetail'
 
 interface FaqAccordionProps {
   faqs: AgencyDetail['faqs']
+  agencyName: string
 }
 
 function FaqItem({ faq, index }: { faq: AgencyDetail['faqs'][number]; index: number }) {
@@ -42,13 +43,13 @@ function FaqItem({ faq, index }: { faq: AgencyDetail['faqs'][number]; index: num
   )
 }
 
-export function FaqAccordion({ faqs }: FaqAccordionProps) {
+export function FaqAccordion({ faqs, agencyName }: FaqAccordionProps) {
   if (faqs.length === 0) return null
 
   return (
     <section aria-labelledby="faq-heading">
       <h2 id="faq-heading" className="text-[22px] font-bold text-slate-800 mb-6">
-        Frequently Asked Questions
+        {agencyName} — Frequently Asked Questions
       </h2>
 
       <div className="flex flex-col gap-3">

@@ -34,7 +34,7 @@ const COMMON_CERTS     = ['MEA Registered', 'ISO 9001:2015', 'NASSCOM Member', '
 
 function empty(): AgencyInput {
   return {
-    slug: '', name: '', tagline: '', description: '', logo_url: '', featured_image_url: '',
+    slug: '', name: '', tagline: '', description: '', seo_title: '', seo_description: '', logo_url: '', featured_image_url: '',
     city: '', state: '', location: '', established: null,
     trust_level: 'unverified', is_active: true, featured: false,
     email: '', website: '', whatsapp: '',
@@ -54,6 +54,7 @@ function empty(): AgencyInput {
     video_testimonials: [], social_links: {},
     current_openings_url: '',
     google_place_id: '', google_rating: null, google_review_count: null,
+    mea_license_url: '', company_registration_url: '',
   }
 }
 
@@ -610,8 +611,14 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           <Field label="MEA License Expiry" hint="Date the license expires">
             <input className={inputCls} type="date" value={form.mea_license_expiry} onChange={e => set('mea_license_expiry', e.target.value)} />
           </Field>
+          <Field label="MEA Verification URL" hint="Link to the government ePOE/MEA portal page for this license — shown as a verify icon on the public profile">
+            <input className={inputCls} value={form.mea_license_url} onChange={e => set('mea_license_url', e.target.value)} placeholder="https://epoe.mea.gov.in/..." />
+          </Field>
           <Field label="Company Registration No." hint="ROC / MCA company registration number">
             <input className={inputCls} value={form.company_registration_no} onChange={e => set('company_registration_no', e.target.value)} placeholder="U85100KL2011PTC023456" />
+          </Field>
+          <Field label="MCA / ROC Verification URL" hint="Link to the MCA or ROC portal page for this registration — shown as a verify icon on the public profile">
+            <input className={inputCls} value={form.company_registration_url} onChange={e => set('company_registration_url', e.target.value)} placeholder="https://www.mca.gov.in/..." />
           </Field>
           <div />
           <div className="col-span-2">
@@ -832,6 +839,40 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           <FaqEditor agencyId={initialData.id} initialFaqs={initialData.faqs} />
         </div>
       )}
+
+      {/* ══ SEO Override ═══════════════════════════════════════════════ */}
+      <div className={sectionCls}>
+        <SectionHeader
+          icon={<BookOpen size={16} />}
+          title="SEO — Title & Meta Description"
+          subtitle="Leave blank to use the auto-generated defaults shown as placeholders"
+        />
+        <div className="flex flex-col gap-4">
+          <Field label="SEO Title" hint={`Default: ${form.name ? `${form.name} Reviews, Fees & Scam Reports — OverseasNursing.com` : 'Auto-generated from agency name'}`}>
+            <input
+              className={inputCls}
+              value={form.seo_title}
+              onChange={e => set('seo_title', e.target.value)}
+              placeholder={form.name ? `${form.name} Reviews, Fees & Scam Reports — OverseasNursing.com` : 'Auto-generated from agency name'}
+              maxLength={70}
+            />
+            <p className="text-[11px] text-slate-400 mt-1">{form.seo_title.length}/70 characters · Google shows ~60 characters</p>
+          </Field>
+          <Field label="Meta Description" hint="Default: auto-generated from agency name and pricing">
+            <textarea
+              className={textareaCls}
+              rows={3}
+              value={form.seo_description}
+              onChange={e => set('seo_description', e.target.value)}
+              placeholder={form.name
+                ? `Read verified nurse reviews of ${form.name}. See agency fees, scam reports, visa success rate, and transparency score before you pay.`
+                : 'Auto-generated from agency name and pricing'}
+              maxLength={160}
+            />
+            <p className="text-[11px] text-slate-400 mt-1">{form.seo_description.length}/160 characters · Google shows ~155 characters</p>
+          </Field>
+        </div>
+      </div>
 
       {/* ══ Save Bar ═══════════════════════════════════════════════════ */}
       <div className="bg-white border border-slate-200 rounded-2xl px-6 py-4 flex items-center justify-between gap-4 sticky bottom-4 shadow-card-md">

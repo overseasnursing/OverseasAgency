@@ -37,7 +37,7 @@ export function InquiryForm({ agency }: InquiryFormProps) {
     return (
       <section id="inquiry" aria-labelledby="inquiry-heading">
         <h2 id="inquiry-heading" className="text-[22px] font-bold text-slate-800 mb-6">
-          Send an Inquiry
+          Contact {agency.name}
         </h2>
         <div className="flex items-center gap-4 p-6 bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl">
           <div className="w-12 h-12 bg-[#DCFCE7] rounded-xl flex items-center justify-center flex-shrink-0">

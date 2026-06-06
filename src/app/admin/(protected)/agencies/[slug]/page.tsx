@@ -22,6 +22,8 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
     id:                            agency.id,
     slug:                          agency.slug,
     name:                          agency.name,
+    seo_title:                     agency.seo_title                  ?? '',
+    seo_description:               agency.seo_description            ?? '',
     tagline:                       agency.tagline                    ?? '',
     description:                   agency.description                ?? '',
     logo_url:                      agency.logo_url                   ?? '',
