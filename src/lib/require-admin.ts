@@ -38,19 +38,24 @@ async function fetchAdminUser(): Promise<AdminUser | null> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
 
+    // Select all columns so admin auth works across local/remote schema versions.
+    // Older local DBs only have display_name; newer schemas add admin_name/admin_permissions.
     const { data } = await supabase
       .from('users')
-      .select('role, admin_name, admin_permissions')
+      .select('*')
       .eq('id', user.id)
       .single()
 
     if (data?.role !== 'admin') return null
 
+    const name = data.admin_name ?? data.display_name ?? user.user_metadata?.full_name ?? user.user_metadata?.name ?? null
+    const permissions = Array.isArray(data.admin_permissions) ? data.admin_permissions : null
+
     return {
       userId:      user.id,
       email:       user.email!,
-      name:        data.admin_name   ?? null,
-      permissions: data.admin_permissions ?? null,
+      name,
+      permissions,
     }
   } catch {
     return null

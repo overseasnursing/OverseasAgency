@@ -11,7 +11,7 @@ export function ScamAlertSection({ agency }: ScamAlertSectionProps) {
     return (
       <section aria-labelledby="trust-heading">
         <h2 id="trust-heading" className="text-[22px] font-bold text-slate-800 mb-4">
-          Scam & Fraud Reports
+          {agency.name} — Scam &amp; Fraud Reports
         </h2>
         <div className="flex items-center gap-4 p-5 bg-[#F0FDF4] border border-[#BBF7D0] rounded-2xl">
           <div className="w-11 h-11 bg-[#DCFCE7] rounded-xl flex items-center justify-center flex-shrink-0">
@@ -33,7 +33,7 @@ export function ScamAlertSection({ agency }: ScamAlertSectionProps) {
   return (
     <section aria-labelledby="scam-heading">
       <h2 id="scam-heading" className="text-[22px] font-bold text-slate-800 mb-4">
-        Scam & Fraud Reports
+        {agency.name} — Scam &amp; Fraud Reports
       </h2>
 
       {/* Warning header */}

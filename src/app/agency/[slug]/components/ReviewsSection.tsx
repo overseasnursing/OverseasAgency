@@ -197,7 +197,7 @@ export function ReviewsSection({ agency }: ReviewsSectionProps) {
     <section id="reviews" aria-labelledby="reviews-heading">
       <div className="flex items-center justify-between mb-6">
         <h2 id="reviews-heading" className="text-[22px] font-bold text-slate-800">
-          Nurse Reviews
+          {agency.name} Nurse Reviews
         </h2>
         <a
           href={writeReviewUrl}
@@ -215,9 +215,20 @@ export function ReviewsSection({ agency }: ReviewsSectionProps) {
           </div>
           <div>
             <p className="text-[16px] font-semibold text-slate-700 mb-1">No reviews yet</p>
-            <p className="text-[13.5px] text-slate-400 max-w-sm leading-relaxed">
-              Be the first to share your experience with {agency.name} and help other nurses make an informed decision.
-            </p>
+            {agency.googleRating && agency.googleReviewCount ? (
+              <p className="text-[13.5px] text-slate-500 max-w-md leading-relaxed">
+                While {agency.name} holds a{' '}
+                <span className="font-semibold text-slate-700">{agency.googleRating.toFixed(1)}-star</span> rating
+                across{' '}
+                <span className="font-semibold text-slate-700">{agency.googleReviewCount.toLocaleString()}+</span> reviews
+                on Google Maps, standard map ratings lack itemized timelines and cost tracking.
+                We are building the first transparent, data-driven database for nurses.
+              </p>
+            ) : (
+              <p className="text-[13.5px] text-slate-400 max-w-sm leading-relaxed">
+                Be the first to share your experience with {agency.name} and help other nurses make an informed decision.
+              </p>
+            )}
           </div>
           <a
             href={writeReviewUrl}

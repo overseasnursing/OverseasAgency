@@ -18,7 +18,7 @@ export function PricingSection({ agency }: PricingSectionProps) {
   return (
     <section id="pricing" aria-labelledby="pricing-heading">
       <h2 id="pricing-heading" className="text-[22px] font-bold text-slate-800 mb-6">
-        Pricing & Fees
+        {agency.name} Fees &amp; Pricing
       </h2>
 
       {/* Price display */}

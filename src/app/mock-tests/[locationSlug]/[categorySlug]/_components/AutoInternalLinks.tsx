@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { ExternalLink, MapPin, DollarSign, CheckSquare, BookOpen } from 'lucide-react'
 import type { SiblingCategory } from '@/lib/data/getMockTestData'
 import { getLocationLinks, getDestinationByCountrySlug, getExamAuthority } from '@/lib/data/mockTestMappings'
@@ -43,7 +44,7 @@ export function AutoInternalLinks({ locationSlug, categorySlug, siblingCategorie
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
           {auto && (
             <div className="flex items-center gap-2 mb-4">
-              <img src={`https://flagcdn.com/20x15/${auto.flagCode}.png`} alt={auto.countryName} width={20} height={15} className="rounded-sm flex-shrink-0" />
+              <Image src={`https://flagcdn.com/20x15/${auto.flagCode}.png`} alt={auto.countryName} width={20} height={15} sizes="20px" className="rounded-sm flex-shrink-0" unoptimized />
               <h2 className="text-[13.5px] font-bold text-slate-700 uppercase tracking-wide">
                 Planning to Work in {auto.countryName}?
               </h2>

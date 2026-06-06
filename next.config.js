@@ -40,6 +40,7 @@ const nextConfig = {
     remotePatterns: [
       { protocol: 'http',  hostname: '127.0.0.1', port: '54321', pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: '*.supabase.co',            pathname: '/storage/v1/object/public/**' },
+      { protocol: 'https', hostname: 'flagcdn.com' },
     ],
   },
 
@@ -74,6 +75,18 @@ const nextConfig = {
         ],
       },
     ]
+  },
+
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // OneDrive-backed workspaces can corrupt webpack's filesystem cache on Windows.
+      // Keep the cache in memory during development to avoid missing vendor chunks.
+      config.cache = {
+        type: 'memory',
+      }
+    }
+
+    return config
   },
 }
 

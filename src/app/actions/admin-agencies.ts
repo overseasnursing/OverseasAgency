@@ -12,6 +12,8 @@ export type AgencyInput = {
   name: string
   tagline: string
   description: string
+  seo_title: string
+  seo_description: string
   logo_url: string
   featured_image_url: string
   city: string
@@ -66,6 +68,9 @@ export type AgencyInput = {
   google_place_id:      string
   google_rating:        number | null
   google_review_count:  number | null
+  // Verification URLs
+  mea_license_url:           string
+  company_registration_url:  string
 }
 
 export type BranchInput = {
@@ -152,6 +157,8 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
   const row = {
     slug,
     name:                          data.name,
+    seo_title:                     data.seo_title                 || null,
+    seo_description:               data.seo_description           || null,
     tagline:                       data.tagline                   || null,
     description:                   data.description               || null,
     logo_url:                      data.logo_url                  || null,
@@ -208,6 +215,9 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     google_place_id:               data.google_place_id           || null,
     google_rating:                 data.google_rating             ?? null,
     google_review_count:           data.google_review_count       ?? null,
+    // Verification URLs
+    mea_license_url:               data.mea_license_url           || null,
+    company_registration_url:      data.company_registration_url  || null,
   }
 
   if (data.id) {
