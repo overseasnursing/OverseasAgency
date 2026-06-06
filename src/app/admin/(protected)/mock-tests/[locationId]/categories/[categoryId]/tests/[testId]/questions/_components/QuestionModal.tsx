@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useTransition, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { X, AlertTriangle, ToggleLeft, ToggleRight, ImagePlus, CheckCircle, Loader2 } from 'lucide-react'
 import { saveQuestion, uploadQuestionImage, type QuestionInput } from '@/app/actions/admin-questions'
@@ -51,8 +52,7 @@ function ImageField({
       <label className={labelCls}>{label} <span className="text-slate-400 font-normal">(optional)</span></label>
       {value ? (
         <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="max-h-48 w-full object-contain" />
+          <Image src={value} alt="" width={800} height={192} sizes="800px" className="max-h-48 w-full object-contain" unoptimized />
           <button type="button" onClick={() => onChange('')}
             className="absolute top-2 right-2 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center text-slate-500 hover:text-red-600 shadow-sm transition-colors">
             <X size={12} />

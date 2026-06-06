@@ -65,7 +65,9 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
     // Legal & Credentials
     mea_license_no:                agency.mea_license_no             ?? '',
     mea_license_expiry:            agency.mea_license_expiry         ?? '',
+    mea_license_url:               agency.mea_license_url            ?? '',
     company_registration_no:       agency.company_registration_no    ?? '',
+    company_registration_url:      agency.company_registration_url   ?? '',
     certifications:                agency.certifications             ?? [],
     // Language Academy
     language_institute_name:       agency.language_institute_name    ?? '',

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -576,8 +577,7 @@ export function ResultClient({
 
                         {/* Image */}
                         {q.image_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={q.image_url} alt="Question" className="mb-4 rounded-xl border border-slate-200 max-h-48 object-contain w-full" />
+                          <Image src={q.image_url} alt="Question" width={800} height={192} sizes="(max-width: 768px) 100vw, 800px" className="mb-4 rounded-xl border border-slate-200 max-h-48 object-contain w-full" unoptimized />
                         )}
 
                         {/* Question text */}

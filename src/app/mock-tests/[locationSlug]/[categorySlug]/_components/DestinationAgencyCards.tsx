@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { Star, ArrowRight, ChevronRight, ShieldCheck } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -164,8 +165,7 @@ export async function DestinationAgencyCards({ countryTerms, countryName, countr
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`https://flagcdn.com/20x15/${flagCode}.png`} alt={`${countryName} flag`} width={20} height={15} className="rounded-sm" />
+          <Image src={`https://flagcdn.com/20x15/${flagCode}.png`} alt={`${countryName} flag`} width={20} height={15} sizes="20px" className="rounded-sm" unoptimized />
           <h2 className="text-[15px] font-bold text-slate-800">
             Top Agencies for {countryName}
           </h2>
@@ -185,8 +185,7 @@ export async function DestinationAgencyCards({ countryTerms, countryName, countr
 
             {/* Featured image */}
             {agency.featuredImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={agency.featuredImage} alt={agency.name} width={600} height={144} className="w-full h-36 object-cover" />
+              <Image src={agency.featuredImage} alt={agency.name} width={600} height={144} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="w-full h-36 object-cover" />
             ) : (
               <div className="w-full h-36 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
                 <span className="text-[28px] font-bold text-primary/20">
@@ -199,8 +198,7 @@ export async function DestinationAgencyCards({ countryTerms, countryName, countr
               {/* Logo + name + trust */}
               <div className="flex items-start gap-3">
                 {agency.logo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={agency.logo} alt={`${agency.name} logo`} width={40} height={40} className="w-10 h-10 rounded-xl object-contain border border-slate-100 flex-shrink-0" />
+                  <Image src={agency.logo} alt={`${agency.name} logo`} width={40} height={40} sizes="40px" className="w-10 h-10 rounded-xl object-contain border border-slate-100 flex-shrink-0" />
                 ) : (
                   <Initials name={agency.name} />
                 )}
