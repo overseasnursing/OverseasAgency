@@ -156,7 +156,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
 
   if (testIds.length > 0) {
     // Fetch question difficulty + approved reviews in parallel
-    const [{ data: qRows }, { data: rRows }] = await Promise.all([
+    const [{ data: qRows }, { data: rRows, error: rErr }] = await Promise.all([
       db.from('mock_test_questions').select('mock_test_id, difficulty').in('mock_test_id', testIds),
       db.from('mock_test_reviews').select('mock_test_id, rating')
         .in('mock_test_id', testIds).eq('status', 'approved'),
@@ -175,14 +175,32 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       diffByTest[tid] = (sorted[0]?.[0] as 'easy' | 'medium' | 'hard') ?? 'medium'
     }
 
-    // Per-test rating aggregates (only reviews linked to a specific test)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ;(rRows ?? []).forEach((r: any) => {
-      if (!r.mock_test_id) return
-      ratingByTest[r.mock_test_id] ??= { sum: 0, count: 0 }
-      ratingByTest[r.mock_test_id].sum   += r.rating
-      ratingByTest[r.mock_test_id].count += 1
-    })
+    // Per-test rating aggregates.
+    // Primary: reviews linked to a specific test via mock_test_id.
+    // Fallback: if no test-linked reviews exist (mock_test_id column not yet migrated,
+    //   test was deleted resetting FK to NULL, or reviews predate the inline form),
+    //   query the full category and show the aggregate on every card.
+    if (!rErr && rRows && rRows.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(rRows as any[]).forEach((r: any) => {
+        if (!r.mock_test_id) return
+        ratingByTest[r.mock_test_id] ??= { sum: 0, count: 0 }
+        ratingByTest[r.mock_test_id].sum   += r.rating
+        ratingByTest[r.mock_test_id].count += 1
+      })
+    } else {
+      // Fallback: category-level aggregate shown on all cards
+      const { data: catR } = await db
+        .from('mock_test_reviews').select('rating')
+        .eq('category_id', cat.id).eq('status', 'approved')
+      if (catR?.length) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const catSum = (catR as any[]).reduce((s: number, r: any) => s + r.rating, 0)
+        testIds.forEach((id: string) => {
+          ratingByTest[id] = { sum: catSum, count: catR.length }
+        })
+      }
+    }
   }
 
   return {

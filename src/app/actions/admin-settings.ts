@@ -51,6 +51,13 @@ export async function saveAdminSettings(
     reviewerInstagramUrl: (formData.get('reviewerInstagramUrl') as string | null)?.trim() ?? '',
     reviewerTwitterUrl: (formData.get('reviewerTwitterUrl') as string | null)?.trim() ?? '',
     reviewerYoutubeUrl: (formData.get('reviewerYoutubeUrl') as string | null)?.trim() ?? '',
+
+    siteFacebookUrl:  (formData.get('siteFacebookUrl')  as string | null)?.trim() ?? '',
+    siteInstagramUrl: (formData.get('siteInstagramUrl') as string | null)?.trim() ?? '',
+    siteTwitterUrl:   (formData.get('siteTwitterUrl')   as string | null)?.trim() ?? '',
+    siteLinkedinUrl:  (formData.get('siteLinkedinUrl')  as string | null)?.trim() ?? '',
+    siteYoutubeUrl:   (formData.get('siteYoutubeUrl')   as string | null)?.trim() ?? '',
+    siteWhatsappUrl:  (formData.get('siteWhatsappUrl')  as string | null)?.trim() ?? '',
   }
 
   const result = await upsertAdminProfile(profile)

@@ -38,6 +38,13 @@ function rowToProfile(row: AdminProfileRow): AdminProfile {
     reviewerTwitterUrl: row.reviewer_twitter_url ?? undefined,
     reviewerYoutubeUrl: row.reviewer_youtube_url ?? undefined,
 
+    siteFacebookUrl:  row.site_facebook_url  ?? undefined,
+    siteInstagramUrl: row.site_instagram_url ?? undefined,
+    siteTwitterUrl:   row.site_twitter_url   ?? undefined,
+    siteLinkedinUrl:  row.site_linkedin_url  ?? undefined,
+    siteYoutubeUrl:   row.site_youtube_url   ?? undefined,
+    siteWhatsappUrl:  row.site_whatsapp_url  ?? undefined,
+
     updatedAt: row.updated_at ?? undefined,
   }
 }
@@ -61,6 +68,38 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
     return rowToProfile(row)
   } catch {
     return null
+  }
+}
+
+export type SiteSocialLinks = {
+  facebook?: string
+  instagram?: string
+  twitter?: string
+  linkedin?: string
+  youtube?: string
+  whatsapp?: string
+}
+
+export async function getSiteSocialLinks(): Promise<SiteSocialLinks> {
+  try {
+    const db = createAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (db as any)
+      .from('admin_profile')
+      .select('site_facebook_url, site_instagram_url, site_twitter_url, site_linkedin_url, site_youtube_url, site_whatsapp_url')
+      .eq('id', FIXED_ROW_ID)
+      .single()
+    if (error || !data) return {}
+    return {
+      facebook:  data.site_facebook_url  || undefined,
+      instagram: data.site_instagram_url || undefined,
+      twitter:   data.site_twitter_url   || undefined,
+      linkedin:  data.site_linkedin_url  || undefined,
+      youtube:   data.site_youtube_url   || undefined,
+      whatsapp:  data.site_whatsapp_url  || undefined,
+    }
+  } catch {
+    return {}
   }
 }
 
@@ -104,6 +143,13 @@ export async function upsertAdminProfile(
     if (profile.reviewerInstagramUrl !== undefined) payload.reviewer_instagram_url = profile.reviewerInstagramUrl || null
     if (profile.reviewerTwitterUrl !== undefined) payload.reviewer_twitter_url = profile.reviewerTwitterUrl || null
     if (profile.reviewerYoutubeUrl !== undefined) payload.reviewer_youtube_url = profile.reviewerYoutubeUrl || null
+
+    if (profile.siteFacebookUrl  !== undefined) payload.site_facebook_url  = profile.siteFacebookUrl  || null
+    if (profile.siteInstagramUrl !== undefined) payload.site_instagram_url = profile.siteInstagramUrl || null
+    if (profile.siteTwitterUrl   !== undefined) payload.site_twitter_url   = profile.siteTwitterUrl   || null
+    if (profile.siteLinkedinUrl  !== undefined) payload.site_linkedin_url  = profile.siteLinkedinUrl  || null
+    if (profile.siteYoutubeUrl   !== undefined) payload.site_youtube_url   = profile.siteYoutubeUrl   || null
+    if (profile.siteWhatsappUrl  !== undefined) payload.site_whatsapp_url  = profile.siteWhatsappUrl  || null
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (db as any)
