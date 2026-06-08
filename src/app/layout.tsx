@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Manrope } from 'next/font/google'
 import { Navbar } from '@/components/navbar/Navbar'
 import { MobileNav } from '@/components/navbar/MobileNav'
+import { SiteFooter } from '@/components/layout/SiteFooter'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
@@ -70,32 +71,6 @@ export const metadata: Metadata = {
   },
 }
 
-const FOOTER_LINKS = {
-  Navigate: [
-    ['Home',              '/'],
-    ['Agencies',          '/agencies'],
-    ['Mock Test',         '/mock-tests'],
-    ['Check Eligibility', '/eligibility'],
-    ['Scam Reports',      '/scam-reports'],
-    ['Countries',         '/countries'],
-    ['Exams',             '/exam'],
-  ],
-  Discover: [
-    ['Salary Guides',  '/salary'],
-    ['Compare',        '/compare'],
-    ['Reviews',        '/reviews'],
-    ['Guides',         '/guides'],
-    ['Exam Guides',    '/exam'],
-    ['Pricing',        '/pricing'],
-  ],
-  'Countries': [
-    ['Germany',   '/country/germany'],
-    ['UK',        '/country/uk'],
-    ['Australia', '/country/australia'],
-    ['Canada',    '/country/canada'],
-    ['Dubai',     '/country/dubai'],
-  ],
-} as const
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -123,66 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
 
-        {/* ── Footer ── */}
-        <footer className="bg-[#F1F5F9] border-t border-slate-100 pb-[72px] md:pb-0" aria-label="Site footer">
-          <div className="max-w-content mx-auto px-6 lg:px-8 pt-14 pb-10">
-
-            <div className="grid grid-cols-12 gap-8 mb-12">
-              {/* Brand */}
-              <div className="col-span-12 lg:col-span-3">
-                <a
-                  href="/"
-                  className="text-[16px] font-bold text-slate-800 hover:text-primary transition-colors"
-                >
-                  OverseasNursing
-                </a>
-                <p className="mt-3 text-[14px] text-slate-500 leading-relaxed max-w-[220px]">
-                  Helping nurses safely navigate overseas migration — reviews, pricing, and scam protection.
-                </p>
-              </div>
-
-              {/* Link columns */}
-              {(Object.entries(FOOTER_LINKS) as [string, readonly (readonly string[])[]][]).map(
-                ([group, links]) => (
-                  <div key={group} className="col-span-6 sm:col-span-4 lg:col-span-3">
-                    <h6 className="mb-4">{group}</h6>
-                    <ul className="space-y-3">
-                      {links.map(([label, href]) => (
-                        <li key={href}>
-                          <a
-                            href={href}
-                            className="text-[14px] text-slate-500 hover:text-primary transition-colors"
-                          >
-                            {label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-              )}
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-slate-200">
-              <p className="text-[13px] text-slate-400">
-                © {new Date().getFullYear()} OverseasNursing. All rights reserved.
-              </p>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-                {[['About', '/about'], ['Editorial Policy', '/editorial-policy'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(
-                  ([label, href]) => (
-                    <a
-                      key={href}
-                      href={href}
-                      className="text-[13px] text-slate-400 hover:text-primary transition-colors"
-                    >
-                      {label}
-                    </a>
-                  )
-                )}
-              </div>
-            </div>
-          </div>
-        </footer>
+        <SiteFooter />
 
         <MobileNav />
         <AnalyticsProvider />

@@ -34,6 +34,14 @@ export interface AdminProfile {
   reviewerTwitterUrl?: string
   reviewerYoutubeUrl?: string
 
+  // ── Site social links ────────────────────────────────
+  siteFacebookUrl?: string
+  siteInstagramUrl?: string
+  siteTwitterUrl?: string
+  siteLinkedinUrl?: string
+  siteYoutubeUrl?: string
+  siteWhatsappUrl?: string
+
   updatedAt?: string
 }
 
@@ -71,5 +79,11 @@ export interface AdminProfileRow {
   reviewer_instagram_url: string | null
   reviewer_twitter_url: string | null
   reviewer_youtube_url: string | null
+  site_facebook_url: string | null
+  site_instagram_url: string | null
+  site_twitter_url: string | null
+  site_linkedin_url: string | null
+  site_youtube_url: string | null
+  site_whatsapp_url: string | null
   updated_at: string | null
 }

@@ -124,6 +124,22 @@ export default function AdminSettingsPage() {
 
         <form action={formAction} className="flex flex-col gap-8">
 
+          {/* ── Site Social Links ──────────────────────────────── */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8">
+            <SectionHeading
+              title="Site Social Links"
+              description="Platform social media accounts displayed in the website footer."
+            />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <FieldRow label="Facebook" name="siteFacebookUrl" placeholder="https://facebook.com/overseasnursing" />
+              <FieldRow label="Instagram" name="siteInstagramUrl" placeholder="https://instagram.com/overseasnursing" />
+              <FieldRow label="Twitter / X" name="siteTwitterUrl" placeholder="https://x.com/overseasnursing" />
+              <FieldRow label="LinkedIn" name="siteLinkedinUrl" placeholder="https://linkedin.com/company/overseasnursing" />
+              <FieldRow label="YouTube" name="siteYoutubeUrl" placeholder="https://youtube.com/@overseasnursing" />
+              <FieldRow label="WhatsApp Community" name="siteWhatsappUrl" placeholder="https://chat.whatsapp.com/..." />
+            </div>
+          </div>
+
           {/* ── Author Section ─────────────────────────────────── */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8">
             <SectionHeading
