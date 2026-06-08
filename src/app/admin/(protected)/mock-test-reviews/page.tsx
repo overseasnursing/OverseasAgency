@@ -1,5 +1,3 @@
-'use server'
-
 import { revalidatePath } from 'next/cache'
 import { Star, CheckCircle, XCircle, Trash2, MapPin, BookOpen } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
