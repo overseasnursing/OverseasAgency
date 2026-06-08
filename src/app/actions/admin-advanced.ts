@@ -1,8 +1,21 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { revalidatePath } from 'next/cache'
 
 const ts = () => new Date().toISOString()
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolvePublicPath(db: any, testId: string): Promise<string | null> {
+  const { data } = await db
+    .from('mock_tests')
+    .select('mock_test_categories!inner(slug, mock_test_locations!inner(slug))')
+    .eq('id', testId)
+    .single()
+  if (!data) return null
+  const cat = data.mock_test_categories
+  return `/mock-tests/${cat.mock_test_locations.slug}/${cat.slug}`
+}
 
 /* ── Clone a mock test (copies all questions) ────────────────────────── */
 export async function cloneMockTest(
@@ -96,6 +109,8 @@ export async function setTestStatus(
     .eq('id', testId)
 
   if (error) return { ok: false, error: error.message }
+  const pagePath = await resolvePublicPath(db, testId)
+  if (pagePath) revalidatePath(pagePath)
   return { ok: true }
 }
 

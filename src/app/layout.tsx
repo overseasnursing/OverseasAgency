@@ -47,9 +47,16 @@ export const metadata: Metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
+  alternates: {
+    canonical: 'https://overseasnursing.com',
+    languages: {
+      'en-IN': 'https://overseasnursing.com',
+      'en':    'https://overseasnursing.com',
+    },
+  },
   openGraph: {
     type:      'website',
-    locale:    'en_US',
+    locale:    'en_IN',
     url:       'https://overseasnursing.com',
     siteName:  'OverseasNursing',
     description:
@@ -92,7 +99,7 @@ const FOOTER_LINKS = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={manrope.variable}>
+    <html lang="en-IN" className={manrope.variable}>
       <head>
         {/* Preconnect to analytics + CDN origins so scripts load faster */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />

@@ -173,7 +173,7 @@ export function buildReviewSchema(review: {
   }
 }
 
-// ─── Article ───────────────────────────────────────────────────────────────────
+// ─── Article / TechArticle ────────────────────────────────────────────────────
 
 export function buildArticleSchema(article: {
   title: string
@@ -182,22 +182,32 @@ export function buildArticleSchema(article: {
   publishedDate?: string
   modifiedDate?: string
   imageUrl?: string
+  type?: 'Article' | 'TechArticle'
+  about?: string
 }) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': article.type ?? 'Article',
     headline: article.title,
     description: article.description,
     url: abs(article.path),
     datePublished: article.publishedDate ?? '2025-01-01',
     dateModified: article.modifiedDate ?? article.publishedDate ?? '2025-01-01',
     ...(article.imageUrl && { image: abs(article.imageUrl) }),
+    ...(article.about && {
+      about: { '@type': 'DefinedTerm', name: article.about },
+    }),
+    inLanguage: 'en',
     author: { '@type': 'Organization', name: SITE_NAME, url: BASE_URL },
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
       url: BASE_URL,
       logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.svg` },
+    },
+    audience: {
+      '@type': 'Audience',
+      audienceType: 'Registered nurses preparing for overseas licensing exams',
     },
   }
 }
@@ -285,7 +295,108 @@ export function buildReviewerPersonSchema(reviewer: {
   }
 }
 
-// ─── LearningResource (mock test category page) ───────────────────────────────
+// ─── Exam category Course schema (replaces separate LearningResource + Course) ─
+// Single authoritative Course entity — always emitted, AggregateRating added when ≥3 reviews
+
+export function buildExamCategorySchema(page: {
+  name:        string
+  description: string
+  path:        string
+  examName:    string
+  tests: Array<{
+    name:             string
+    slug:             string
+    duration_minutes: number
+    total_questions:  number
+    difficulty:       string
+  }>
+  avgRating?:   number
+  reviewCount?: number
+  reviews?: Array<{
+    reviewerName:    string
+    reviewerCountry: string | null
+    rating:          number
+    title:           string | null
+    text:            string | null
+    date:            string
+  }>
+}) {
+  const url = abs(page.path)
+
+  // AggregateRating only when ≥3 reviews (avoids misleading averages)
+  const aggregate = (page.reviewCount ?? 0) >= 3 && (page.avgRating ?? 0) > 0
+    ? {
+        aggregateRating: {
+          '@type':      'AggregateRating',
+          ratingValue:  (page.avgRating ?? 0).toFixed(1),
+          reviewCount:  page.reviewCount,
+          bestRating:   '5',
+          worstRating:  '1',
+        },
+      }
+    : {}
+
+  // Individual Review items (up to 10) when any reviews exist
+  const reviewItems = (page.reviews ?? []).slice(0, 10).map(r => ({
+    '@type':       'Review',
+    ...(r.title && { name: r.title }),
+    author: {
+      '@type': 'Person',
+      name:    r.reviewerName,
+      ...(r.reviewerCountry && {
+        address: { '@type': 'PostalAddress', addressCountry: r.reviewerCountry },
+      }),
+    },
+    reviewRating: {
+      '@type':     'Rating',
+      ratingValue: r.rating,
+      bestRating:  5,
+      worstRating: 1,
+    },
+    ...(r.text && { reviewBody: r.text }),
+    datePublished: r.date,
+  }))
+
+  // hasCourseInstance — one per test variant
+  const instances = page.tests.map(t => ({
+    '@type':     'CourseInstance',
+    name:        t.name,
+    url:         abs(`${page.path}/${t.slug}`),
+    courseMode:  'online',
+    duration:    `PT${t.duration_minutes}M`,
+    courseWorkload: `${t.total_questions} questions`,
+  }))
+
+  return {
+    '@context': 'https://schema.org',
+    '@type':    'Course',
+    name:       page.name,
+    description: page.description,
+    url,
+    '@id':      `${url}#course`,
+    about: {
+      '@type': 'DefinedTerm',
+      name:    page.examName,
+    },
+    educationalLevel:    'Professional',
+    teaches:             page.examName,
+    learningResourceType: 'Practice Test',
+    inLanguage:          'en',
+    isAccessibleForFree: true,
+    numberOfItems:       page.tests.length,
+    provider: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
+    audience: {
+      '@type':       'EducationalAudience',
+      educationalRole: 'student',
+      audienceType:  'Registered nurses preparing for overseas licensing exams',
+    },
+    ...(instances.length > 0 && { hasCourseInstance: instances }),
+    ...aggregate,
+    ...(reviewItems.length > 0 && { review: reviewItems }),
+  }
+}
+
+// ─── LearningResource (kept for non-exam pages that still use it) ─────────────
 
 export function buildLearningResourceSchema(page: {
   name: string
@@ -309,36 +420,49 @@ export function buildLearningResourceSchema(page: {
   }
 }
 
-// ─── Quiz ItemList (one item per mock test) ────────────────────────────────────
+// ─── Quiz ItemList (enriched — one item per mock test) ────────────────────────
 
 export function buildQuizItemListSchema(
   tests: Array<{
-    name: string
-    slug: string
+    name:             string
+    slug:             string
     duration_minutes: number
-    total_questions: number
+    total_questions:  number
+    difficulty?:      string
   }>,
-  basePath: string,
+  basePath:     string,
   categoryName: string,
+  examName?:    string,
 ) {
   if (!tests.length) return null
   return {
     '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: `${categoryName} — Mock Test List`,
+    '@type':    'ItemList',
+    name:       `${categoryName} — Mock Tests`,
     numberOfItems: tests.length,
     itemListElement: tests.map((t, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
+      '@type':   'ListItem',
+      position:  i + 1,
       item: {
         '@type': ['Quiz', 'LearningResource'],
-        name: t.name,
-        url: abs(`${basePath}/${t.slug}`),
-        timeRequired: `PT${t.duration_minutes}M`,
-        numberOfItems: t.total_questions,
+        name:    t.name,
+        url:     abs(`${basePath}/${t.slug}`),
+        timeRequired:    `PT${t.duration_minutes}M`,
+        numberOfItems:   t.total_questions,
         educationalLevel: 'Professional',
-        inLanguage: 'en',
+        inLanguage:      'en',
         isAccessibleForFree: true,
+        ...(t.difficulty && {
+          educationalAlignment: {
+            '@type':         'AlignmentObject',
+            alignmentType:   'educationalDifficulty',
+            targetName:      t.difficulty.charAt(0).toUpperCase() + t.difficulty.slice(1),
+          },
+        }),
+        ...(examName && {
+          assesses: examName,
+          about:    { '@type': 'DefinedTerm', name: examName },
+        }),
         provider: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
       },
     })),
@@ -365,8 +489,8 @@ export function buildGuidePersonSchema(person: {
   }
 }
 
-// ─── Mock-test reviews (AggregateRating + Review items for exam category pages) ─
-
+// ─── buildMockTestReviewsSchema — deprecated alias, use buildExamCategorySchema ─
+// Kept temporarily so old call sites don't break during migration
 export function buildMockTestReviewsSchema(data: {
   examName:    string
   path:        string
@@ -382,51 +506,16 @@ export function buildMockTestReviewsSchema(data: {
   }>
 }): Record<string, unknown> | null {
   if (data.reviewCount < 1) return null
-
-  // Individual Review items — eligible for any count; include title + body + author + date
-  const reviewItems = data.reviews
-    .slice(0, 10)
-    .map(r => ({
-      '@type':       'Review',
-      name:          r.title ?? undefined,
-      author: {
-        '@type': 'Person',
-        name:    r.reviewerName,
-        ...(r.reviewerCountry && {
-          address: { '@type': 'PostalAddress', addressCountry: r.reviewerCountry },
-        }),
-      },
-      reviewRating: {
-        '@type':      'Rating',
-        ratingValue:  r.rating,
-        bestRating:   5,
-        worstRating:  1,
-      },
-      reviewBody:    r.text ?? undefined,
-      datePublished: r.date,
-    }))
-
-  // AggregateRating only when ≥ 3 reviews — avoids misleading single-review averages
-  const aggregate = data.reviewCount >= 3
-    ? {
-        aggregateRating: {
-          '@type':      'AggregateRating',
-          ratingValue:  data.avgRating.toFixed(1),
-          reviewCount:  data.reviewCount,
-          bestRating:   '5',
-          worstRating:  '1',
-        },
-      }
-    : {}
-
-  return {
-    '@context': 'https://schema.org',
-    '@type':    'Course',
-    name:       data.examName,
-    url:        abs(data.path),
-    ...aggregate,
-    ...(reviewItems.length > 0 && { review: reviewItems }),
-  }
+  return buildExamCategorySchema({
+    name:        data.examName,
+    description: '',
+    path:        data.path,
+    examName:    data.examName,
+    tests:       [],
+    avgRating:   data.avgRating,
+    reviewCount: data.reviewCount,
+    reviews:     data.reviews,
+  })
 }
 
 // ─── Agency (full schema for agency detail pages) ─────────────────────────────

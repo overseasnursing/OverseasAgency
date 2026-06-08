@@ -8,7 +8,14 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/', '/_next/'],
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/_next/',
+          // Test-taking pages — noindexed at metadata level too; disallow saves crawl budget
+          '/mock-tests/*/attempt*',
+          '/mock-tests/*/study*',
+        ],
       },
     ],
     sitemap: [

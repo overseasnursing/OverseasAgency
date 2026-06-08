@@ -18,6 +18,8 @@ export type PublicTest = {
   passing_percentage: number; instructions: string
   is_premium: boolean; status: string
   difficulty: 'easy' | 'medium' | 'hard'
+  avgRating:   number
+  reviewCount: number
 }
 
 function difficultyFromPass(pp: number): 'easy' | 'medium' | 'hard' {
@@ -147,28 +149,40 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       .order('name'),
   ])
 
-  // Compute dominant difficulty per test from actual question tags
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const testIds = (tests ?? []).map((t: any) => t.id)
-  const diffByTest: Record<string, 'easy' | 'medium' | 'hard'> = {}
+  const diffByTest:   Record<string, 'easy' | 'medium' | 'hard'> = {}
+  const ratingByTest: Record<string, { sum: number; count: number }> = {}
 
   if (testIds.length > 0) {
-    const { data: qRows } = await db
-      .from('mock_test_questions')
-      .select('mock_test_id, difficulty')
-      .in('mock_test_id', testIds)
+    // Fetch question difficulty + approved reviews in parallel
+    const [{ data: qRows }, { data: rRows }] = await Promise.all([
+      db.from('mock_test_questions').select('mock_test_id, difficulty').in('mock_test_id', testIds),
+      db.from('mock_test_reviews').select('mock_test_id, rating')
+        .in('mock_test_id', testIds).eq('status', 'approved'),
+    ])
 
-    const counts: Record<string, Record<string, number>> = {}
+    // Dominant difficulty per test
+    const diffCounts: Record<string, Record<string, number>> = {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(qRows ?? []).forEach((q: any) => {
-      counts[q.mock_test_id] ??= { easy: 0, medium: 0, hard: 0 }
+      diffCounts[q.mock_test_id] ??= { easy: 0, medium: 0, hard: 0 }
       const d = q.difficulty as string
-      if (d in counts[q.mock_test_id]) counts[q.mock_test_id][d]++
+      if (d in diffCounts[q.mock_test_id]) diffCounts[q.mock_test_id][d]++
     })
-    for (const tid in counts) {
-      const sorted = Object.entries(counts[tid]).sort((a, b) => b[1] - a[1])
+    for (const tid in diffCounts) {
+      const sorted = Object.entries(diffCounts[tid]).sort((a, b) => b[1] - a[1])
       diffByTest[tid] = (sorted[0]?.[0] as 'easy' | 'medium' | 'hard') ?? 'medium'
     }
+
+    // Per-test rating aggregates (only reviews linked to a specific test)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(rRows ?? []).forEach((r: any) => {
+      if (!r.mock_test_id) return
+      ratingByTest[r.mock_test_id] ??= { sum: 0, count: 0 }
+      ratingByTest[r.mock_test_id].sum   += r.rating
+      ratingByTest[r.mock_test_id].count += 1
+    })
   }
 
   return {
@@ -180,16 +194,21 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       seo_description: cat.seo_description ?? '',
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tests: (tests ?? []).map((t: any) => ({
-      id: t.id, name: t.name, slug: t.slug,
-      duration_minutes: t.duration_minutes,
-      total_questions: t.total_questions,
-      passing_percentage: t.passing_percentage,
-      instructions: t.instructions ?? '',
-      is_premium: t.is_premium ?? false,
-      status: t.status ?? 'published',
-      difficulty: diffByTest[t.id] ?? difficultyFromPass(t.passing_percentage),
-    })),
+    tests: (tests ?? []).map((t: any) => {
+      const rt = ratingByTest[t.id]
+      return {
+        id: t.id, name: t.name, slug: t.slug,
+        duration_minutes: t.duration_minutes,
+        total_questions: t.total_questions,
+        passing_percentage: t.passing_percentage,
+        instructions: t.instructions ?? '',
+        is_premium: t.is_premium ?? false,
+        status: t.status ?? 'published',
+        difficulty:  diffByTest[t.id] ?? difficultyFromPass(t.passing_percentage),
+        avgRating:   rt ? Math.round((rt.sum / rt.count) * 10) / 10 : 0,
+        reviewCount: rt?.count ?? 0,
+      }
+    }),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     siblingCategories: (siblings ?? []).map((s: any) => ({ id: s.id, name: s.name, slug: s.slug })),
   }
@@ -238,7 +257,9 @@ export async function getMockTestBySlug(locSlug: string, catSlug: string, testSl
       seo_description: test.seo_description ?? '',
       is_premium: test.is_premium ?? false,
       status: test.status ?? 'published',
-      difficulty: testDifficulty,
+      difficulty:  testDifficulty,
+      avgRating:   0,
+      reviewCount: 0,
     },
     category: { id: cat.id, name: cat.name, slug: cat.slug },
     location: { id: loc.id, name: loc.name, slug: loc.slug },

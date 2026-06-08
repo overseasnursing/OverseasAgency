@@ -15,10 +15,9 @@ import {
   buildFaqSchema,
   buildArticleSchema,
   buildOrganizationSchema,
-  buildLearningResourceSchema,
   buildQuizItemListSchema,
   buildGuidePersonSchema,
-  buildMockTestReviewsSchema,
+  buildExamCategorySchema,
 } from '@/lib/seo/schemas'
 import { getMockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamGuideContent } from './_components/ExamGuideContent'
@@ -26,6 +25,8 @@ import { AutoInternalLinks } from './_components/AutoInternalLinks'
 import { DestinationAgencyCards } from './_components/DestinationAgencyCards'
 import { MockTestReviews } from './_components/MockTestReviews'
 import { ReviewFormInline } from './_components/ReviewFormInline'
+import { ExamFaqSection } from './_components/ExamFaqSection'
+import { getFaqsForCategory } from '@/lib/data/mock-test-faqs'
 import { getLocationLinks, getDestinationByCountrySlug } from '@/lib/data/mockTestMappings'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -42,15 +43,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locationSlug, categorySlug } = await params
   const data = await getMockTestCategoryData(locationSlug, categorySlug)
   if (!data) return {}
-  const { category, location } = data
+  const { category, location, tests } = data
   const title = category.seo_title || `${category.name} — Free Mock Tests | OverseasNursing`
   const desc  = category.seo_description || category.description ||
     `Practice ${category.name} with free timed mock tests. Part of ${location.name} licensing preparation.`
+  const ogImageUrl = `/api/og?type=exam&title=${encodeURIComponent(category.name)}&subtitle=${encodeURIComponent(location.name)}&tests=${tests.length}`
   return {
     title,
     description: desc,
     alternates: { canonical: `https://overseasnursing.com/mock-tests/${locationSlug}/${categorySlug}` },
-    openGraph: { title, description: desc, url: `https://overseasnursing.com/mock-tests/${locationSlug}/${categorySlug}` },
+    openGraph: {
+      title,
+      description: desc,
+      url: `https://overseasnursing.com/mock-tests/${locationSlug}/${categorySlug}`,
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description: desc,
+      images: [ogImageUrl],
+    },
   }
 }
 
@@ -107,6 +120,11 @@ export default async function CategoryPage({ params }: PageProps) {
     ? Math.round((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviewCount) * 10) / 10
     : 0
 
+  // FAQs: prefer guide content FAQs; fall back to static exam-type FAQs
+  const guideFaqs = content?.meta.faqs ?? []
+  const staticFaqs = guideFaqs.length === 0 ? getFaqsForCategory(categorySlug) : []
+  const faqList = guideFaqs.length > 0 ? guideFaqs : staticFaqs
+
   // Build all schemas; nulls are filtered at the end
   const rawSchemas: (Record<string, unknown> | null)[] = [
     // 1. WebPage
@@ -123,21 +141,41 @@ export default async function CategoryPage({ params }: PageProps) {
     // 3. Organization
     buildOrganizationSchema(),
 
-    // 4. LearningResource
-    buildLearningResourceSchema({
+    // 4. Course — single authoritative schema (replaces LearningResource + separate Course/reviews)
+    //    Always emitted; AggregateRating added when ≥3 reviews; hasCourseInstance per test
+    buildExamCategorySchema({
       name:        pageTitle,
       description: pageDesc,
       path:        pagePath,
       examName:    category.name,
-      testCount:   tests.length,
+      tests:       tests.map(t => ({
+        name:             t.name,
+        slug:             t.slug,
+        duration_minutes: t.duration_minutes,
+        total_questions:  t.total_questions,
+        difficulty:       t.difficulty,
+      })),
+      avgRating,
+      reviewCount,
+      reviews: reviewCount > 0
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? reviews.map((r: any) => ({
+            reviewerName:    r.reviewer_name,
+            reviewerCountry: r.reviewer_country ?? null,
+            rating:          r.rating,
+            title:           r.review_title  ?? null,
+            text:            r.review_text   ?? null,
+            date:            r.created_at?.split('T')[0] ?? '',
+          }))
+        : [],
     }),
 
-    // 5. ItemList of Quiz items — one per test, auto-generated
+    // 5. Quiz ItemList — enriched with difficulty + assesses per item
     tests.length > 0
-      ? buildQuizItemListSchema(tests, pagePath, category.name)
+      ? buildQuizItemListSchema(tests, pagePath, category.name, category.name)
       : null,
 
-    // 6. Article — only when guide content exists
+    // 6. TechArticle — only when study guide content exists
     content
       ? buildArticleSchema({
           title:         pageTitle,
@@ -145,12 +183,14 @@ export default async function CategoryPage({ params }: PageProps) {
           path:          pagePath,
           publishedDate: content.meta.publishedDate ?? '2025-01-01',
           modifiedDate:  content.meta.modifiedDate,
+          type:          'TechArticle',
+          about:         category.name,
         })
       : null,
 
-    // 7. FAQPage — only when FAQs exist in guide
-    content?.meta.faqs?.length
-      ? buildFaqSchema(content.meta.faqs.map(f => ({ question: f.q, answer: f.a })))
+    // 7. FAQPage — from guide content or static exam-type fallback
+    faqList.length > 0
+      ? buildFaqSchema(faqList.map(f => ({ question: f.q, answer: f.a })))
       : null,
 
     // 8. Person (Author) — only when guide has author name
@@ -168,24 +208,6 @@ export default async function CategoryPage({ params }: PageProps) {
           name:        content.meta.reviewer.name,
           description: content.meta.reviewer.experience ?? '',
           jobTitle:    content.meta.reviewer.title,
-        })
-      : null,
-
-    // 10. AggregateRating + Review items — only when reviews exist
-    reviewCount > 0
-      ? buildMockTestReviewsSchema({
-          examName:    category.name,
-          path:        pagePath,
-          avgRating,
-          reviewCount,
-          reviews: reviews.map((r: any) => ({
-            reviewerName:    r.reviewer_name,
-            reviewerCountry: r.reviewer_country ?? null,
-            rating:          r.rating,
-            title:           r.review_title    ?? null,
-            text:            r.review_text     ?? null,
-            date:            r.created_at?.split('T')[0] ?? '',
-          })),
         })
       : null,
   ]
@@ -274,8 +296,6 @@ export default async function CategoryPage({ params }: PageProps) {
           tests={tests as PublicTest[]}
           locationSlug={locationSlug}
           categorySlug={categorySlug}
-          avgRating={avgRating}
-          reviewCount={reviewCount}
         />
 
         {/* Auto-generated internal links — zero manual work, driven by DB + mappings */}
@@ -290,6 +310,11 @@ export default async function CategoryPage({ params }: PageProps) {
         {/* SEO guide content — only renders when guide content has been added */}
         {content && (
           <ExamGuideContent content={content} categoryName={category.name} />
+        )}
+
+        {/* FAQ section — shown when no guide content but static FAQs exist for this exam type */}
+        {!content && staticFaqs.length > 0 && (
+          <ExamFaqSection faqs={staticFaqs} examName={category.name} />
         )}
 
         {/* Nurse reviews for this exam category */}
