@@ -230,7 +230,6 @@ export function ResultClient({
         <ReviewModal
           categoryId={categoryId}
           testId={testId}
-          reviewerName={userName}
           examName={testName}
           onDone={handleReviewDone}
         />
