@@ -269,8 +269,9 @@ function TestCard({
   const studyHref = `/mock-tests/${locationSlug}/${categorySlug}/${test.slug}/study`
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-card hover:shadow-card-md hover:border-slate-300 transition-all overflow-hidden">
-      {/* Number strip */}
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-card hover:shadow-card-md hover:border-slate-300 transition-all overflow-hidden flex flex-col">
+
+      {/* Number + name header */}
       <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-slate-100">
         <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary text-[12px] font-bold flex items-center justify-center flex-shrink-0">
           {String(index + 1).padStart(2, '0')}
@@ -283,7 +284,8 @@ function TestCard({
         </button>
       </div>
 
-      <div className="px-5 pb-5 pt-3 flex flex-col gap-3">
+      <div className="px-5 pt-3 pb-5 flex flex-col gap-3 flex-1">
+
         {/* Stats chips */}
         <div className="flex flex-wrap gap-2">
           {[
@@ -297,45 +299,56 @@ function TestCard({
           ))}
         </div>
 
-        {/* Difficulty + utility badges */}
+        {/* Difficulty + Instant Results (Free badge removed) */}
         <div className="flex flex-wrap gap-2">
-          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-badge border ${diff.cls}`}>{diff.label}</span>
-          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-violet-50 text-violet-700 border border-violet-100">⚡ Instant Results</span>
-          <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-green-50 text-green-700 border border-green-100">🆓 Free</span>
+          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-badge border ${diff.cls}`}>{diff.label}</span>
+          <span className="text-[11px] font-semibold px-2.5 py-1 rounded-badge bg-violet-50 text-violet-700 border border-violet-100">⚡ Instant Results</span>
         </div>
 
-        {/* Rating — plain text link to reviews section, only when this test has reviews */}
-        {test.reviewCount > 0 && (
-          <a
-            href="#candidate-reviews"
-            className="flex items-center gap-1.5 w-fit group"
+        {/* Rating + Details row — always visible, rating hidden when no reviews */}
+        <div className="flex items-center justify-between pt-0.5">
+          {test.reviewCount > 0 ? (
+            <a href="#candidate-reviews" className="flex items-center gap-1.5 group">
+              <MiniStars rating={test.avgRating} />
+              <span className="text-[13px] font-bold text-slate-700">{test.avgRating.toFixed(1)}</span>
+              <span className="text-[12px] text-slate-400 group-hover:text-primary transition-colors">
+                ({test.reviewCount} review{test.reviewCount !== 1 ? 's' : ''})
+              </span>
+            </a>
+          ) : (
+            <span className="text-[12px] text-slate-300 italic">No reviews yet</span>
+          )}
+          <button
+            onClick={onDetails}
+            disabled={isStarting}
+            className="flex items-center gap-1 text-[12px] text-slate-400 hover:text-primary transition-colors font-medium disabled:opacity-40"
           >
-            <MiniStars rating={test.avgRating} />
-            <span className="text-[13px] font-bold text-slate-700">{test.avgRating.toFixed(1)}</span>
-            <span className="text-[12px] text-slate-400 group-hover:text-primary transition-colors">
-              ({test.reviewCount} review{test.reviewCount !== 1 ? 's' : ''})
-            </span>
-          </a>
-        )}
-
-        {/* Actions */}
-        <div className="flex gap-2 pt-1 border-t border-slate-100">
-          <button onClick={onDetails} disabled={isStarting}
-            className="flex items-center gap-1.5 h-9 px-3 border border-slate-200 hover:border-slate-300 text-slate-600 text-[12.5px] font-medium rounded-xl transition-colors disabled:opacity-50">
             <Info size={12} /> Details
           </button>
-          <a href={studyHref}
-            className="flex items-center gap-1.5 h-9 px-3 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[12.5px] font-semibold rounded-xl transition-colors">
-            <BookOpen size={12} /> Study
-          </a>
-          <button onClick={onStart} disabled={isStarting}
-            className="flex-1 flex items-center justify-center gap-1.5 h-9 bg-primary hover:bg-primary-hover text-white text-[12.5px] font-semibold rounded-xl transition-colors disabled:opacity-70">
-            {isStarting
-              ? <><Loader2 size={13} className="animate-spin" /> Setting up…</>
-              : <><Play size={12} /> Start Exam <ChevronRight size={13} /></>
-            }
-          </button>
         </div>
+
+        {/* Spacer pushes buttons to bottom */}
+        <div className="flex-1" />
+
+        {/* Study button — full width outlined */}
+        <a
+          href={studyHref}
+          className="w-full flex items-center justify-center gap-2 h-10 border-2 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[13px] font-semibold rounded-xl transition-colors"
+        >
+          <BookOpen size={14} /> Study Mode
+        </a>
+
+        {/* Start Exam button — full width primary */}
+        <button
+          onClick={onStart}
+          disabled={isStarting}
+          className="w-full flex items-center justify-center gap-2 h-11 bg-primary hover:bg-primary-hover text-white text-[14px] font-bold rounded-xl transition-colors disabled:opacity-70 shadow-sm"
+        >
+          {isStarting
+            ? <><Loader2 size={15} className="animate-spin" /> Setting up…</>
+            : <><Play size={14} /> Start Exam <ChevronRight size={15} /></>
+          }
+        </button>
       </div>
     </div>
   )
