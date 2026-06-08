@@ -9,11 +9,11 @@ const isDev = process.env.NODE_ENV !== 'production'
 // - connect-src: Supabase + analytics.
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.clarity.ms`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.clarity.ms https://static.cloudflareinsights.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 https://maps.gstatic.com https://maps.googleapis.com https://flagcdn.com",
   "frame-src https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
-  "connect-src 'self' https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com",
+  "connect-src 'self' https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://cloudflareinsights.com",
   "font-src 'self'",
   "media-src 'none'",
   "object-src 'none'",
@@ -28,8 +28,15 @@ const nextConfig = {
   poweredByHeader: false,
 
   experimental: {
-    // Tree-shake lucide-react so only used icons are bundled
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-tooltip',
+      'framer-motion',
+    ],
   },
 
   images: {
@@ -64,12 +71,16 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
-          { key: 'Content-Security-Policy',          value: CSP },
+          { key: 'Content-Security-Policy',            value: CSP },
           { key: 'X-Content-Type-Options',            value: 'nosniff' },
           { key: 'X-Frame-Options',                   value: 'DENY' },
           { key: 'Referrer-Policy',                   value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',                value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'X-DNS-Prefetch-Control',            value: 'on' },
+          // Prevents cross-origin window takeover (COOP)
+          { key: 'Cross-Origin-Opener-Policy',        value: 'same-origin-allow-popups' },
+          // HSTS — 1 year, include subdomains, eligible for preload list
+          { key: 'Strict-Transport-Security',         value: 'max-age=31536000; includeSubDomains; preload' },
           // Supabase CDN preconnect hint
           { key: 'Link',                              value: '<https://cdn.supabase.co>; rel=preconnect' },
         ],
