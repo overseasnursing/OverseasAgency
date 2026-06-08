@@ -10,7 +10,6 @@ export type MockTestReviewInput = {
   difficulty:       'easy' | 'medium' | 'hard'
   reviewTitle?:     string
   reviewText?:      string
-  reviewerName:     string
   reviewerCountry?: string
 }
 
@@ -32,8 +31,6 @@ export async function submitMockTestReview(
     return { success: false, error: 'Rating must be 1–5.' }
   if (!['easy', 'medium', 'hard'].includes(data.difficulty))
     return { success: false, error: 'Invalid difficulty.' }
-  if (!data.reviewerName || data.reviewerName.trim().length < 2)
-    return { success: false, error: 'Name is required.' }
   if (data.reviewTitle && data.reviewTitle.length > 120)
     return { success: false, error: 'Title must be under 120 characters.' }
   if (data.reviewText && data.reviewText.length > 2000)
@@ -44,14 +41,24 @@ export async function submitMockTestReview(
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) return { success: false, error: 'You must be signed in to submit a review.' }
+
+  // Derive reviewer name from auth metadata (not from client input)
+  const meta = user.user_metadata ?? {}
+  const reviewerName: string =
+    (meta.display_name as string | undefined)?.trim() ||
+    (meta.full_name   as string | undefined)?.trim() ||
+    (meta.name        as string | undefined)?.trim() ||
+    (user.email?.split('@')[0] ?? 'Nurse')
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const { error } = await db.from('mock_test_reviews').insert({
     category_id:      data.categoryId,
     mock_test_id:     data.testId ?? null,
-    user_id:          user?.id ?? null,
-    reviewer_name:    sanitize(data.reviewerName),
+    user_id:          user.id,
+    reviewer_name:    sanitize(reviewerName),
     reviewer_country: data.reviewerCountry ? sanitize(data.reviewerCountry) : null,
     rating:           data.rating,
     difficulty:       data.difficulty,

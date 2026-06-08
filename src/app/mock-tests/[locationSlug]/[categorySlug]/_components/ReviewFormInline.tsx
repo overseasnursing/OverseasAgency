@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Star, Globe, CheckCircle, PenLine, ChevronDown } from 'lucide-react'
+import { Star, Globe, CheckCircle, PenLine, ChevronDown, LogIn, User } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { submitMockTestReview } from '@/app/actions/submitMockTestReview'
 
 type TestOption = { id: string; name: string }
@@ -21,43 +22,67 @@ const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent']
 
 const inputCls = 'w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/60 transition-colors bg-white'
 
-export function ReviewFormInline({ categoryId, tests }: Props) {
-  const [reviewedTests,   setReviewedTests]   = useState<Set<string>>(new Set())
-  const [selectedTestId,  setSelectedTestId]  = useState('')
-  const [rating,          setRating]          = useState(0)
-  const [hover,           setHover]           = useState(0)
-  const [difficulty,      setDiff]            = useState<'easy' | 'medium' | 'hard' | null>(null)
-  const [reviewerName,    setName]            = useState('')
-  const [reviewTitle,     setTitle]           = useState('')
-  const [reviewText,      setText]            = useState('')
-  const [reviewerCountry, setCountry]         = useState('')
-  const [error,           setError]           = useState('')
-  const [submitted,       setSubmitted]       = useState(false)
-  const [pending,         start]              = useTransition()
+type AuthState =
+  | { status: 'loading' }
+  | { status: 'unauthenticated' }
+  | { status: 'authenticated'; displayName: string; userId: string }
 
-  // Read localStorage on mount to know which tests are already reviewed
+function getDisplayName(user: { user_metadata?: Record<string, unknown>; email?: string }): string {
+  const m = user.user_metadata ?? {}
+  return (
+    (m.display_name as string | undefined)?.trim() ||
+    (m.full_name    as string | undefined)?.trim() ||
+    (m.name         as string | undefined)?.trim() ||
+    user.email?.split('@')[0] ||
+    'Nurse'
+  )
+}
+
+export function ReviewFormInline({ categoryId, tests }: Props) {
+  const [auth,           setAuth]          = useState<AuthState>({ status: 'loading' })
+  const [reviewedTests,  setReviewedTests] = useState<Set<string>>(new Set())
+  const [selectedTestId, setSelectedTestId]= useState('')
+  const [rating,         setRating]        = useState(0)
+  const [hover,          setHover]         = useState(0)
+  const [difficulty,     setDiff]          = useState<'easy' | 'medium' | 'hard' | null>(null)
+  const [reviewTitle,    setTitle]         = useState('')
+  const [reviewText,     setText]          = useState('')
+  const [reviewerCountry,setCountry]       = useState('')
+  const [error,          setError]         = useState('')
+  const [submitted,      setSubmitted]     = useState(false)
+  const [pending,        start]            = useTransition()
+
+  // Check auth state + load reviewed tests from localStorage
   useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        setAuth({ status: 'unauthenticated' })
+      } else {
+        setAuth({ status: 'authenticated', displayName: getDisplayName(user), userId: user.id })
+      }
+    })
+
+    // Load reviewed tests from localStorage
     const reviewed = new Set<string>()
     tests.forEach(t => {
       if (localStorage.getItem(`reviewed_test_${t.id}`)) reviewed.add(t.id)
     })
     setReviewedTests(reviewed)
-    // Default select the first non-reviewed test
     const first = tests.find(t => !reviewed.has(t.id))
     if (first) setSelectedTestId(first.id)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const displayRating  = hover || rating
-  const unreviewed     = tests.filter(t => !reviewedTests.has(t.id))
-  const allReviewed    = unreviewed.length === 0
+  const displayRating = hover || rating
+  const unreviewed    = tests.filter(t => !reviewedTests.has(t.id))
+  const allReviewed   = unreviewed.length === 0
 
   function handleSubmit() {
+    if (auth.status !== 'authenticated') return
     if (!selectedTestId)  { setError('Please select a test.'); return }
     if (rating === 0)     { setError('Please select a star rating.'); return }
     if (!difficulty)      { setError('Please select a difficulty level.'); return }
-    if (!reviewerName.trim() || reviewerName.trim().length < 2)
-                          { setError('Please enter your name.'); return }
     setError('')
     start(async () => {
       const result = await submitMockTestReview({
@@ -67,16 +92,13 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
         difficulty,
         reviewTitle:     reviewTitle.trim()     || undefined,
         reviewText:      reviewText.trim()      || undefined,
-        reviewerName:    reviewerName.trim(),
         reviewerCountry: reviewerCountry.trim() || undefined,
       })
       if (!result.success) { setError(result.error); return }
-      // Mark this test as reviewed in localStorage
       localStorage.setItem(`reviewed_test_${selectedTestId}`, '1')
       const updated = new Set(reviewedTests).add(selectedTestId)
       setReviewedTests(updated)
       setSubmitted(true)
-      // After 3s, reset to let user review another test if available
       const nextTest = tests.find(t => !updated.has(t.id))
       setTimeout(() => {
         setSubmitted(false)
@@ -86,6 +108,52 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
     })
   }
 
+  // ── Login gate ──────────────────────────────────────────────────
+  if (auth.status === 'loading') return null
+
+  if (auth.status === 'unauthenticated') {
+    const returnPath = typeof window !== 'undefined' ? window.location.pathname : ''
+    return (
+      <section className="mt-10">
+        <div className="flex items-center gap-2 mb-2">
+          <PenLine size={14} className="text-primary" />
+          <p className="text-[11px] font-bold text-primary uppercase tracking-widest">Write a Review</p>
+        </div>
+        <h2 className="text-[20px] font-bold text-slate-800 mb-1">Share Your Experience</h2>
+        <p className="text-[13.5px] text-slate-500 mb-6">
+          Reviewed a test? Help other nurses by sharing your feedback.
+        </p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center">
+            <LogIn size={24} className="text-primary" />
+          </div>
+          <div>
+            <p className="text-[16px] font-bold text-slate-800">Sign in to submit a review</p>
+            <p className="text-[13px] text-slate-500 mt-1 max-w-[320px]">
+              Reviews are linked to your account so we can track and display them accurately.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 mt-1">
+            <a
+              href={`/auth/login?next=${encodeURIComponent(returnPath)}`}
+              className="h-10 px-5 bg-primary hover:bg-primary-hover text-white text-[13.5px] font-semibold rounded-xl transition-colors flex items-center gap-2"
+            >
+              <LogIn size={14} />
+              Sign in
+            </a>
+            <a
+              href={`/auth/signup?next=${encodeURIComponent(returnPath)}`}
+              className="h-10 px-5 border border-slate-200 hover:border-slate-300 text-slate-700 text-[13.5px] font-semibold rounded-xl transition-colors"
+            >
+              Create account
+            </a>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // ── All reviewed ────────────────────────────────────────────────
   if (allReviewed) {
     return (
       <section className="mt-10">
@@ -104,10 +172,10 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
     )
   }
 
+  // ── Authenticated form ──────────────────────────────────────────
   return (
     <section className="mt-10">
 
-      {/* Section label */}
       <div className="flex items-center gap-2 mb-2">
         <PenLine size={14} className="text-primary" />
         <p className="text-[11px] font-bold text-primary uppercase tracking-widest">Write a Review</p>
@@ -132,6 +200,16 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
           </div>
         ) : (
           <>
+            {/* Logged-in user badge */}
+            <div className="flex items-center gap-2.5 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl w-fit">
+              <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                <User size={12} className="text-primary" />
+              </div>
+              <span className="text-[13px] text-slate-700">
+                Reviewing as <span className="font-semibold text-slate-900">{auth.displayName}</span>
+              </span>
+            </div>
+
             {/* Test selector */}
             <div>
               <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">Select Test</p>
@@ -209,19 +287,6 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
                       )
                     })}
                   </div>
-                </div>
-
-                {/* Your name */}
-                <div>
-                  <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">Your Name</p>
-                  <input
-                    type="text"
-                    className={inputCls}
-                    placeholder="e.g. Priya Nair"
-                    maxLength={80}
-                    value={reviewerName}
-                    onChange={e => setName(e.target.value)}
-                  />
                 </div>
 
                 {/* Country */}

@@ -5,11 +5,10 @@ import { Star, X, CheckCircle, Globe } from 'lucide-react'
 import { submitMockTestReview } from '@/app/actions/submitMockTestReview'
 
 type Props = {
-  categoryId:   string
-  testId:       string
-  reviewerName: string
-  examName:     string
-  onDone:       () => void
+  categoryId: string
+  testId:     string
+  examName:   string
+  onDone:     () => void
 }
 
 const DIFF_CONFIG = {
@@ -22,7 +21,7 @@ const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent']
 
 const inputCls = 'w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/60 transition-colors'
 
-export function ReviewModal({ categoryId, testId, reviewerName, examName, onDone }: Props) {
+export function ReviewModal({ categoryId, testId, examName, onDone }: Props) {
   const [rating,          setRating]    = useState(0)
   const [hover,           setHover]     = useState(0)
   const [difficulty,      setDiff]      = useState<'easy' | 'medium' | 'hard' | null>(null)
@@ -45,9 +44,8 @@ export function ReviewModal({ categoryId, testId, reviewerName, examName, onDone
         testId,
         rating,
         difficulty,
-        reviewTitle:     reviewTitle.trim()  || undefined,
-        reviewText:      reviewText.trim()   || undefined,
-        reviewerName,
+        reviewTitle:     reviewTitle.trim()     || undefined,
+        reviewText:      reviewText.trim()      || undefined,
         reviewerCountry: reviewerCountry.trim() || undefined,
       })
       if (!result.success) { setError(result.error); return }
