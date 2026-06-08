@@ -365,6 +365,70 @@ export function buildGuidePersonSchema(person: {
   }
 }
 
+// ─── Mock-test reviews (AggregateRating + Review items for exam category pages) ─
+
+export function buildMockTestReviewsSchema(data: {
+  examName:    string
+  path:        string
+  avgRating:   number
+  reviewCount: number
+  reviews: Array<{
+    reviewerName:    string
+    reviewerCountry: string | null
+    rating:          number
+    title:           string | null
+    text:            string | null
+    date:            string
+  }>
+}): Record<string, unknown> | null {
+  if (data.reviewCount < 1) return null
+
+  // Individual Review items — eligible for any count; include title + body + author + date
+  const reviewItems = data.reviews
+    .slice(0, 10)
+    .map(r => ({
+      '@type':       'Review',
+      name:          r.title ?? undefined,
+      author: {
+        '@type': 'Person',
+        name:    r.reviewerName,
+        ...(r.reviewerCountry && {
+          address: { '@type': 'PostalAddress', addressCountry: r.reviewerCountry },
+        }),
+      },
+      reviewRating: {
+        '@type':      'Rating',
+        ratingValue:  r.rating,
+        bestRating:   5,
+        worstRating:  1,
+      },
+      reviewBody:    r.text ?? undefined,
+      datePublished: r.date,
+    }))
+
+  // AggregateRating only when ≥ 3 reviews — avoids misleading single-review averages
+  const aggregate = data.reviewCount >= 3
+    ? {
+        aggregateRating: {
+          '@type':      'AggregateRating',
+          ratingValue:  data.avgRating.toFixed(1),
+          reviewCount:  data.reviewCount,
+          bestRating:   '5',
+          worstRating:  '1',
+        },
+      }
+    : {}
+
+  return {
+    '@context': 'https://schema.org',
+    '@type':    'Course',
+    name:       data.examName,
+    url:        abs(data.path),
+    ...aggregate,
+    ...(reviewItems.length > 0 && { review: reviewItems }),
+  }
+}
+
 // ─── Agency (full schema for agency detail pages) ─────────────────────────────
 
 export function buildAgencySchema(agency: {

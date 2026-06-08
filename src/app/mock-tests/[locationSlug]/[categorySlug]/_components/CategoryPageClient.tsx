@@ -14,11 +14,14 @@ import type { PublicTest } from '@/lib/data/getMockTestData'
 type LocationInfo = { id: string; name: string; slug: string }
 type CategoryInfo = { id: string; name: string; slug: string; description: string }
 
-/* ── Difficulty helper ──────────────────────────────────────────────── */
-function getDiff(pp: number): { label: string; cls: string } {
-  if (pp >= 70) return { label: 'Hard',   cls: 'bg-[#FEE2E2] text-[#B91C1C] border-red-100' }
-  if (pp >= 55) return { label: 'Medium', cls: 'bg-[#FEF3C7] text-[#92400E] border-amber-100' }
-  return           { label: 'Easy',   cls: 'bg-[#DCFCE7] text-[#166534] border-green-100' }
+/* ── Difficulty config lookup ───────────────────────────────────────── */
+function getDiffConfig(d: 'easy' | 'medium' | 'hard'): { label: string; cls: string } {
+  const map = {
+    easy:   { label: 'Easy',   cls: 'bg-[#DCFCE7] text-[#166534] border-green-100' },
+    medium: { label: 'Medium', cls: 'bg-[#FEF3C7] text-[#92400E] border-amber-100' },
+    hard:   { label: 'Hard',   cls: 'bg-[#FEE2E2] text-[#B91C1C] border-red-100'   },
+  }
+  return map[d] ?? map.medium
 }
 
 /* ── Test Details Modal ─────────────────────────────────────────────── */
@@ -26,7 +29,7 @@ function TestDetailsModal({
   test, onClose, onStart,
 }: { test: PublicTest; onClose: () => void; onStart: () => void }) {
   const passMarks = Math.ceil(test.total_questions * test.passing_percentage / 100)
-  const diff = getDiff(test.passing_percentage)
+  const diff = getDiffConfig(test.difficulty)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
@@ -235,19 +238,35 @@ function AuthModal({
   )
 }
 
+/* ── Inline mini star row (client-only, no extra import needed) ─────── */
+function MiniStars({ rating }: { rating: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map(i => (
+        <svg key={i} width="11" height="11" viewBox="0 0 24 24"
+          fill={i <= Math.round(rating) ? '#F59E0B' : '#E2E8F0'}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      ))}
+    </div>
+  )
+}
+
 /* ── Test Card ──────────────────────────────────────────────────────── */
 function TestCard({
-  test, index, isStarting, locationSlug, categorySlug, onDetails, onStart,
+  test, index, isStarting, locationSlug, categorySlug, avgRating, reviewCount, onDetails, onStart,
 }: {
   test:         PublicTest
   index:        number
   isStarting:   boolean
   locationSlug: string
   categorySlug: string
+  avgRating:    number
+  reviewCount:  number
   onDetails:    () => void
   onStart:      () => void
 }) {
-  const diff      = getDiff(test.passing_percentage)
+  const diff      = getDiffConfig(test.difficulty)
   const passMarks = Math.ceil(test.total_questions * test.passing_percentage / 100)
   const studyHref = `/mock-tests/${locationSlug}/${categorySlug}/${test.slug}/study`
 
@@ -280,9 +299,16 @@ function TestCard({
           ))}
         </div>
 
-        {/* Badges */}
-        <div className="flex flex-wrap gap-2">
+        {/* Badges row: difficulty + rating + free/instant */}
+        <div className="flex flex-wrap items-center gap-2">
           <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-badge border ${diff.cls}`}>{diff.label}</span>
+          {reviewCount > 0 && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-amber-50 border border-amber-100 text-amber-700">
+              <MiniStars rating={avgRating} />
+              <span className="ml-0.5">{avgRating.toFixed(1)}</span>
+              <span className="text-amber-500/70 font-normal">({reviewCount})</span>
+            </span>
+          )}
           <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-violet-50 text-violet-700 border border-violet-100">⚡ Instant Results</span>
           <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-green-50 text-green-700 border border-green-100">🆓 Free</span>
         </div>
@@ -336,13 +362,15 @@ function PassingCriteria() {
 
 /* ── Main Component ─────────────────────────────────────────────────── */
 export function CategoryPageClient({
-  location, category, tests, locationSlug, categorySlug,
+  location, category, tests, locationSlug, categorySlug, avgRating = 0, reviewCount = 0,
 }: {
-  location: LocationInfo
-  category: CategoryInfo
-  tests: PublicTest[]
+  location:    LocationInfo
+  category:    CategoryInfo
+  tests:       PublicTest[]
   locationSlug: string
   categorySlug: string
+  avgRating?:  number
+  reviewCount?: number
 }) {
   const router = useRouter()
   const [detailsTest, setDetailsTest]         = useState<PublicTest | null>(null)
@@ -441,6 +469,8 @@ export function CategoryPageClient({
               isStarting={startingId === test.id}
               locationSlug={locationSlug}
               categorySlug={categorySlug}
+              avgRating={avgRating}
+              reviewCount={reviewCount}
               onDetails={() => setDetailsTest(test)}
               onStart={() => handleStart(test)}
             />
