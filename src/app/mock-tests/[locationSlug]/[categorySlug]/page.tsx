@@ -25,6 +25,7 @@ import { ExamGuideContent } from './_components/ExamGuideContent'
 import { AutoInternalLinks } from './_components/AutoInternalLinks'
 import { DestinationAgencyCards } from './_components/DestinationAgencyCards'
 import { MockTestReviews } from './_components/MockTestReviews'
+import { ReviewFormInline } from './_components/ReviewFormInline'
 import { getLocationLinks, getDestinationByCountrySlug } from '@/lib/data/mockTestMappings'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -77,7 +78,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // Fetch reviews for schema + display
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
-  const { data: reviewRows } = await db
+  const { data: reviewRows, error: reviewErr } = await db
     .from('mock_test_reviews')
     .select('reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at')
     .eq('category_id', category.id)
@@ -85,8 +86,22 @@ export default async function CategoryPage({ params }: PageProps) {
     .order('created_at', { ascending: false })
     .limit(20)
 
+  // If v2 columns are missing, fall back to base columns
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const reviews = (reviewRows ?? []) as any[]
+  let reviews: any[]
+  if (reviewErr || !reviewRows) {
+    const { data: fb } = await db
+      .from('mock_test_reviews')
+      .select('reviewer_name, rating, difficulty, review_text, created_at')
+      .eq('category_id', category.id)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(20)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reviews = (fb ?? []).map((r: any) => ({ ...r, reviewer_country: null, review_title: null }))
+  } else {
+    reviews = reviewRows
+  }
   const reviewCount = reviews.length
   const avgRating = reviewCount > 0
     ? Math.round((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviewCount) * 10) / 10
@@ -279,6 +294,14 @@ export default async function CategoryPage({ params }: PageProps) {
 
         {/* Nurse reviews for this exam category */}
         <MockTestReviews categoryId={category.id} examName={category.name} />
+
+        {/* Inline review form — lets users review any test without taking the exam */}
+        {tests.length > 0 && (
+          <ReviewFormInline
+            categoryId={category.id}
+            tests={tests.map(t => ({ id: t.id, name: t.name }))}
+          />
+        )}
 
         {/* Top agencies for the destination country — shown at bottom of page */}
         {(() => {

@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export type MockTestReviewInput = {
   categoryId:       string
+  testId?:          string
   rating:           number
   difficulty:       'easy' | 'medium' | 'hard'
   reviewTitle?:     string
@@ -48,6 +49,7 @@ export async function submitMockTestReview(
 
   const { error } = await db.from('mock_test_reviews').insert({
     category_id:      data.categoryId,
+    mock_test_id:     data.testId ?? null,
     user_id:          user?.id ?? null,
     reviewer_name:    sanitize(data.reviewerName),
     reviewer_country: data.reviewerCountry ? sanitize(data.reviewerCountry) : null,
@@ -55,7 +57,7 @@ export async function submitMockTestReview(
     difficulty:       data.difficulty,
     review_title:     data.reviewTitle  ? sanitize(data.reviewTitle)  : null,
     review_text:      data.reviewText   ? sanitize(data.reviewText)   : null,
-    status:           'approved',
+    status:           'pending',
   })
 
   if (error) return { success: false, error: 'Failed to save review. Please try again.' }

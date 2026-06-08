@@ -4,7 +4,7 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import {
   Shield, LayoutDashboard, Building2, Star, ShieldAlert,
-  LogOut, ExternalLink, ClipboardList, Settings, Users,
+  LogOut, ExternalLink, ClipboardList, Settings, Users, MessageSquare,
 } from 'lucide-react'
 import type { AdminPermission } from '@/lib/require-admin'
 
@@ -18,13 +18,14 @@ type NavItem = {
 }
 
 const NAV: NavItem[] = [
-  { href: '/admin',              label: 'Dashboard',    Icon: LayoutDashboard, exact: true,  permission: null,          superOnly: false },
-  { href: '/admin/agencies',     label: 'Agencies',     Icon: Building2,       exact: false, permission: 'agencies',    superOnly: false },
-  { href: '/admin/reviews',      label: 'Reviews',      Icon: Star,            exact: false, permission: 'reviews',     superOnly: false },
-  { href: '/admin/scam-reports', label: 'Scam Reports', Icon: ShieldAlert,     exact: false, permission: 'scam-reports',superOnly: false },
-  { href: '/admin/mock-tests',   label: 'Mock Tests',   Icon: ClipboardList,   exact: false, permission: 'mock-tests',  superOnly: false },
-  { href: '/admin/settings',     label: 'Settings',     Icon: Settings,        exact: false, permission: 'settings',    superOnly: false },
-  { href: '/admin/employees',    label: 'Employees',    Icon: Users,           exact: false, permission: null,          superOnly: true  },
+  { href: '/admin',                    label: 'Dashboard',     Icon: LayoutDashboard, exact: true,  permission: null,          superOnly: false },
+  { href: '/admin/agencies',           label: 'Agencies',      Icon: Building2,       exact: false, permission: 'agencies',    superOnly: false },
+  { href: '/admin/reviews',            label: 'Agency Reviews',Icon: Star,            exact: false, permission: 'reviews',     superOnly: false },
+  { href: '/admin/mock-test-reviews',  label: 'Exam Reviews',  Icon: MessageSquare,   exact: false, permission: 'mock-tests',  superOnly: false },
+  { href: '/admin/scam-reports',       label: 'Scam Reports',  Icon: ShieldAlert,     exact: false, permission: 'scam-reports',superOnly: false },
+  { href: '/admin/mock-tests',         label: 'Mock Tests',    Icon: ClipboardList,   exact: false, permission: 'mock-tests',  superOnly: false },
+  { href: '/admin/settings',           label: 'Settings',      Icon: Settings,        exact: false, permission: 'settings',    superOnly: false },
+  { href: '/admin/employees',          label: 'Employees',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
 ]
 
 type Props = {
