@@ -17,6 +17,7 @@ export type PublicTest = {
   duration_minutes: number; total_questions: number
   passing_percentage: number; instructions: string
   is_premium: boolean; status: string
+  difficulty: 'easy' | 'medium' | 'hard'
 }
 
 function difficultyFromPass(pp: number): 'easy' | 'medium' | 'hard' {
@@ -146,6 +147,30 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       .order('name'),
   ])
 
+  // Compute dominant difficulty per test from actual question tags
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const testIds = (tests ?? []).map((t: any) => t.id)
+  const diffByTest: Record<string, 'easy' | 'medium' | 'hard'> = {}
+
+  if (testIds.length > 0) {
+    const { data: qRows } = await db
+      .from('mock_test_questions')
+      .select('mock_test_id, difficulty')
+      .in('mock_test_id', testIds)
+
+    const counts: Record<string, Record<string, number>> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(qRows ?? []).forEach((q: any) => {
+      counts[q.mock_test_id] ??= { easy: 0, medium: 0, hard: 0 }
+      const d = q.difficulty as string
+      if (d in counts[q.mock_test_id]) counts[q.mock_test_id][d]++
+    })
+    for (const tid in counts) {
+      const sorted = Object.entries(counts[tid]).sort((a, b) => b[1] - a[1])
+      diffByTest[tid] = (sorted[0]?.[0] as 'easy' | 'medium' | 'hard') ?? 'medium'
+    }
+  }
+
   return {
     location: { id: loc.id, name: loc.name, slug: loc.slug, country_slug: countrySlug },
     category: {
@@ -163,6 +188,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       instructions: t.instructions ?? '',
       is_premium: t.is_premium ?? false,
       status: t.status ?? 'published',
+      difficulty: diffByTest[t.id] ?? difficultyFromPass(t.passing_percentage),
     })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     siblingCategories: (siblings ?? []).map((s: any) => ({ id: s.id, name: s.name, slug: s.slug })),
@@ -189,6 +215,18 @@ export async function getMockTestBySlug(locSlug: string, catSlug: string, testSl
     .select('id, name, slug, duration_minutes, total_questions, passing_percentage, instructions, seo_title, seo_description')
     .eq('slug', testSlug).eq('category_id', cat.id).eq('is_active', true).single()
   if (!test) return null
+  // Compute dominant difficulty for this single test
+  let testDifficulty: 'easy' | 'medium' | 'hard' = difficultyFromPass(test.passing_percentage)
+  const { data: qRows } = await db
+    .from('mock_test_questions').select('difficulty').eq('mock_test_id', test.id)
+  if (qRows?.length) {
+    const counts: Record<string, number> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(qRows as any[]).forEach((q: any) => { counts[q.difficulty] = (counts[q.difficulty] ?? 0) + 1 })
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0]
+    if (top === 'easy' || top === 'medium' || top === 'hard') testDifficulty = top
+  }
+
   return {
     test: {
       id: test.id, name: test.name, slug: test.slug,
@@ -200,6 +238,7 @@ export async function getMockTestBySlug(locSlug: string, catSlug: string, testSl
       seo_description: test.seo_description ?? '',
       is_premium: test.is_premium ?? false,
       status: test.status ?? 'published',
+      difficulty: testDifficulty,
     },
     category: { id: cat.id, name: cat.name, slug: cat.slug },
     location: { id: loc.id, name: loc.name, slug: loc.slug },

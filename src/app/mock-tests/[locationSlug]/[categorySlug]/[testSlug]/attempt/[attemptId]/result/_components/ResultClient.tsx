@@ -13,6 +13,7 @@ import {
 import { retryWrongQuestions } from '@/app/actions/exam-analytics'
 import { toggleBookmark }      from '@/app/actions/bookmarks'
 import type { LeaderboardEntry } from '@/app/actions/exam-analytics'
+import { ReviewModal } from './ReviewModal'
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 type ReviewAnswer = {
@@ -39,6 +40,7 @@ type Props = {
   attemptId:         string
   testId:            string
   testName:          string
+  categoryId:        string
   categoryName:      string
   locationName:      string
   locationSlug:      string
@@ -117,7 +119,7 @@ function AnimBar({ pct, color }: { pct: number; color: string }) {
    ResultClient — main component
 ══════════════════════════════════════════════════════════════════════ */
 export function ResultClient({
-  attemptId, testId, testName, categoryName, locationName,
+  attemptId, testId, testName, categoryId, categoryName, locationName,
   locationSlug, categorySlug, testSlug,
   userName, userEmail, passingPercentage, percentage,
   totalQuestions, obtainedMarks, totalMarks,
@@ -132,6 +134,22 @@ export function ResultClient({
   const [showCert,     setShowCert]     = useState(false)
   const [retryError,   setRetryError]   = useState<string | null>(null)
   const [retrying,     startRetry]      = useTransition()
+
+  /* ── Review modal — shown once per session unless already reviewed ── */
+  const storageKey = `reviewed_exam_${categoryId}`
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (localStorage.getItem(storageKey)) return
+    const t = setTimeout(() => setShowReviewModal(true), 900)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function handleReviewDone() {
+    setShowReviewModal(false)
+    if (typeof window !== 'undefined') localStorage.setItem(storageKey, '1')
+  }
 
   /* ── Bookmark state ────────────────────────────────────────────── */
   const [bookmarks,      setBookmarks]      = useState<Set<string>>(new Set(initialBookmarks))
@@ -206,6 +224,16 @@ export function ResultClient({
   ───────────────────────────────────────────────────────────────── */
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
+
+      {/* ── Review modal ────────────────────────────────────────── */}
+      {showReviewModal && (
+        <ReviewModal
+          categoryId={categoryId}
+          reviewerName={userName}
+          examName={testName}
+          onDone={handleReviewDone}
+        />
+      )}
 
       {/* ── Top bar ─────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">

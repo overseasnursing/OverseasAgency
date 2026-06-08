@@ -51,7 +51,7 @@ export default async function ResultPage({ params }: PageProps) {
   // Load test + category + location
   const { data: test } = await db
     .from('mock_tests')
-    .select('id, name, passing_percentage, duration_minutes, mock_test_categories(name, slug, mock_test_locations(name, slug))')
+    .select('id, name, passing_percentage, duration_minutes, mock_test_categories(id, name, slug, mock_test_locations(name, slug))')
     .eq('id', attempt.mock_test_id)
     .single()
   if (!test) notFound()
@@ -109,6 +109,7 @@ export default async function ResultPage({ params }: PageProps) {
       attemptId={attemptId}
       testId={test.id}
       testName={test.name}
+      categoryId={category?.id ?? ''}
       categoryName={category?.name ?? categorySlug}
       locationName={location?.name ?? locationSlug}
       locationSlug={locationSlug}

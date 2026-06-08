@@ -18,12 +18,15 @@ import {
   buildLearningResourceSchema,
   buildQuizItemListSchema,
   buildGuidePersonSchema,
+  buildMockTestReviewsSchema,
 } from '@/lib/seo/schemas'
 import { getMockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamGuideContent } from './_components/ExamGuideContent'
 import { AutoInternalLinks } from './_components/AutoInternalLinks'
 import { DestinationAgencyCards } from './_components/DestinationAgencyCards'
+import { MockTestReviews } from './_components/MockTestReviews'
 import { getLocationLinks, getDestinationByCountrySlug } from '@/lib/data/mockTestMappings'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
 
@@ -70,6 +73,24 @@ export default async function CategoryPage({ params }: PageProps) {
   const content = await getMockTestContent(category.id, categorySlug)
 
   const pagePath = `/mock-tests/${locationSlug}/${categorySlug}`
+
+  // Fetch reviews for schema + display
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { data: reviewRows } = await db
+    .from('mock_test_reviews')
+    .select('reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at')
+    .eq('category_id', category.id)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const reviews = (reviewRows ?? []) as any[]
+  const reviewCount = reviews.length
+  const avgRating = reviewCount > 0
+    ? Math.round((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviewCount) * 10) / 10
+    : 0
 
   // Build all schemas; nulls are filtered at the end
   const rawSchemas: (Record<string, unknown> | null)[] = [
@@ -134,6 +155,24 @@ export default async function CategoryPage({ params }: PageProps) {
           jobTitle:    content.meta.reviewer.title,
         })
       : null,
+
+    // 10. AggregateRating + Review items — only when reviews exist
+    reviewCount > 0
+      ? buildMockTestReviewsSchema({
+          examName:    category.name,
+          path:        pagePath,
+          avgRating,
+          reviewCount,
+          reviews: reviews.map((r: any) => ({
+            reviewerName:    r.reviewer_name,
+            reviewerCountry: r.reviewer_country ?? null,
+            rating:          r.rating,
+            title:           r.review_title    ?? null,
+            text:            r.review_text     ?? null,
+            date:            r.created_at?.split('T')[0] ?? '',
+          })),
+        })
+      : null,
   ]
 
   const schemas = rawSchemas.filter((s): s is Record<string, unknown> => s != null)
@@ -161,6 +200,27 @@ export default async function CategoryPage({ params }: PageProps) {
             </div>
             <div className="flex-1">
               <h1 className="text-title-sm font-bold text-slate-900">{category.name}</h1>
+
+              {/* Aggregate rating — shown only when reviews exist */}
+              {reviewCount > 0 && (
+                <a
+                  href="#candidate-reviews"
+                  className="inline-flex items-center gap-2 mt-2 group"
+                >
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={i <= Math.round(avgRating) ? '#F59E0B' : '#E2E8F0'}>
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-[14px] font-bold text-slate-800">{avgRating.toFixed(1)}</span>
+                  <span className="text-[13px] text-slate-500 group-hover:text-primary transition-colors">
+                    ({reviewCount} Review{reviewCount !== 1 ? 's' : ''})
+                  </span>
+                </a>
+              )}
+
               {category.description && (
                 <p className="text-[14px] text-slate-500 mt-1.5 max-w-[680px] leading-relaxed">{category.description}</p>
               )}
@@ -199,6 +259,8 @@ export default async function CategoryPage({ params }: PageProps) {
           tests={tests as PublicTest[]}
           locationSlug={locationSlug}
           categorySlug={categorySlug}
+          avgRating={avgRating}
+          reviewCount={reviewCount}
         />
 
         {/* Auto-generated internal links — zero manual work, driven by DB + mappings */}
@@ -214,6 +276,9 @@ export default async function CategoryPage({ params }: PageProps) {
         {content && (
           <ExamGuideContent content={content} categoryName={category.name} />
         )}
+
+        {/* Nurse reviews for this exam category */}
+        <MockTestReviews categoryId={category.id} examName={category.name} />
 
         {/* Top agencies for the destination country — shown at bottom of page */}
         {(() => {
