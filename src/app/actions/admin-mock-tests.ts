@@ -10,6 +10,28 @@ function toSlug(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/^-|-$/g, '')
 }
 
+// Returns the public category page path so we can bust its ISR cache immediately.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolvePublicPath(db: any, by: { testId: string } | { categoryId: string }): Promise<string | null> {
+  if ('testId' in by) {
+    const { data } = await db
+      .from('mock_tests')
+      .select('mock_test_categories!inner(slug, mock_test_locations!inner(slug))')
+      .eq('id', by.testId)
+      .single()
+    if (!data) return null
+    const cat = data.mock_test_categories
+    return `/mock-tests/${cat.mock_test_locations.slug}/${cat.slug}`
+  }
+  const { data } = await db
+    .from('mock_test_categories')
+    .select('slug, mock_test_locations!inner(slug)')
+    .eq('id', by.categoryId)
+    .single()
+  if (!data) return null
+  return `/mock-tests/${data.mock_test_locations.slug}/${data.slug}`
+}
+
 /* ── Types ───────────────────────────────────────────────────────────── */
 
 export type LocationInput = {
@@ -168,11 +190,15 @@ export async function saveMockTest(data: MockTestInput): Promise<{ error: string
     const { error } = await db.from('mock_tests').update(row).eq('id', data.id)
     if (error) return { error: error.message }
     revalidatePath('/admin/mock-tests')
+    const pagePath = await resolvePublicPath(db, { categoryId: data.category_id })
+    if (pagePath) revalidatePath(pagePath)
     return { error: null, id: data.id }
   }
   const { data: r, error } = await db.from('mock_tests').insert(row).select('id').single()
   if (error) return { error: error.message }
   revalidatePath('/admin/mock-tests')
+  const pagePath = await resolvePublicPath(db, { categoryId: data.category_id })
+  if (pagePath) revalidatePath(pagePath)
   return { error: null, id: r.id }
 }
 
@@ -181,9 +207,12 @@ export async function deleteMockTest(id: string): Promise<{ error: string | null
   if (!isSuperAdmin(admin)) return { error: 'Only super admins can delete mock tests.' }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
+  // Resolve path before deleting — row won't exist after
+  const pagePath = await resolvePublicPath(db, { testId: id })
   const { error } = await db.from('mock_tests').delete().eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/admin/mock-tests')
+  if (pagePath) revalidatePath(pagePath)
   return { error: null }
 }
 
@@ -194,5 +223,7 @@ export async function toggleMockTestStatus(id: string, is_active: boolean): Prom
   const { error } = await db.from('mock_tests').update({ is_active, updated_at: now() }).eq('id', id)
   if (error) return { error: error.message }
   revalidatePath('/admin/mock-tests')
+  const pagePath = await resolvePublicPath(db, { testId: id })
+  if (pagePath) revalidatePath(pagePath)
   return { error: null }
 }

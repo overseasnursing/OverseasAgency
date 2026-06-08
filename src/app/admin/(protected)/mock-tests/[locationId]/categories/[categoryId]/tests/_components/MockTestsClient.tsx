@@ -340,136 +340,117 @@ export function MockTestsClient({
           {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><X size={13} /></button>}
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          {!filtered.length ? (
-            <div className="text-center py-16">
-              <ClipboardList size={32} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-[14px] font-semibold text-slate-600 mb-1">{search ? 'No tests match' : 'No mock tests yet'}</p>
-              {!search && (
-                <button onClick={() => setShowAdd(true)} className="mt-3 inline-flex items-center gap-2 h-9 px-4 bg-primary text-white text-[13px] font-semibold rounded-xl">
-                  <Plus size={14} /> Add Mock Test
-                </button>
-              )}
-            </div>
-          ) : (
-            <table className="w-full text-[13px]">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 font-semibold text-slate-500">Mock Test</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-500">Duration</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-500">Questions</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-500">Pass %</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-500">Attempts</th>
-                  <th className="text-left px-4 py-3 font-semibold text-slate-500">Status</th>
-                  <th className="px-4 py-3 text-right font-semibold text-slate-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filtered.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/60 transition-colors">
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
-                          <ClipboardList size={14} className="text-violet-500" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-800">{t.name}</p>
-                          <p className="text-[11px] text-slate-400 font-mono">/{t.slug}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="flex items-center gap-1.5 text-slate-600">
-                        <Clock size={12} className="text-slate-400" />
-                        {t.duration_minutes} min
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="flex items-center gap-1.5 text-slate-600">
-                        <HelpCircle size={12} className="text-slate-400" />
-                        {t.total_questions} Qs
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-[12px] font-semibold text-slate-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                        {t.passing_percentage}%
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-[13px] font-semibold text-slate-800">{t.total_attempts}</span>
-                        {t.active_attempts > 0 && (
-                          <span className="text-[11px] text-blue-600">{t.active_attempts} active</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <button onClick={() => handleToggle(t)} className="hover:opacity-80 transition-opacity">
-                        {t.is_active
-                          ? <span className="text-[11px] font-semibold text-[#166534] bg-[#DCFCE7] px-2 py-0.5 rounded-full">Active</span>
-                          : <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Inactive</span>}
+        {/* Card list */}
+        {!filtered.length ? (
+          <div className="bg-white border border-slate-200 rounded-2xl text-center py-16">
+            <ClipboardList size={32} className="text-slate-300 mx-auto mb-3" />
+            <p className="text-[14px] font-semibold text-slate-600 mb-1">{search ? 'No tests match' : 'No mock tests yet'}</p>
+            {!search && (
+              <button onClick={() => setShowAdd(true)} className="mt-3 inline-flex items-center gap-2 h-9 px-4 bg-primary text-white text-[13px] font-semibold rounded-xl">
+                <Plus size={14} /> Add Mock Test
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {filtered.map((t) => (
+              <div key={t.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-slate-300 transition-colors">
+
+                {/* Top row: icon + name + status toggle */}
+                <div className="flex items-start gap-3 px-5 pt-4 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <ClipboardList size={14} className="text-violet-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-800 text-[14px] leading-snug">{t.name}</p>
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5 truncate">/{t.slug}</p>
+                  </div>
+                  <button onClick={() => handleToggle(t)} className="flex-shrink-0 hover:opacity-80 transition-opacity">
+                    {t.is_active
+                      ? <span className="text-[11px] font-semibold text-[#166534] bg-[#DCFCE7] px-2.5 py-1 rounded-full">Active</span>
+                      : <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">Inactive</span>}
+                  </button>
+                </div>
+
+                {/* Stats + action buttons */}
+                <div className="flex items-center justify-between gap-4 px-5 py-3 flex-wrap">
+
+                  {/* Stats chips */}
+                  <div className="flex items-center gap-3 flex-wrap text-[12.5px] text-slate-600">
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={12} className="text-slate-400" /> {t.duration_minutes} min
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <HelpCircle size={12} className="text-slate-400" /> {t.total_questions} Qs
+                    </span>
+                    <span className="text-[12px] font-semibold text-slate-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
+                      Pass {t.passing_percentage}%
+                    </span>
+                    <span className="flex items-center gap-1 text-slate-500">
+                      {t.total_attempts} attempt{t.total_attempts !== 1 ? 's' : ''}
+                      {t.active_attempts > 0 && (
+                        <span className="text-[11px] text-blue-600 ml-1">({t.active_attempts} active)</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <a
+                      href={`/admin/mock-tests/${location.id}/categories/${category.id}/tests/${t.id}/questions`}
+                      className="inline-flex items-center gap-1.5 h-7 px-3 border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-[12px] font-medium rounded-lg transition-colors"
+                    >
+                      <HelpCircle size={11} /> Questions <ChevronRight size={10} />
+                    </a>
+                    <a
+                      href={`/admin/mock-tests/${location.id}/categories/${category.id}/tests/${t.id}/analytics`}
+                      className="inline-flex items-center gap-1.5 h-7 px-3 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[12px] font-medium rounded-lg transition-colors"
+                    >
+                      <BarChart2 size={11} /> Analytics
+                    </a>
+                    <a
+                      href={`/admin/mock-tests/${location.id}/categories/${category.id}/tests/${t.id}/ai-generator`}
+                      className="inline-flex items-center gap-1.5 h-7 px-3 border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-[12px] font-medium rounded-lg transition-colors"
+                      title="AI Question Generator"
+                    >
+                      <Sparkles size={11} /> AI
+                    </a>
+                    <button
+                      onClick={() => handleClone(t)}
+                      disabled={pending}
+                      className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 text-slate-400 hover:text-emerald-700 text-[12px] font-medium rounded-lg transition-colors disabled:opacity-40"
+                      title="Clone"
+                    >
+                      <Copy size={11} /> Clone
+                    </button>
+                    <button
+                      onClick={() => setEditItem(t)}
+                      className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-primary/40 hover:bg-primary/5 text-slate-600 hover:text-primary text-[12px] font-medium rounded-lg transition-colors"
+                    >
+                      <Pencil size={11} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleArchive(t)}
+                      disabled={pending}
+                      className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-amber-200 hover:bg-amber-50 text-slate-400 hover:text-amber-700 text-[12px] font-medium rounded-lg transition-colors disabled:opacity-40"
+                      title="Archive"
+                    >
+                      <Archive size={11} />
+                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => setDeleteItem(t)}
+                        className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
+                      >
+                        <Trash2 size={11} />
                       </button>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center justify-end gap-2">
-                        <a
-                          href={`/admin/mock-tests/${location.id}/categories/${category.id}/tests/${t.id}/questions`}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-[12px] font-medium rounded-lg transition-colors"
-                        >
-                          <HelpCircle size={11} /> Questions <ChevronRight size={10} />
-                        </a>
-                        <a
-                          href={`/admin/mock-tests/${location.id}/categories/${category.id}/tests/${t.id}/analytics`}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[12px] font-medium rounded-lg transition-colors"
-                        >
-                          <BarChart2 size={11} /> Analytics
-                        </a>
-                        <a
-                          href={`/admin/mock-tests/${location.id}/categories/${category.id}/tests/${t.id}/ai-generator`}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-violet-200 bg-violet-50 hover:bg-violet-100 text-violet-700 text-[12px] font-medium rounded-lg transition-colors"
-                          title="AI Question Generator"
-                        >
-                          <Sparkles size={11} /> AI
-                        </a>
-                        <button
-                          onClick={() => handleClone(t)}
-                          disabled={pending}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 text-slate-400 hover:text-emerald-700 text-[12px] font-medium rounded-lg transition-colors disabled:opacity-40"
-                          title="Clone test"
-                        >
-                          <Copy size={11} />
-                        </button>
-                        <button
-                          onClick={() => setEditItem(t)}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-primary/40 hover:bg-primary/5 text-slate-600 hover:text-primary text-[12px] font-medium rounded-lg transition-colors"
-                        >
-                          <Pencil size={11} /> Edit
-                        </button>
-                        <button
-                          onClick={() => handleArchive(t)}
-                          disabled={pending}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-amber-200 hover:bg-amber-50 text-slate-400 hover:text-amber-700 text-[12px] font-medium rounded-lg transition-colors disabled:opacity-40"
-                          title="Archive test"
-                        >
-                          <Archive size={11} />
-                        </button>
-                        {isSuperAdmin && (
-                          <button
-                            onClick={() => setDeleteItem(t)}
-                            className="inline-flex items-center gap-1.5 h-7 px-3 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-400 hover:text-[#B91C1C] text-[12px] font-medium rounded-lg transition-colors"
-                          >
-                            <Trash2 size={11} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {filtered.length > 0 && (
           <p className="text-[12px] text-slate-400 text-center">

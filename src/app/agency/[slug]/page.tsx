@@ -58,6 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : `Read verified nurse reviews of ${agency.name}. See agency fees (₹${agency.pricing.minCost / 100000}–${agency.pricing.maxCost / 100000}L), scam reports, visa success rate, and transparency score before you pay.`
   const title       = agency.seoTitle       || autoTitle
   const description = agency.seoDescription || autoDescription
+  const ogImageUrl  = `/api/og?type=agency&title=${encodeURIComponent(agency.name)}&location=${encodeURIComponent(agency.location ?? '')}&rating=${agency.rating > 0 ? agency.rating.toFixed(1) : ''}`
 
   return {
     title,
@@ -70,11 +71,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       url: `/agency/${slug}`,
       type: 'website',
+      images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [ogImageUrl],
     },
   }
 }

@@ -254,15 +254,13 @@ function MiniStars({ rating }: { rating: number }) {
 
 /* ── Test Card ──────────────────────────────────────────────────────── */
 function TestCard({
-  test, index, isStarting, locationSlug, categorySlug, avgRating, reviewCount, onDetails, onStart,
+  test, index, isStarting, locationSlug, categorySlug, onDetails, onStart,
 }: {
   test:         PublicTest
   index:        number
   isStarting:   boolean
   locationSlug: string
   categorySlug: string
-  avgRating:    number
-  reviewCount:  number
   onDetails:    () => void
   onStart:      () => void
 }) {
@@ -299,19 +297,26 @@ function TestCard({
           ))}
         </div>
 
-        {/* Badges row: difficulty + rating + free/instant */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Difficulty + utility badges */}
+        <div className="flex flex-wrap gap-2">
           <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-badge border ${diff.cls}`}>{diff.label}</span>
-          {reviewCount > 0 && (
-            <span className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-amber-50 border border-amber-100 text-amber-700">
-              <MiniStars rating={avgRating} />
-              <span className="ml-0.5">{avgRating.toFixed(1)}</span>
-              <span className="text-amber-500/70 font-normal">({reviewCount})</span>
-            </span>
-          )}
           <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-violet-50 text-violet-700 border border-violet-100">⚡ Instant Results</span>
           <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-badge bg-green-50 text-green-700 border border-green-100">🆓 Free</span>
         </div>
+
+        {/* Rating — plain text link to reviews section, only when this test has reviews */}
+        {test.reviewCount > 0 && (
+          <a
+            href="#candidate-reviews"
+            className="flex items-center gap-1.5 w-fit group"
+          >
+            <MiniStars rating={test.avgRating} />
+            <span className="text-[13px] font-bold text-slate-700">{test.avgRating.toFixed(1)}</span>
+            <span className="text-[12px] text-slate-400 group-hover:text-primary transition-colors">
+              ({test.reviewCount} review{test.reviewCount !== 1 ? 's' : ''})
+            </span>
+          </a>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2 pt-1 border-t border-slate-100">
@@ -362,15 +367,13 @@ function PassingCriteria() {
 
 /* ── Main Component ─────────────────────────────────────────────────── */
 export function CategoryPageClient({
-  location, category, tests, locationSlug, categorySlug, avgRating = 0, reviewCount = 0,
+  location, category, tests, locationSlug, categorySlug,
 }: {
-  location:    LocationInfo
-  category:    CategoryInfo
-  tests:       PublicTest[]
+  location:     LocationInfo
+  category:     CategoryInfo
+  tests:        PublicTest[]
   locationSlug: string
   categorySlug: string
-  avgRating?:  number
-  reviewCount?: number
 }) {
   const router = useRouter()
   const [detailsTest, setDetailsTest]         = useState<PublicTest | null>(null)
@@ -469,8 +472,6 @@ export function CategoryPageClient({
               isStarting={startingId === test.id}
               locationSlug={locationSlug}
               categorySlug={categorySlug}
-              avgRating={avgRating}
-              reviewCount={reviewCount}
               onDetails={() => setDetailsTest(test)}
               onStart={() => handleStart(test)}
             />

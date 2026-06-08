@@ -19,7 +19,7 @@ import { HeroVisual } from '@/components/visuals/HeroVisual'
 import { GlobalSearchBar, type SearchAgency, type SearchCountry, type SearchExam } from '@/components/search/GlobalSearchBar'
 import { AgencyCard } from '@/components/agencies/AgencyCard'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
-import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
+import { buildWebPageSchema, buildBreadcrumbSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 
 /* ── Metadata ────────────────────────────────────────────────────── */
 
@@ -43,6 +43,7 @@ const HOME_SCHEMAS = [
     path: '/',
   }),
   buildBreadcrumbSchema([{ name: 'Home', href: '/' }]),
+  buildOrganizationSchema(),
 ]
 
 /* ── Inline curated data ─────────────────────────────────────────── */
