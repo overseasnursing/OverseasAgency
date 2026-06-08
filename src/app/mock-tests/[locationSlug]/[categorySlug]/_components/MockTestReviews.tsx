@@ -1,4 +1,4 @@
-import { Star, MessageSquare, MapPin } from 'lucide-react'
+import { Star, MessageSquare, MapPin, ScrollText } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type Review = {
@@ -10,6 +10,7 @@ type Review = {
   review_title:     string | null
   review_text:      string | null
   created_at:       string
+  mock_tests:       { name: string } | null
 }
 
 const DIFF_CONFIG: Record<string, { label: string; pill: string; bar: string }> = {
@@ -51,15 +52,30 @@ export async function MockTestReviews({
   const db = createAdminClient() as any
 
   // Fully server-rendered — Google crawls all review content from HTML source
-  const { data } = await db
+  const { data, error } = await db
     .from('mock_test_reviews')
-    .select('id, reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at')
+    .select('id, reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at, mock_tests(name)')
     .eq('category_id', categoryId)
     .eq('status', 'approved')
-    .order('created_at', { ascending: false })  // most recent first
+    .order('created_at', { ascending: false })
     .limit(20)
 
-  const reviews: Review[] = data ?? []
+  // If v2 migration columns are missing, fall back to base columns only
+  let reviews: Review[]
+  if (error || !data) {
+    const { data: fallback } = await db
+      .from('mock_test_reviews')
+      .select('id, reviewer_name, rating, difficulty, review_text, created_at')
+      .eq('category_id', categoryId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false })
+      .limit(20)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    reviews = (fallback ?? []).map((r: any) => ({ ...r, reviewer_country: null, review_title: null, mock_tests: null }))
+  } else {
+    reviews = data
+  }
+
   if (reviews.length === 0) return null
 
   const avg = Math.round(
@@ -192,10 +208,18 @@ export async function MockTestReviews({
                   </p>
                 )}
 
-                {/* Submitted date */}
-                <p className="text-[11.5px] text-slate-400 mt-auto pt-1 border-t border-slate-100">
-                  Submitted on {formatDate(review.created_at)}
-                </p>
+                {/* Test name + date footer */}
+                <div className="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+                  {review.mock_tests?.name && (
+                    <span className="flex items-center gap-1 text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-full px-2 py-0.5 truncate max-w-[180px]">
+                      <ScrollText size={9} className="flex-shrink-0" />
+                      {review.mock_tests.name}
+                    </span>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 ml-auto">
+                    {formatDate(review.created_at)}
+                  </p>
+                </div>
               </article>
             )
           })}

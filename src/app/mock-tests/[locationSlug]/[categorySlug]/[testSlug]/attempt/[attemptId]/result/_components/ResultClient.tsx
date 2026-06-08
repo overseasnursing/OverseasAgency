@@ -135,8 +135,8 @@ export function ResultClient({
   const [retryError,   setRetryError]   = useState<string | null>(null)
   const [retrying,     startRetry]      = useTransition()
 
-  /* ── Review modal — shown once per session unless already reviewed ── */
-  const storageKey = `reviewed_exam_${categoryId}`
+  /* ── Review modal — shown once per test (per-device) ── */
+  const storageKey = `reviewed_test_${testId}`
   const [showReviewModal, setShowReviewModal] = useState(false)
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -229,6 +229,7 @@ export function ResultClient({
       {showReviewModal && (
         <ReviewModal
           categoryId={categoryId}
+          testId={testId}
           reviewerName={userName}
           examName={testName}
           onDone={handleReviewDone}
