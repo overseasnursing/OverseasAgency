@@ -28,7 +28,8 @@ const FOOTER_LINKS = {
   ],
   'For Agencies': [
     ['Claim Your Listing', '/claim-listing'],
-    ['Agency Login',       '/agency-admin'],
+    ['Submit Your Agency', '/agency-login?tab=submit'],
+    ['Agency Login',       '/agency-login'],
   ],
 } as const
 
@@ -108,7 +109,7 @@ export async function SiteFooter() {
 
         <div className="grid grid-cols-12 gap-8 mb-12">
           {/* Brand + social icons */}
-          <div className="col-span-12 lg:col-span-3">
+          <div className="col-span-12 lg:col-span-4">
             <a
               href="/"
               className="text-[16px] font-bold text-slate-800 hover:text-primary transition-colors"
@@ -141,7 +142,7 @@ export async function SiteFooter() {
           {/* Link columns */}
           {(Object.entries(FOOTER_LINKS) as [string, readonly (readonly string[])[]][]).map(
             ([group, links]) => (
-              <div key={group} className="col-span-6 sm:col-span-4 lg:col-span-3">
+              <div key={group} className="col-span-6 sm:col-span-3 lg:col-span-2">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500 mb-4">{group}</p>
                 <ul className="space-y-3">
                   {links.map(([label, href]) => (

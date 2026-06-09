@@ -24,6 +24,7 @@ const NAV: NavItem[] = [
   { href: '/admin/mock-test-reviews',  label: 'Exam Reviews',  Icon: MessageSquare,   exact: false, permission: 'mock-tests',  superOnly: false },
   { href: '/admin/scam-reports',       label: 'Scam Reports',  Icon: ShieldAlert,     exact: false, permission: 'scam-reports',superOnly: false },
   { href: '/admin/mock-tests',         label: 'Mock Tests',    Icon: ClipboardList,   exact: false, permission: 'mock-tests',  superOnly: false },
+  { href: '/admin/agency-submissions',  label: 'New Agencies',  Icon: Building2,       exact: false, permission: 'agencies',    superOnly: false },
   { href: '/admin/claim-listings',      label: 'Claim Requests',Icon: BadgeCheck,      exact: false, permission: 'claim-listings', superOnly: false },
   { href: '/admin/settings',           label: 'Settings',      Icon: Settings,        exact: false, permission: 'settings',    superOnly: false },
   { href: '/admin/employees',          label: 'Employees',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
