@@ -321,7 +321,8 @@ function TestCard({
           <button
             onClick={onDetails}
             disabled={isStarting}
-            className="flex items-center gap-1 text-[12px] text-slate-400 hover:text-primary transition-colors font-medium disabled:opacity-40"
+            aria-label={`View details for ${test.name}`}
+            className="flex items-center gap-1 text-[12px] text-slate-500 hover:text-primary transition-colors font-medium disabled:opacity-40"
           >
             <Info size={12} /> Details
           </button>
@@ -333,6 +334,7 @@ function TestCard({
         {/* Study button — full width outlined */}
         <a
           href={studyHref}
+          aria-label={`Study Mode: ${test.name}`}
           className="w-full flex items-center justify-center gap-2 h-10 border-2 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[13px] font-semibold rounded-xl transition-colors"
         >
           <BookOpen size={14} /> Study Mode

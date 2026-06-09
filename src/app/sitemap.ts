@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 import { createAdminClient }   from '@/lib/supabase/admin'
 import { getAllCountrySlugs }  from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
-import { getAllScamReports }   from '@/lib/data/scamReports'
+import { getApprovedScamReports } from '@/lib/db/scam-reports'
 import { getAllLocationCitiesFromDb } from '@/lib/data/getLocationData'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs }   from '@/lib/data/salaries'
@@ -149,9 +149,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   /* ── Scam report pages ── */
-  const scamPages: MetadataRoute.Sitemap = getAllScamReports().map(r => ({
+  const approvedScamReports = await getApprovedScamReports()
+  const scamPages: MetadataRoute.Sitemap = approvedScamReports.map(r => ({
     url: url(`/scam-report/${r.slug}`),
-    lastModified: new Date(r.reportedDate),
+    lastModified: new Date(r.updated_at),
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }))

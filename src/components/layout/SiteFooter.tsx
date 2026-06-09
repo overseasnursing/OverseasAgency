@@ -138,7 +138,7 @@ export async function SiteFooter() {
           {(Object.entries(FOOTER_LINKS) as [string, readonly (readonly string[])[]][]).map(
             ([group, links]) => (
               <div key={group} className="col-span-6 sm:col-span-4 lg:col-span-3">
-                <h6 className="mb-4">{group}</h6>
+                <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-slate-500 mb-4">{group}</p>
                 <ul className="space-y-3">
                   {links.map(([label, href]) => (
                     <li key={href}>
