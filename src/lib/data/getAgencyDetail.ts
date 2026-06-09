@@ -174,6 +174,7 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
       whatsapp:     b.whatsapp    ?? '',
       email:        b.email       ?? '',
       googleMapsUrl:b.google_maps_url ?? undefined,
+      pinCode:      b.pin_code        ?? undefined,
       isHeadOffice: b.is_head_office,
       openingHours: b.office_hours   ?? undefined,
       latitude:     b.latitude       ?? undefined,

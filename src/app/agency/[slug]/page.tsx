@@ -28,6 +28,7 @@ import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
 import { SectionNav } from './components/SectionNav'
+import { LazyYouTube } from '@/components/ui/LazyYouTube'
 
 function extractYouTubeId(url: string): string | null {
   const patterns = [
@@ -106,6 +107,8 @@ export default async function AgencyDetailPage({ params }: PageProps) {
       streetAddress: headOffice?.address,
       city: agency.city,
       state: agency.state,
+      postalCode: headOffice?.pinCode,
+      logoUrl: agency.logo,
       rating: agency.rating,
       reviewCount: agency.reviewCount,
       pricingIsFree: agency.pricing.isFree,
@@ -341,13 +344,9 @@ export default async function AgencyDetailPage({ params }: PageProps) {
                       if (!vid) return null
                       return (
                         <div key={i} className="aspect-video rounded-2xl overflow-hidden bg-slate-100">
-                          <iframe
-                            src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}
+                          <LazyYouTube
+                            videoId={vid}
                             title={`${agency.name} video testimonial ${i + 1}`}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            loading="lazy"
-                            className="w-full h-full border-0"
                           />
                         </div>
                       )

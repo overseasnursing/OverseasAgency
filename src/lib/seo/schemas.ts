@@ -1,8 +1,16 @@
 const BASE_URL = 'https://overseasnursing.com'
 const SITE_NAME = 'OverseasNursing.com'
+const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.svg`
 
 function abs(path: string): string {
   return path.startsWith('http') ? path : `${BASE_URL}${path}`
+}
+
+// Converts YYYY-MM-DD to YYYY-MM-DDTHH:mm:ssZ so schema.org validators
+// accept it as a valid ISO 8601 datetime with timezone.
+function toSchemaDate(date: string): string {
+  if (date.includes('T')) return date
+  return `${date}T00:00:00Z`
 }
 
 // ─── Breadcrumb ────────────────────────────────────────────────────────────────
@@ -115,6 +123,7 @@ export function buildLocalBusinessSchema(agency: {
     '@type': 'LocalBusiness',
     name: agency.name,
     url: agency.url ?? `${BASE_URL}/agency/${agency.slug}`,
+    image: DEFAULT_OG_IMAGE,
     ...(agency.description && { description: agency.description }),
     ...((agency.rating ?? 0) > 0 && (agency.reviewCount ?? 0) > 0
       ? {
@@ -169,6 +178,7 @@ export function buildReviewSchema(review: {
       '@type': 'LocalBusiness',
       name: review.agencyName,
       url: `${BASE_URL}/agency/${review.agencySlug}`,
+      image: DEFAULT_OG_IMAGE,
     },
   }
 }
@@ -185,15 +195,18 @@ export function buildArticleSchema(article: {
   type?: 'Article' | 'TechArticle'
   about?: string
 }) {
+  const published = toSchemaDate(article.publishedDate ?? '2025-01-01')
+  const modified  = toSchemaDate(article.modifiedDate ?? article.publishedDate ?? '2025-01-01')
+
   return {
     '@context': 'https://schema.org',
     '@type': article.type ?? 'Article',
     headline: article.title,
     description: article.description,
     url: abs(article.path),
-    datePublished: article.publishedDate ?? '2025-01-01',
-    dateModified: article.modifiedDate ?? article.publishedDate ?? '2025-01-01',
-    ...(article.imageUrl && { image: abs(article.imageUrl) }),
+    datePublished: published,
+    dateModified:  modified,
+    image: article.imageUrl ? abs(article.imageUrl) : DEFAULT_OG_IMAGE,
     ...(article.about && {
       about: { '@type': 'DefinedTerm', name: article.about },
     }),
@@ -530,6 +543,8 @@ export function buildAgencySchema(agency: {
   streetAddress?: string
   city?: string
   state?: string
+  postalCode?: string
+  logoUrl?: string
   rating?: number
   reviewCount?: number
   pricingIsFree?: boolean
@@ -556,6 +571,7 @@ export function buildAgencySchema(agency: {
     '@id': agencyId,
     name: agency.name,
     url: agency.website ?? pageUrl,
+    image: agency.logoUrl ? abs(agency.logoUrl) : DEFAULT_OG_IMAGE,
     ...(agency.description && { description: agency.description }),
     ...(agency.telephone && { telephone: agency.telephone }),
     ...(agency.email && { email: agency.email }),
@@ -566,6 +582,7 @@ export function buildAgencySchema(agency: {
         ...(agency.streetAddress && { streetAddress: agency.streetAddress }),
         ...(agency.city && { addressLocality: agency.city }),
         ...(agency.state && { addressRegion: agency.state }),
+        ...(agency.postalCode && { postalCode: agency.postalCode }),
         addressCountry: 'IN',
       },
     }),
@@ -632,6 +649,7 @@ export function buildAggregateRatingSchema(entity: {
     '@type': 'LocalBusiness',
     name: entity.name,
     url,
+    image: DEFAULT_OG_IMAGE,
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: entity.ratingValue.toFixed(1),
