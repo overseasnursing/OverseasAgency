@@ -21,7 +21,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 flex flex-col gap-1">
               <li><strong>Account data:</strong> Email address and display name when you register</li>
               <li><strong>Review & report content:</strong> Text, ratings, and other content you submit</li>
-              <li><strong>Usage data:</strong> Pages visited, search queries, and interaction data via Google Analytics</li>
+              <li><strong>Usage data:</strong> Pages visited, search queries, and interaction data collected via Cloudflare Zaraz and Microsoft Clarity</li>
               <li><strong>Device data:</strong> Browser type, IP address, and operating system</li>
             </ul>
           </section>
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-[18px] font-bold text-slate-800 mb-3">4. Cookies & Analytics</h2>
-            <p>We use Google Analytics (GA4) to understand how users interact with our platform. This uses cookies to track anonymous usage data. You can opt out via your browser settings or a GA opt-out extension. We also use Microsoft Clarity for session analytics.</p>
+            <p>We use Cloudflare Zaraz to load analytics and marketing tools, plus Microsoft Clarity for session analytics. This uses cookies to track anonymous usage data. You can opt out via your browser settings or privacy extensions.</p>
           </section>
 
           <section>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-5 flex flex-col gap-1">
               <li><strong>Supabase</strong> — Authentication and database</li>
               <li><strong>Vercel</strong> — Hosting and deployment</li>
-              <li><strong>Google Analytics</strong> — Usage analytics</li>
+              <li><strong>Cloudflare Zaraz</strong> — Analytics tag management and tracking</li>
               <li><strong>Cloudflare</strong> — CDN and security</li>
             </ul>
             <p className="mt-3">Each of these services has its own privacy policy governing their data use.</p>

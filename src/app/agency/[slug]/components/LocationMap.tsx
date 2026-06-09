@@ -1,6 +1,7 @@
 import React from 'react'
 import { ExternalLink, MapPin } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { LazyMap } from '@/components/ui/LazyMap'
 
 interface LocationMapProps {
   agency: AgencyDetail
@@ -27,16 +28,11 @@ export function LocationMap({ agency }: LocationMapProps) {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-        <div className="relative w-full h-[220px] sm:h-[260px]">
-          <iframe
-            src={embedUrl}
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen={false}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
+        <div className="relative w-full h-[220px] sm:h-[260px] overflow-hidden">
+          <LazyMap
+            embedUrl={embedUrl}
             title={`Map of ${hq.name}`}
+            address={addressQuery}
           />
         </div>
 

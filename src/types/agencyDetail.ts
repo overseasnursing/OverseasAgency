@@ -48,6 +48,7 @@ export interface Branch {
   whatsapp: string
   email: string
   googleMapsUrl?: string
+  pinCode?: string
   isHeadOffice: boolean
   openingHours?: string
   latitude?: number

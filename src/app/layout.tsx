@@ -5,6 +5,7 @@ import { MobileNav } from '@/components/navbar/MobileNav'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 /* ── Font ─────────────────────────────────────────────────────────
@@ -77,8 +78,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en-IN" className={manrope.variable}>
       <head>
         {/* Preconnect to analytics + CDN origins so scripts load faster */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
         <link rel="preconnect" href="https://cdn.supabase.co" crossOrigin="anonymous" />
       </head>
@@ -102,6 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <MobileNav />
         <AnalyticsProvider />
+        <Analytics />
         <SpeedInsights />
 
       </body>

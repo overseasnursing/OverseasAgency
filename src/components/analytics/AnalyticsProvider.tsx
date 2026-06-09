@@ -1,25 +1,10 @@
 import Script from 'next/script'
 
-const GA_ID      = process.env.NEXT_PUBLIC_GA_ID || 'G-JED5DJ73XM'
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID
 
 export function AnalyticsProvider() {
   return (
     <>
-      {/* Google Analytics 4 */}
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-        strategy="lazyOnload"
-      />
-      <Script id="ga4-init" strategy="lazyOnload">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${GA_ID}');
-        `}
-      </Script>
-
       {/* Microsoft Clarity */}
       {CLARITY_ID && (
         <Script id="clarity-init" strategy="lazyOnload">
