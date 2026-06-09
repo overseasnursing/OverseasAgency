@@ -17,14 +17,18 @@ CREATE INDEX IF NOT EXISTS idx_mock_test_reviews_category
 
 ALTER TABLE public.mock_test_reviews ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "public read approved"
-  ON public.mock_test_reviews FOR SELECT
-  USING (status = 'approved');
+DO $$ BEGIN
+  CREATE POLICY "public read approved"
+    ON public.mock_test_reviews FOR SELECT
+    USING (status = 'approved');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
-CREATE POLICY "authenticated insert"
-  ON public.mock_test_reviews FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+DO $$ BEGIN
+  CREATE POLICY "authenticated insert"
+    ON public.mock_test_reviews FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 GRANT SELECT                ON public.mock_test_reviews TO anon;
 GRANT SELECT, INSERT        ON public.mock_test_reviews TO authenticated;

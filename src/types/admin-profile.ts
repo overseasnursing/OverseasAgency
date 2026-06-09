@@ -42,6 +42,12 @@ export interface AdminProfile {
   siteYoutubeUrl?: string
   siteWhatsappUrl?: string
 
+  // ── Email / SendPulse ────────────────────────────────
+  sendpulseApiId?: string
+  sendpulseApiSecret?: string
+  emailFromName?: string
+  emailFromEmail?: string
+
   updatedAt?: string
 }
 
@@ -85,5 +91,9 @@ export interface AdminProfileRow {
   site_linkedin_url: string | null
   site_youtube_url: string | null
   site_whatsapp_url: string | null
+  sendpulse_api_id: string | null
+  sendpulse_api_secret: string | null
+  email_from_name: string | null
+  email_from_email: string | null
   updated_at: string | null
 }

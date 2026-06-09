@@ -2,11 +2,11 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { Star, ShieldCheck, Users, AlertTriangle } from 'lucide-react'
 import { FlagIcon } from '@/components/ui/FlagIcon'
-import { getAllReviews, getFeaturedReviews, getReviewStats } from '@/lib/data/reviews'
+import { getPublicReviews, getPublicReviewStats } from '@/lib/db/reviews'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewsListClient } from './ReviewsListClient'
 
-export const revalidate = 86400
+export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Nurse Reviews of Overseas Recruitment Agencies — Verified Experiences | OverseasNursing.com',
@@ -29,10 +29,12 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ReviewsPage() {
-  const stats = getReviewStats()
-  const featured = getFeaturedReviews()
-  const all = getAllReviews()
+export default async function ReviewsPage() {
+  const [all, stats] = await Promise.all([
+    getPublicReviews(),
+    getPublicReviewStats(),
+  ])
+  const featured = all.filter(r => r.featured)
 
   const reviewSchema = {
     '@context': 'https://schema.org',

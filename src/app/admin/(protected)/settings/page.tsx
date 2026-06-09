@@ -140,6 +140,49 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
+          {/* ── Email / SendPulse ─────────────────────────────── */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8">
+            <SectionHeading
+              title="Email Settings (SendPulse)"
+              description="Used to send OTP verification and claim approval emails to agencies."
+            />
+            <div className="flex flex-col gap-5">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                <p className="text-[12.5px] text-blue-700">
+                  Get your API ID and Secret from{' '}
+                  <a href="https://sendpulse.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">
+                    sendpulse.com
+                  </a>{' '}
+                  → API → REST API credentials.
+                </p>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <FieldRow
+                  label="SendPulse API ID"
+                  name="sendpulseApiId"
+                  placeholder="Your SendPulse client_id"
+                />
+                <FieldRow
+                  label="SendPulse API Secret"
+                  name="sendpulseApiSecret"
+                  type="password"
+                  placeholder="Your SendPulse client_secret"
+                />
+                <FieldRow
+                  label="From Name"
+                  name="emailFromName"
+                  placeholder="OverseasNursing"
+                />
+                <FieldRow
+                  label="From Email"
+                  name="emailFromEmail"
+                  type="email"
+                  placeholder="noreply@overseasnursing.com"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* ── Author Section ─────────────────────────────────── */}
           <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8">
             <SectionHeading
