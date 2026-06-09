@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAllReviews as getMockReviews } from '@/lib/data/reviews'
 import type { Tables, InsertDto } from '@/types/database'
+import type { PlatformReview } from '@/types/review'
 
 const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -154,4 +155,113 @@ export async function deleteReview(id: string): Promise<boolean> {
     return false
   }
   return true
+}
+
+// ── Public page data (mapped to PlatformReview) ───────────────────────────
+
+function initials(name: string): string {
+  return name.split(' ').slice(0, 2).map(w => w[0] ?? '').join('').toUpperCase()
+}
+
+function parseCostStr(text: string | null): number {
+  if (!text) return 0
+  const clean = text.replace(/[₹,\s]/g, '')
+  const lakh  = clean.match(/^([\d.]+)[Ll]/)
+  if (lakh) return parseFloat(lakh[1]) * 100000
+  const n = parseFloat(clean)
+  return isNaN(n) ? 0 : n
+}
+
+function rowToPlatformReview(row: ReviewRow, featured: boolean): PlatformReview {
+  return {
+    id:                       row.id,
+    agencySlug:               row.agency_slug,
+    agencyName:               row.agency_name,
+    authorName:               row.author_name,
+    authorInitials:           initials(row.author_name),
+    authorFrom:               row.author_from,
+    verified:                 true,
+    verifiedPlacement:        row.placed,
+    date:                     row.created_at,
+    rating:                   row.overall_rating,
+    communicationRating:      row.communication_rating ?? row.overall_rating,
+    transparencyRating:       row.transparency_rating  ?? row.overall_rating,
+    speedRating:              row.speed_rating          ?? row.overall_rating,
+    destinationCountry:       row.country_placed,
+    destinationCity:          '',
+    hospitalType:             '',
+    actualCostPaid:           parseCostStr(row.actual_cost_paid),
+    timelineMonths:           row.timeline_months ?? 0,
+    visaReceived:             row.placed,
+    hiddenChargesExperienced: !!row.surprise_charges,
+    wouldRecommend:           row.recommends,
+    title:                    row.country_placed
+                                ? `Placed in ${row.country_placed}`
+                                : 'Verified Review',
+    body:                     row.review_text,
+    adviceForOthers:          row.advice ?? undefined,
+    helpful:                  row.helpful_count,
+    featured,
+  }
+}
+
+export async function getPublicReviews(): Promise<PlatformReview[]> {
+  if (!SUPABASE_CONFIGURED) return getMockReviews()
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('*')
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false })
+
+  if (error || !data?.length) return getMockReviews()
+
+  // Mark top 4 most-helpful verified-placement reviews as featured
+  const featuredIds = new Set(
+    [...data]
+      .filter(r => r.placed)
+      .sort((a, b) => b.helpful_count - a.helpful_count)
+      .slice(0, 4)
+      .map(r => r.id)
+  )
+
+  return data.map(r => rowToPlatformReview(r, featuredIds.has(r.id)))
+}
+
+export async function getPublicReviewStats(): Promise<{
+  total: number
+  placed: number
+  withHiddenCharges: number
+  avgRating: number
+  recommendPercent: number
+}> {
+  if (!SUPABASE_CONFIGURED) {
+    const mock = getMockReviews()
+    const total = mock.length
+    return {
+      total,
+      placed:            mock.filter(r => r.verifiedPlacement).length,
+      withHiddenCharges: mock.filter(r => r.hiddenChargesExperienced).length,
+      avgRating:         Math.round(mock.reduce((s, r) => s + r.rating, 0) / total * 10) / 10,
+      recommendPercent:  Math.round(mock.filter(r => r.wouldRecommend).length / total * 100),
+    }
+  }
+
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('reviews')
+    .select('overall_rating, placed, surprise_charges, recommends')
+    .eq('status', 'approved')
+
+  if (!data?.length) return { total: 0, placed: 0, withHiddenCharges: 0, avgRating: 0, recommendPercent: 0 }
+
+  const total = data.length
+  return {
+    total,
+    placed:            data.filter(r => r.placed).length,
+    withHiddenCharges: data.filter(r => !!r.surprise_charges).length,
+    avgRating:         Math.round(data.reduce((s, r) => s + r.overall_rating, 0) / total * 10) / 10,
+    recommendPercent:  Math.round(data.filter(r => r.recommends).length / total * 100),
+  }
 }

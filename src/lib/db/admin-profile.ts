@@ -45,6 +45,11 @@ function rowToProfile(row: AdminProfileRow): AdminProfile {
     siteYoutubeUrl:   row.site_youtube_url   ?? undefined,
     siteWhatsappUrl:  row.site_whatsapp_url  ?? undefined,
 
+    sendpulseApiId:     row.sendpulse_api_id     ?? undefined,
+    sendpulseApiSecret: row.sendpulse_api_secret ?? undefined,
+    emailFromName:      row.email_from_name      ?? undefined,
+    emailFromEmail:     row.email_from_email      ?? undefined,
+
     updatedAt: row.updated_at ?? undefined,
   }
 }
@@ -103,6 +108,35 @@ export async function getSiteSocialLinks(): Promise<SiteSocialLinks> {
   }
 }
 
+export type EmailConfig = {
+  apiId: string
+  apiSecret: string
+  fromName: string
+  fromEmail: string
+}
+
+export async function getEmailConfig(): Promise<EmailConfig | null> {
+  try {
+    const db = createAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (db as any)
+      .from('admin_profile')
+      .select('sendpulse_api_id, sendpulse_api_secret, email_from_name, email_from_email')
+      .eq('id', FIXED_ROW_ID)
+      .single()
+    if (error || !data) return null
+    if (!data.sendpulse_api_id || !data.sendpulse_api_secret) return null
+    return {
+      apiId:     data.sendpulse_api_id,
+      apiSecret: data.sendpulse_api_secret,
+      fromName:  data.email_from_name  || 'OverseasNursing',
+      fromEmail: data.email_from_email || 'noreply@overseasnursing.com',
+    }
+  } catch {
+    return null
+  }
+}
+
 export async function upsertAdminProfile(
   profile: Partial<AdminProfile>,
 ): Promise<{ error?: string }> {
@@ -150,6 +184,11 @@ export async function upsertAdminProfile(
     if (profile.siteLinkedinUrl  !== undefined) payload.site_linkedin_url  = profile.siteLinkedinUrl  || null
     if (profile.siteYoutubeUrl   !== undefined) payload.site_youtube_url   = profile.siteYoutubeUrl   || null
     if (profile.siteWhatsappUrl  !== undefined) payload.site_whatsapp_url  = profile.siteWhatsappUrl  || null
+
+    if (profile.sendpulseApiId     !== undefined) payload.sendpulse_api_id     = profile.sendpulseApiId     || null
+    if (profile.sendpulseApiSecret !== undefined) payload.sendpulse_api_secret = profile.sendpulseApiSecret || null
+    if (profile.emailFromName      !== undefined) payload.email_from_name      = profile.emailFromName      || null
+    if (profile.emailFromEmail     !== undefined) payload.email_from_email     = profile.emailFromEmail     || null
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (db as any)

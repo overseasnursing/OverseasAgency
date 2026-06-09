@@ -4,7 +4,7 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import {
   Shield, LayoutDashboard, Building2, Star, ShieldAlert,
-  LogOut, ExternalLink, ClipboardList, Settings, Users, MessageSquare,
+  LogOut, ExternalLink, ClipboardList, Settings, Users, MessageSquare, BadgeCheck,
 } from 'lucide-react'
 import type { AdminPermission } from '@/lib/require-admin'
 
@@ -24,6 +24,7 @@ const NAV: NavItem[] = [
   { href: '/admin/mock-test-reviews',  label: 'Exam Reviews',  Icon: MessageSquare,   exact: false, permission: 'mock-tests',  superOnly: false },
   { href: '/admin/scam-reports',       label: 'Scam Reports',  Icon: ShieldAlert,     exact: false, permission: 'scam-reports',superOnly: false },
   { href: '/admin/mock-tests',         label: 'Mock Tests',    Icon: ClipboardList,   exact: false, permission: 'mock-tests',  superOnly: false },
+  { href: '/admin/claim-listings',      label: 'Claim Requests',Icon: BadgeCheck,      exact: false, permission: 'claim-listings', superOnly: false },
   { href: '/admin/settings',           label: 'Settings',      Icon: Settings,        exact: false, permission: 'settings',    superOnly: false },
   { href: '/admin/employees',          label: 'Employees',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
 ]

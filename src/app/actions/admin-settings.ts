@@ -58,6 +58,11 @@ export async function saveAdminSettings(
     siteLinkedinUrl:  (formData.get('siteLinkedinUrl')  as string | null)?.trim() ?? '',
     siteYoutubeUrl:   (formData.get('siteYoutubeUrl')   as string | null)?.trim() ?? '',
     siteWhatsappUrl:  (formData.get('siteWhatsappUrl')  as string | null)?.trim() ?? '',
+
+    sendpulseApiId:     (formData.get('sendpulseApiId')     as string | null)?.trim() ?? '',
+    sendpulseApiSecret: (formData.get('sendpulseApiSecret') as string | null)?.trim() ?? '',
+    emailFromName:      (formData.get('emailFromName')      as string | null)?.trim() ?? '',
+    emailFromEmail:     (formData.get('emailFromEmail')     as string | null)?.trim() ?? '',
   }
 
   const result = await upsertAdminProfile(profile)

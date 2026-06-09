@@ -8,6 +8,7 @@ export type AdminPermission =
   | 'scam-reports'
   | 'mock-tests'
   | 'settings'
+  | 'claim-listings'
 
 export type AdminUser = {
   userId:      string

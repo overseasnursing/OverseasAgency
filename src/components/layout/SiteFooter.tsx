@@ -26,6 +26,10 @@ const FOOTER_LINKS = {
     ['Canada',    '/country/canada'],
     ['Dubai',     '/country/dubai'],
   ],
+  'For Agencies': [
+    ['Claim Your Listing', '/claim-listing'],
+    ['Agency Login',       '/agency-admin'],
+  ],
 } as const
 
 function FacebookIcon() {
