@@ -5,6 +5,7 @@ import { MobileNav } from '@/components/navbar/MobileNav'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 /* ── Font ─────────────────────────────────────────────────────────
@@ -103,6 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MobileNav />
         <AnalyticsProvider />
         <SpeedInsights />
+        <Analytics />
 
       </body>
     </html>
