@@ -1,8 +1,8 @@
 import type { NextRequest } from 'next/server'
-import { getAllAgencies } from '@/lib/data/agencies'
+import { getActiveAgencies } from '@/lib/db/agencies'
+import { getApprovedScamReports } from '@/lib/db/scam-reports'
 import { getAllCountrySlugs } from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
-import { getAllScamReports } from '@/lib/data/scamReports'
 import { getAllLocationCitiesFromDb } from '@/lib/data/getLocationData'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs } from '@/lib/data/salaries'
@@ -32,7 +32,7 @@ type SitemapType =
 async function buildXml(type: string): Promise<string | null> {
   switch (type as SitemapType) {
     case 'agencies': {
-      const slugs = getAllAgencies().map((a) => a.slug)
+      const slugs = (await getActiveAgencies()).map((a) => a.slug)
       return buildSitemapXml(agencySitemapEntries(slugs))
     }
     case 'countries': {
@@ -42,7 +42,7 @@ async function buildXml(type: string): Promise<string | null> {
       return buildSitemapXml(pricingSitemapEntries(getAllPricingCountrySlugs()))
     }
     case 'scam-reports': {
-      const slugs = getAllScamReports().map((r) => r.slug)
+      const slugs = (await getApprovedScamReports()).map((r) => r.slug)
       return buildSitemapXml(scamReportSitemapEntries(slugs))
     }
     case 'locations': {
