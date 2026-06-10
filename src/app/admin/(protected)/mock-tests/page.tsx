@@ -17,6 +17,7 @@ export default async function MockTestLocationsPage() {
       mock_test_categories(count)
     `)
     .order('created_at', { ascending: false })
+    .limit(100)
 
   // Fetch country_slug separately — column may not exist yet on older deployments
   let countrySlugs: Record<string, string | null> = {}

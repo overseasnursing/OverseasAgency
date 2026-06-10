@@ -15,6 +15,7 @@ async function fetchClaims() {
     `)
     .in('status', ['pending_approval', 'approved', 'rejected'])
     .order('created_at', { ascending: false })
+    .limit(200)
 
   return (data ?? []) as ClaimRow[]
 }

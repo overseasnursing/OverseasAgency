@@ -2,7 +2,11 @@ import React from 'react'
 import { getAllReviewsAdmin } from '@/lib/db/reviews'
 import { approveReview, rejectReview, holdReview, removeReview } from '@/app/actions/moderate'
 import { requirePermission } from '@/lib/require-admin'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { AdminPagination } from '@/components/admin/AdminPagination'
 import { Star, CheckCircle, XCircle, Clock, Trash2, MapPin, Building2 } from 'lucide-react'
+
+const PAGE_SIZE = 20
 
 export const dynamic = 'force-dynamic'
 
@@ -20,15 +24,32 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
 }
 
 interface PageProps {
-  searchParams: Promise<{ status?: string; agency?: string }>
+  searchParams: Promise<{ status?: string; agency?: string; page?: string }>
 }
 
 export default async function AdminReviewsPage({ searchParams }: PageProps) {
   await requirePermission('reviews')
-  const { status = 'all', agency = '' } = await searchParams
-  const reviews = await getAllReviewsAdmin(status, agency || undefined)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { status = 'all', agency = '', page: pageStr = '1' } = await searchParams
+  const page = Math.max(1, Number(pageStr) || 1)
+  const from = (page - 1) * PAGE_SIZE
+  const to   = from + PAGE_SIZE - 1
 
-  // Build unique agency list from all reviews for the filter
+  // Paginated reviews for current filter
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let pagedQuery: any = db
+    .from('reviews')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to)
+  if (status !== 'all') pagedQuery = pagedQuery.eq('status', status)
+  if (agency) pagedQuery = pagedQuery.eq('agency_slug', agency)
+  const { data: reviews, count: filteredCount } = await pagedQuery
+
+  const totalPages = Math.ceil((filteredCount ?? 0) / PAGE_SIZE)
+
+  // All reviews for counts + agency filter options (no pagination)
   const allReviews = await getAllReviewsAdmin('all')
   const agencyOptions = Array.from(
     new Map(allReviews.map(r => [r.agency_slug, r.agency_name])).entries()
@@ -39,6 +60,14 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
     counts[r.status ?? 'pending'] = (counts[r.status ?? 'pending'] ?? 0) + 1
   }
 
+  function buildHref(p: number) {
+    const params = new URLSearchParams()
+    params.set('status', status)
+    if (agency) params.set('agency', agency)
+    params.set('page', String(p))
+    return `/admin/reviews?${params}`
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -46,7 +75,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
         <div>
           <h1 className="text-[22px] font-bold text-slate-900 mb-1">Reviews</h1>
           <p className="text-[13px] text-slate-500">
-            {reviews.length} review{reviews.length !== 1 ? 's' : ''} {status !== 'all' ? `· ${status}` : ''}
+            {filteredCount ?? 0} review{(filteredCount ?? 0) !== 1 ? 's' : ''} {status !== 'all' ? `· ${status}` : ''}
             {agency ? ` · ${agencyOptions.find(([s]) => s === agency)?.[1] ?? agency}` : ''}
           </p>
         </div>
@@ -59,7 +88,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
           {STATUS_TABS.map(tab => (
             <a
               key={tab.key}
-              href={`/admin/reviews?status=${tab.key}${agency ? `&agency=${agency}` : ''}`}
+              href={`/admin/reviews?status=${tab.key}${agency ? `&agency=${agency}` : ''}&page=1`}
               className={`px-3 py-1.5 text-[12.5px] font-semibold rounded-lg transition-colors whitespace-nowrap ${
                 status === tab.key
                   ? 'bg-white text-slate-800 shadow-sm'
@@ -106,11 +135,17 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
       </div>
 
       {/* Review list */}
-      {reviews.length === 0 ? (
+      {!reviews?.length ? (
         <div className="text-center py-16 text-slate-400 text-[14px]">No reviews found.</div>
       ) : (
         <div className="flex flex-col gap-4">
-          {reviews.map((review) => {
+          {reviews.map((review: {
+            id: string; agency_name: string | null; agency_slug: string | null
+            status: string | null; created_at: string | null; author_name: string | null
+            overall_rating: number | null; author_from: string | null; country_placed: string | null
+            actual_cost_paid: string | null; timeline_months: number | null; recommends: boolean | null
+            review_text: string | null; surprise_charges: string | null; reject_reason: string | null
+          }) => {
             const badge = STATUS_BADGE[review.status ?? 'pending'] ?? STATUS_BADGE.pending
             return (
               <div key={review.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -239,6 +274,16 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
           })}
         </div>
       )}
+
+      {/* Pagination */}
+      <AdminPagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={filteredCount ?? 0}
+        pageSize={PAGE_SIZE}
+        buildHref={buildHref}
+        itemLabel="reviews"
+      />
     </div>
   )
 }
