@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import { Star, Globe, CheckCircle, PenLine, ChevronDown, LogIn, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { submitMockTestReview } from '@/app/actions/submitMockTestReview'
+import { CountrySelect } from '@/components/ui/LocationCascade'
 
 type TestOption = { id: string; name: string }
 
@@ -294,17 +295,11 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
                   <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
                     Your Country <span className="text-slate-400 font-normal normal-case">(optional)</span>
                   </p>
-                  <div className="relative">
-                    <Globe size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      className={`${inputCls} pl-9`}
-                      placeholder="e.g. India, Philippines…"
-                      maxLength={100}
-                      value={reviewerCountry}
-                      onChange={e => setCountry(e.target.value)}
-                    />
-                  </div>
+                  <CountrySelect
+                    value={reviewerCountry || null}
+                    onChange={(label) => setCountry(label ?? '')}
+                    placeholder="Select your country…"
+                  />
                 </div>
               </div>
 

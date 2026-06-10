@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertTriangle, AlertCircle } from 'lucide-react'
 import { submitScamReport } from '@/app/actions/submitScamReport'
 import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
+import { LocationCascade } from '@/components/ui/LocationCascade'
 
 type Step = 'agency' | 'incident' | 'details' | 'submit'
 
@@ -29,6 +30,8 @@ const initialForm = {
   agencyName: '',
   countryPromised: '',
   amountPaid: '',
+  reporterState: '',
+  reporterCity: '',
   amountLost: '',
   category: '',
   title: '',
@@ -352,11 +355,21 @@ export function ScamReportForm() {
               <p className="text-[12px] text-slate-400 mt-1">You can use initials for privacy</p>
             </div>
             <div>
-              <FieldLabel required>Your home district/city</FieldLabel>
-              <Input
-                placeholder="e.g. Kottayam, Kerala"
-                value={form.reporterFrom}
-                onChange={(e) => set('reporterFrom', e.target.value)}
+              <FieldLabel required>Your home location</FieldLabel>
+              <LocationCascade
+                mode="state-city"
+                state={form.reporterState}
+                city={form.reporterCity}
+                onStateChange={(v) => {
+                  set('reporterState', v ?? '')
+                  set('reporterCity', '')
+                  set('reporterFrom', v ?? '')
+                }}
+                onCityChange={(v) => {
+                  set('reporterCity', v ?? '')
+                  set('reporterFrom', v && form.reporterState ? `${v}, ${form.reporterState}` : (form.reporterState || v || ''))
+                }}
+                className="flex flex-col gap-3"
               />
             </div>
 

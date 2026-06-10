@@ -15,6 +15,7 @@ import {
   type AgencyInput, type BranchInput, type FaqInput,
 } from '@/app/actions/admin-agencies'
 import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
+import { LocationCascade } from '@/components/ui/LocationCascade'
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 
@@ -258,9 +259,18 @@ function BranchFields({ data, onChange }: { data: BranchInput; onChange: (d: Bra
       <Field label="Branch Name" required><input className={inputCls} value={data.name} onChange={f('name')} placeholder="Head Office — Kochi" /></Field>
       <Field label="Is Head Office"><Toggle checked={data.is_head_office} onChange={v => onChange({ ...data, is_head_office: v })} label="Head Office" /></Field>
       <Field label="Address" required><input className={inputCls} value={data.address} onChange={f('address')} placeholder="123 MG Road" /></Field>
-      <Field label="City" required><input className={inputCls} value={data.city} onChange={f('city')} placeholder="Kochi" /></Field>
-      <Field label="State" required><input className={inputCls} value={data.state} onChange={f('state')} placeholder="Kerala" /></Field>
-      <Field label="Country"><input className={inputCls} value={data.country} onChange={f('country')} placeholder="India" /></Field>
+      <div className="col-span-2">
+        <LocationCascade
+          mode="country-state-city"
+          country={data.country ?? 'India'}
+          state={data.state}
+          city={data.city}
+          onCountryChange={(v) => onChange({ ...data, country: v ?? '' })}
+          onStateChange={(v) => onChange({ ...data, state: v ?? '', city: '' })}
+          onCityChange={(v) => onChange({ ...data, city: v ?? '' })}
+          className="grid grid-cols-3 gap-3"
+        />
+      </div>
       <Field label="Phone"><input className={inputCls} value={data.phone ?? ''} onChange={f('phone')} placeholder="+91 484 123 4567" /></Field>
       <Field label="WhatsApp"><input className={inputCls} value={data.whatsapp ?? ''} onChange={f('whatsapp')} placeholder="+91 98765 43210" /></Field>
       <Field label="Email"><input className={inputCls} value={data.email ?? ''} onChange={f('email')} placeholder="branch@agency.com" /></Field>
@@ -575,8 +585,16 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
       <div className={sectionCls}>
         <SectionHeader icon={<MapPin size={16} />} title="Location" />
         <div className="grid grid-cols-2 gap-4">
-          <Field label="City" required><input className={inputCls} value={form.city} onChange={e => handleCityOrState('city', e.target.value)} placeholder="Kochi" required /></Field>
-          <Field label="State" required><input className={inputCls} value={form.state} onChange={e => handleCityOrState('state', e.target.value)} placeholder="Kerala" required /></Field>
+          <div className="col-span-2">
+            <LocationCascade
+              mode="state-city"
+              state={form.state}
+              city={form.city}
+              onStateChange={(v) => handleCityOrState('state', v ?? '')}
+              onCityChange={(v) => handleCityOrState('city', v ?? '')}
+              className="grid grid-cols-2 gap-4"
+            />
+          </div>
           <Field label="Location Display" hint="Auto-filled from city + state. Edit if needed."><input className={inputCls} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Kochi, Kerala" /></Field>
           <Field label="Established Year"><input className={inputCls} type="number" value={num(form.established)} onChange={e => set('established', parseNum(e.target.value))} placeholder="2010" min={1980} max={2030} /></Field>
         </div>
