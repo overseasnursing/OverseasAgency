@@ -37,6 +37,7 @@ export default async function AgencySubmissionsPage() {
     .from('agency_submissions')
     .select('*')
     .order('created_at', { ascending: false })
+    .limit(200)
 
   const rows = (data ?? []) as SubmissionRow[]
   const pending  = rows.filter(r => r.status === 'pending')

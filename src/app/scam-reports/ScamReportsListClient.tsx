@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { ScamReportCard } from '@/components/scam/ScamReportCard'
 import type { PlatformScamReport, ScamCategory, ScamSeverity } from '@/types/scamReport'
 
@@ -24,10 +24,15 @@ interface ScamReportsListClientProps {
   reports: PlatformScamReport[]
 }
 
+const PAGE_SIZE = 10
+
 export function ScamReportsListClient({ reports }: ScamReportsListClientProps) {
   const [category, setCategory] = useState('all')
   const [severity, setSeverity] = useState('all')
   const [unresolvedOnly, setUnresolvedOnly] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  useEffect(() => { setVisibleCount(PAGE_SIZE) }, [category, severity, unresolvedOnly])
 
   const filtered = useMemo(() => {
     let list = [...reports]
@@ -82,6 +87,9 @@ export function ScamReportsListClient({ reports }: ScamReportsListClientProps) {
 
       <p className="text-[13px] text-slate-500 mb-4">
         {filtered.length} report{filtered.length !== 1 ? 's' : ''}
+        {filtered.length > visibleCount && (
+          <span className="text-slate-400"> · showing {visibleCount}</span>
+        )}
       </p>
 
       <div className="flex flex-col gap-5">
@@ -90,9 +98,23 @@ export function ScamReportsListClient({ reports }: ScamReportsListClientProps) {
             No reports match your filters.
           </div>
         ) : (
-          filtered.map((report) => <ScamReportCard key={report.id} report={report} />)
+          filtered.slice(0, visibleCount).map((report) => <ScamReportCard key={report.id} report={report} />)
         )}
       </div>
+
+      {visibleCount < filtered.length && (
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <button
+            onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+            className="h-11 px-8 bg-white border border-slate-200 hover:border-[#DC2626] hover:text-[#DC2626] text-[14px] font-semibold text-slate-700 rounded-xl transition-colors shadow-sm"
+          >
+            Load more reports
+          </button>
+          <p className="text-[12.5px] text-slate-400">
+            {visibleCount} of {filtered.length} shown
+          </p>
+        </div>
+      )}
     </div>
   )
 }

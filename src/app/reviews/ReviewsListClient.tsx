@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import type { PlatformReview } from '@/types/review'
 
@@ -17,11 +17,17 @@ interface ReviewsListClientProps {
   reviews: PlatformReview[]
 }
 
+const PAGE_SIZE = 10
+
 export function ReviewsListClient({ reviews }: ReviewsListClientProps) {
   const [country, setCountry] = useState('All Countries')
   const [sort, setSort] = useState('helpful')
   const [placedOnly, setPlacedOnly] = useState(false)
   const [recommends, setRecommends] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  // Reset to first page on filter change
+  useEffect(() => { setVisibleCount(PAGE_SIZE) }, [country, sort, placedOnly, recommends])
 
   const filtered = useMemo(() => {
     let list = [...reviews]
@@ -100,6 +106,9 @@ export function ReviewsListClient({ reviews }: ReviewsListClientProps) {
       {/* Count */}
       <p className="text-[13px] text-slate-500 mb-4">
         {filtered.length} review{filtered.length !== 1 ? 's' : ''}
+        {filtered.length > visibleCount && (
+          <span className="text-slate-400"> · showing {visibleCount}</span>
+        )}
       </p>
 
       {/* List */}
@@ -109,11 +118,26 @@ export function ReviewsListClient({ reviews }: ReviewsListClientProps) {
             No reviews match your filters.
           </div>
         ) : (
-          filtered.map((review) => (
+          filtered.slice(0, visibleCount).map((review) => (
             <ReviewCard key={review.id} review={review} showAgencyName />
           ))
         )}
       </div>
+
+      {/* Load more */}
+      {visibleCount < filtered.length && (
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <button
+            onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+            className="h-11 px-8 bg-white border border-slate-200 hover:border-primary hover:text-primary text-[14px] font-semibold text-slate-700 rounded-xl transition-colors shadow-sm"
+          >
+            Load more reviews
+          </button>
+          <p className="text-[12.5px] text-slate-400">
+            {visibleCount} of {filtered.length} shown
+          </p>
+        </div>
+      )}
     </div>
   )
 }

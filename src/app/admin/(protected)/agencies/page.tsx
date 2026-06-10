@@ -1,9 +1,12 @@
 import React from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePermission } from '@/lib/require-admin'
-import { Plus, Pencil, Globe, Star, Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
+import { AdminPagination } from '@/components/admin/AdminPagination'
+import { Plus, Pencil, Globe, Star, Shield, AlertTriangle, CheckCircle, XCircle, Search } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+
+const PAGE_SIZE = 20
 
 const TRUST_BADGE: Record<string, { label: string; cls: string; icon: React.ReactNode }> = {
   verified:       { label: 'Verified',       cls: 'bg-[#DCFCE7] text-[#166534]',   icon: <CheckCircle size={11} /> },
@@ -12,14 +15,41 @@ const TRUST_BADGE: Record<string, { label: string; cls: string; icon: React.Reac
   'scam-reported':{ label: 'Scam Reported',  cls: 'bg-[#FEE2E2] text-[#B91C1C]',   icon: <AlertTriangle size={11} /> },
 }
 
-export default async function AdminAgenciesPage() {
+interface PageProps {
+  searchParams: Promise<{ page?: string; q?: string; trust?: string }>
+}
+
+export default async function AdminAgenciesPage({ searchParams }: PageProps) {
   await requirePermission('agencies')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
-  const { data: agencies, error } = await db
+
+  const { page: pageStr = '1', q = '', trust = '' } = await searchParams
+  const page = Math.max(1, Number(pageStr) || 1)
+  const from = (page - 1) * PAGE_SIZE
+  const to   = from + PAGE_SIZE - 1
+
+  // Paginated query
+  let query = db
     .from('agencies')
-    .select('id, slug, name, city, state, trust_level, is_active, featured, rating, review_count, placement_count, created_at')
+    .select('id, slug, name, city, state, trust_level, is_active, featured, rating, review_count, placement_count, created_at', { count: 'exact' })
     .order('created_at', { ascending: false })
+    .range(from, to)
+
+  if (q) query = query.ilike('name', `%${q}%`)
+  if (trust) query = query.eq('trust_level', trust)
+
+  const { data: agencies, error, count: totalCount } = await query
+
+  const totalPages = Math.ceil((totalCount ?? 0) / PAGE_SIZE)
+
+  function buildHref(p: number) {
+    const params = new URLSearchParams()
+    params.set('page', String(p))
+    if (q) params.set('q', q)
+    if (trust) params.set('trust', trust)
+    return `/admin/agencies?${params}`
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,7 +58,11 @@ export default async function AdminAgenciesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[22px] font-bold text-slate-900 mb-0.5">Agencies</h1>
-          <p className="text-[13px] text-slate-500">{agencies?.length ?? 0} agencies in the database</p>
+          <p className="text-[13px] text-slate-500">
+            {totalCount ?? 0} agencies total
+            {q && ` · searching "${q}"`}
+            {trust && ` · ${trust}`}
+          </p>
         </div>
         <a
           href="/admin/agencies/new"
@@ -38,6 +72,39 @@ export default async function AdminAgenciesPage() {
           Add Agency
         </a>
       </div>
+
+      {/* Search + filter bar */}
+      <form method="get" action="/admin/agencies" className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          <input
+            name="q"
+            defaultValue={q}
+            type="text"
+            placeholder="Search agencies…"
+            className="w-full h-9 pl-8 pr-3 text-[13px] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
+          />
+        </div>
+        <select
+          name="trust"
+          defaultValue={trust}
+          className="h-9 pl-3 pr-8 text-[13px] text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 appearance-none cursor-pointer"
+        >
+          <option value="">All Trust Levels</option>
+          <option value="verified">Verified</option>
+          <option value="trusted">Trusted</option>
+          <option value="unverified">Unverified</option>
+          <option value="scam-reported">Scam Reported</option>
+        </select>
+        <button type="submit" className="h-9 px-4 bg-primary hover:bg-primary-hover text-white text-[13px] font-semibold rounded-xl transition-colors">
+          Search
+        </button>
+        {(q || trust) && (
+          <a href="/admin/agencies" className="h-9 px-3 flex items-center text-[13px] text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl transition-colors">
+            Clear
+          </a>
+        )}
+      </form>
 
       {error && (
         <div className="p-4 bg-[#FEE2E2] border border-[#FECACA] rounded-xl text-[13px] text-[#B91C1C]">
@@ -50,14 +117,15 @@ export default async function AdminAgenciesPage() {
         {!agencies?.length ? (
           <div className="text-center py-16">
             <Globe size={32} className="text-slate-300 mx-auto mb-3" />
-            <p className="text-[14px] font-semibold text-slate-600 mb-1">No agencies yet</p>
-            <p className="text-[13px] text-slate-400 mb-4">Add your first agency to get started.</p>
-            <a
-              href="/admin/agencies/new"
-              className="inline-flex items-center gap-2 h-9 px-4 bg-primary text-white text-[13px] font-semibold rounded-xl"
-            >
-              <Plus size={14} /> Add Agency
-            </a>
+            <p className="text-[14px] font-semibold text-slate-600 mb-1">No agencies found</p>
+            <p className="text-[13px] text-slate-400 mb-4">
+              {q || trust ? 'Try adjusting your search or filter.' : 'Add your first agency to get started.'}
+            </p>
+            {!q && !trust && (
+              <a href="/admin/agencies/new" className="inline-flex items-center gap-2 h-9 px-4 bg-primary text-white text-[13px] font-semibold rounded-xl">
+                <Plus size={14} /> Add Agency
+              </a>
+            )}
           </div>
         ) : (
           <table className="w-full text-[13px]">
@@ -136,7 +204,16 @@ export default async function AdminAgenciesPage() {
         )}
       </div>
 
-      {/* Quick links to public pages */}
+      {/* Pagination */}
+      <AdminPagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalCount ?? 0}
+        pageSize={PAGE_SIZE}
+        buildHref={buildHref}
+        itemLabel="agencies"
+      />
+
       {!!agencies?.length && (
         <p className="text-[12px] text-slate-400 text-center">
           Public listing: <a href="/agencies" target="_blank" className="text-primary hover:underline">/agencies</a>

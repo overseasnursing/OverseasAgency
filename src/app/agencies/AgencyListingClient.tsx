@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { SlidersHorizontal, ArrowUpDown, CheckCircle } from 'lucide-react'
 import { AgencyCard } from '@/components/agencies/AgencyCard'
 import { SearchBar } from '@/components/search/SearchBar'
@@ -129,12 +129,20 @@ interface AgencyListingClientProps {
   initialCountry?: string | null
 }
 
+const PAGE_SIZE = 12
+
 export function AgencyListingClient({ agencies, initialCountry }: AgencyListingClientProps) {
   const [filters, setFilters] = useState<FilterState>(() =>
     initialCountry ? { ...DEFAULT_FILTERS, countries: [initialCountry] } : DEFAULT_FILTERS
   )
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [sortOpen, setSortOpen]     = useState(false)
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  // Reset to first page whenever filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [filters])
 
   // Derive available states and cities from agencies data
   const availableStates = useMemo(() => {
@@ -162,6 +170,8 @@ export function AgencyListingClient({ agencies, initialCountry }: AgencyListingC
   }, [agencies, filters.state])
 
   const results = useMemo(() => applyFilters(agencies, filters), [agencies, filters])
+  const visible = results.slice(0, visibleCount)
+  const hasMore = visibleCount < results.length
 
   const activeFilterCount = [
     filters.countries.length > 0,
@@ -267,9 +277,14 @@ export function AgencyListingClient({ agencies, initialCountry }: AgencyListingC
                   agenc{results.length === 1 ? 'y' : 'ies'} found
                 </span>
               </p>
+              {results.length > visibleCount && (
+                <p className="text-[13px] text-slate-400 mt-0.5">
+                  Showing {visibleCount} of {results.length}
+                </p>
+              )}
               {filters.search && (
                 <p className="text-[13px] text-slate-400 mt-0.5">
-                  Showing results for &ldquo;{filters.search}&rdquo;
+                  Results for &ldquo;{filters.search}&rdquo;
                 </p>
               )}
             </div>
@@ -314,11 +329,31 @@ export function AgencyListingClient({ agencies, initialCountry }: AgencyListingC
 
           {/* Cards */}
           {results.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {results.map((agency) => (
-                <AgencyCard key={agency.id} agency={agency} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {visible.map((agency) => (
+                  <AgencyCard key={agency.id} agency={agency} />
+                ))}
+              </div>
+
+              {hasMore ? (
+                <div className="mt-8 flex flex-col items-center gap-2">
+                  <button
+                    onClick={() => setVisibleCount(v => v + PAGE_SIZE)}
+                    className="h-11 px-8 bg-white border border-slate-200 hover:border-primary hover:text-primary text-[14px] font-semibold text-slate-700 rounded-xl transition-colors shadow-sm"
+                  >
+                    Load more agencies
+                  </button>
+                  <p className="text-[12.5px] text-slate-400">
+                    Showing {visibleCount} of {results.length}
+                  </p>
+                </div>
+              ) : results.length > PAGE_SIZE ? (
+                <p className="text-center text-[13px] text-slate-400 mt-8">
+                  All {results.length} agencies shown
+                </p>
+              ) : null}
+            </>
           ) : (
             /* Empty state */
             <div className="flex flex-col items-center justify-center py-20 text-center">
