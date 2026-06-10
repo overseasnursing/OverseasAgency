@@ -3,7 +3,7 @@ import { createAdminClient }   from '@/lib/supabase/admin'
 import { getAllCountrySlugs }  from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
 import { getApprovedScamReports } from '@/lib/db/scam-reports'
-import { getAllLocationCitiesFromDb } from '@/lib/data/getLocationData'
+import { getAllStatesFromDb } from '@/lib/data/getAgencyLocationData'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs }   from '@/lib/data/salaries'
 import { getAllExamSlugs }     from '@/lib/data/exams'
@@ -68,12 +68,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     agencies,
     mockLocations,
     mockCategories,
-    locationCities,
+    agencyStates,
   ] = await Promise.all([
     getAgenciesFromDb(),
     getMockTestLocationsFromDb(),
     getMockTestCategoriesFromDb(),
-    getAllLocationCitiesFromDb(),
+    getAllStatesFromDb(),
   ])
 
   /* ── Static pages ── */
@@ -108,13 +108,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }))
 
-  /* ── Location city pages ── */
-  const locationPages: MetadataRoute.Sitemap = locationCities.map(({ slug }) => ({
-    url: url(`/location/${slug}`),
+  /* ── Agency state pages ── */
+  const agencyStatePages: MetadataRoute.Sitemap = agencyStates.map((s) => ({
+    url: url(`/agencies/${s.stateSlug}`),
     lastModified: today,
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
+    changeFrequency: 'weekly' as const,
+    priority: 0.85,
   }))
+
+  /* ── Agency city pages ── */
+  const agencyCityPages: MetadataRoute.Sitemap = agencyStates.flatMap((s) =>
+    s.cities.map((c) => ({
+      url: url(`/agencies/${s.stateSlug}/${c.citySlug}`),
+      lastModified: today,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
+  )
 
   /* ── Comparison pages ── */
   const comparisonPages: MetadataRoute.Sitemap = getAllComparisonSlugs().map(slug => ({
@@ -178,8 +188,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticPages,
     ...countryPages,
     ...agencyPages,
+    ...agencyStatePages,
+    ...agencyCityPages,
     ...pricingPages,
-    ...locationPages,
     ...comparisonPages,
     ...salaryPages,
     ...examPages,

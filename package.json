@@ -20,6 +20,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "country-state-city": "^3.2.1",
     "flag-icons": "^7.5.0",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.356.0",

@@ -629,6 +629,77 @@ export function buildAgencySchema(agency: {
   }
 }
 
+// ─── CollectionPage (state + city location directory pages) ──────────────────
+
+export function buildCollectionPageSchema(page: {
+  name: string
+  description: string
+  path: string
+  locationName: string
+  locationRegion?: string
+  agencyCount: number
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: page.name,
+    description: page.description,
+    url: abs(page.path),
+    '@id': `${abs(page.path)}#webpage`,
+    isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: BASE_URL },
+    about: {
+      '@type': 'Place',
+      name: page.locationName,
+      ...(page.locationRegion && { containedInPlace: { '@type': 'State', name: page.locationRegion } }),
+      address: { '@type': 'PostalAddress', addressCountry: 'IN' },
+    },
+    numberOfItems: page.agencyCount,
+    inLanguage: 'en-IN',
+  }
+}
+
+// ─── ItemList (agency listings on location pages) ─────────────────────────────
+
+export function buildAgencyItemListSchema(agencies: Array<{
+  name: string
+  slug: string
+  rating: number
+  reviewCount: number
+  city: string
+  state: string
+}>, listName: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: listName,
+    numberOfItems: agencies.length,
+    itemListElement: agencies.map((a, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'LocalBusiness',
+        name: a.name,
+        url: `${BASE_URL}/agency/${a.slug}`,
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: a.city,
+          addressRegion: a.state,
+          addressCountry: 'IN',
+        },
+        ...((a.rating > 0 && a.reviewCount > 0) && {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: a.rating.toFixed(1),
+            reviewCount: a.reviewCount,
+            bestRating: '5',
+            worstRating: '1',
+          },
+        }),
+      },
+    })),
+  }
+}
+
 // ─── Aggregate review (for agency pages) ─────────────────────────────────────
 
 export function buildAggregateRatingSchema(entity: {

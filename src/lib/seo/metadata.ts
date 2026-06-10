@@ -120,7 +120,55 @@ export function buildPricingMetadata(data: {
   })
 }
 
-// ─── Location ──────────────────────────────────────────────────────────────────
+// ─── Location — state directory page ──────────────────────────────────────────
+
+export function buildStateAgencyMetadata(data: {
+  state: string
+  stateSlug: string
+  agencyCount: number
+  topDestinations: string[]
+  feeRange: { minLakhs: number; maxLakhs: number }
+}): Metadata {
+  const dest = data.topDestinations.slice(0, 3).join(', ')
+  const feeNote = data.feeRange.minLakhs > 0
+    ? ` Fees from ₹${data.feeRange.minLakhs}L.`
+    : ''
+
+  const title = `${data.agencyCount} Overseas Nursing Agencies in ${data.state} (2025) — Verified Reviews & Fees | ${SITE_NAME}`
+  const description = `Compare ${data.agencyCount} verified overseas nursing agencies in ${data.state}.${feeNote} Real nurse reviews, transparent pricing${dest ? `, placements to ${dest}` : ''} and scam alerts — all in one place.`
+
+  return buildMetadata({
+    title,
+    description,
+    path: `/agencies/${data.stateSlug}`,
+    ogImage: `/og/agencies-${data.stateSlug}.png`,
+  })
+}
+
+// ─── Location — city directory page ───────────────────────────────────────────
+
+export function buildCityAgencyMetadata(data: {
+  city: string
+  citySlug: string
+  state: string
+  stateSlug: string
+  agencyCount: number
+  topDestinations: string[]
+}): Metadata {
+  const dest = data.topDestinations.slice(0, 3).join(', ')
+
+  const title = `Overseas Nursing Agencies in ${data.city}, ${data.state} — ${data.agencyCount} Verified | ${SITE_NAME}`
+  const description = `Find ${data.agencyCount} verified overseas nursing agenc${data.agencyCount === 1 ? 'y' : 'ies'} in ${data.city}. Compare fees, read real nurse reviews${dest ? `, and explore placements to ${dest}` : ''}. Updated 2025 data.`
+
+  return buildMetadata({
+    title,
+    description,
+    path: `/agencies/${data.stateSlug}/${data.citySlug}`,
+    ogImage: `/og/agencies-${data.stateSlug}-${data.citySlug}.png`,
+  })
+}
+
+// ─── Location (legacy /location/[city]) ───────────────────────────────────────
 
 export function buildLocationMetadata(location: {
   city: string

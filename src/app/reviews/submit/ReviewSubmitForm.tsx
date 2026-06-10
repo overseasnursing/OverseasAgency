@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertCircle, Building2 } from 'lucide-react'
 import { submitReview } from '@/app/actions/submitReview'
 import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
+import { LocationCascade } from '@/components/ui/LocationCascade'
+import { findCountryIso } from '@/lib/data/locationPicker'
 
 type Step = 'agency' | 'financial' | 'ratings' | 'written' | 'verify'
 
@@ -21,6 +23,7 @@ const HOSPITAL_TYPES = ['University Hospital', 'NHS Trust', 'Public Hospital', '
 const initialForm = {
   agencyName: '',
   destinationCountry: '',
+  destinationState: '',
   destinationCity: '',
   hospitalType: '',
   visaReceived: '',
@@ -38,6 +41,8 @@ const initialForm = {
   adviceForOthers: '',
   wouldRecommend: '',
   authorName: '',
+  authorState: '',
+  authorCity: '',
   authorFrom: '',
   verifyConsent: false,
 }
@@ -258,11 +263,15 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               </Select>
             </div>
             <div>
-              <FieldLabel>Destination City</FieldLabel>
-              <Input
-                placeholder="e.g. Munich, London, Toronto"
-                value={form.destinationCity}
-                onChange={(e) => set('destinationCity', e.target.value)}
+              <FieldLabel>Destination State / Region</FieldLabel>
+              <LocationCascade
+                mode="state-city"
+                countryIsoOverride={form.destinationCountry ? findCountryIso(form.destinationCountry) : null}
+                state={form.destinationState}
+                city={form.destinationCity}
+                onStateChange={(v) => { set('destinationState', v ?? ''); set('destinationCity', '') }}
+                onCityChange={(v) => set('destinationCity', v ?? '')}
+                className="flex flex-col gap-3"
               />
             </div>
             <div>
@@ -444,11 +453,21 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               <p className="text-[12px] text-slate-400 mt-1">You can use initials for your last name</p>
             </div>
             <div>
-              <FieldLabel required>Your home district/city</FieldLabel>
-              <Input
-                placeholder="e.g. Thrissur, Kerala"
-                value={form.authorFrom}
-                onChange={(e) => set('authorFrom', e.target.value)}
+              <FieldLabel required>Your home location</FieldLabel>
+              <LocationCascade
+                mode="state-city"
+                state={form.authorState}
+                city={form.authorCity}
+                onStateChange={(v) => {
+                  set('authorState', v ?? '')
+                  set('authorCity', '')
+                  set('authorFrom', v ? v : '')
+                }}
+                onCityChange={(v) => {
+                  set('authorCity', v ?? '')
+                  set('authorFrom', v && form.authorState ? `${v}, ${form.authorState}` : (form.authorState || v || ''))
+                }}
+                className="flex flex-col gap-3"
               />
             </div>
 

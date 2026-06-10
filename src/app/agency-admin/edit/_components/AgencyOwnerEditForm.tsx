@@ -15,6 +15,7 @@ import {
   type OwnerBranchInput,
 } from '@/app/actions/agencyOwnerActions'
 import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
+import { LocationCascade } from '@/components/ui/LocationCascade'
 
 /* ─── Types ────────────────────────────────────────────────────────────────── */
 
@@ -264,18 +265,17 @@ function BranchEditor({
             <Field label="Branch Name *">
               <input value={data.name} onChange={e => set('name', e.target.value)} className={inputCls} placeholder="e.g. Kochi Head Office" />
             </Field>
-            <Field label="City *">
-              <input value={data.city} onChange={e => set('city', e.target.value)} className={inputCls} placeholder="e.g. Kochi" />
-            </Field>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <Field label="State *">
-              <input value={data.state} onChange={e => set('state', e.target.value)} className={inputCls} placeholder="e.g. Kerala" />
-            </Field>
-            <Field label="Country">
-              <input value={data.country ?? ''} onChange={e => set('country', e.target.value)} className={inputCls} placeholder="India" />
-            </Field>
-          </div>
+          <LocationCascade
+            mode="country-state-city"
+            country={data.country ?? 'India'}
+            state={data.state}
+            city={data.city}
+            onCountryChange={(v) => set('country', v ?? 'India')}
+            onStateChange={(v) => { set('state', v ?? ''); set('city', '') }}
+            onCityChange={(v) => set('city', v ?? '')}
+            className="grid sm:grid-cols-3 gap-3"
+          />
           <Field label="Address *">
             <textarea value={data.address} onChange={e => set('address', e.target.value)} rows={2} className={textareaCls} placeholder="Full street address" />
           </Field>
