@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePermission } from '@/lib/require-admin'
 import { AdminPagination } from '@/components/admin/AdminPagination'
@@ -32,7 +33,7 @@ export default async function AdminAgenciesPage({ searchParams }: PageProps) {
   // Paginated query
   let query = db
     .from('agencies')
-    .select('id, slug, name, city, state, trust_level, is_active, featured, rating, review_count, placement_count, created_at', { count: 'exact' })
+    .select('id, slug, name, city, state, trust_level, is_active, featured, rating, review_count, placement_count, logo_url, created_at', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -144,14 +145,26 @@ export default async function AdminAgenciesPage({ searchParams }: PageProps) {
                 id: string; slug: string; name: string; city: string; state: string
                 trust_level: string; is_active: boolean; featured: boolean
                 rating: number | null; review_count: number; placement_count: number
+                logo_url: string | null
               }) => {
                 const badge = TRUST_BADGE[a.trust_level] ?? TRUST_BADGE.unverified
                 return (
                   <tr key={a.id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary flex-shrink-0">
-                          {a.name.substring(0, 2).toUpperCase()}
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary flex-shrink-0 overflow-hidden">
+                          {a.logo_url ? (
+                            <Image
+                              src={a.logo_url}
+                              alt={`${a.name} logo`}
+                              width={32}
+                              height={32}
+                              sizes="32px"
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            a.name.substring(0, 2).toUpperCase()
+                          )}
                         </div>
                         <div>
                           <p className="font-semibold text-slate-800">{a.name}</p>
