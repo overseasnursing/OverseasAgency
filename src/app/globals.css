@@ -51,12 +51,6 @@ html {
 body {
   background-color: var(--surface-page);
   color: var(--text-primary);
-  /* Reserve space for fixed mobile nav */
-  padding-bottom: var(--mobile-nav-height);
-}
-
-@media (min-width: 768px) {
-  body { padding-bottom: 0; }
 }
 
 /* ─────────────────────────────────────────────────────────────────
