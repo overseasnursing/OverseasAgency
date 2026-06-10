@@ -18,6 +18,7 @@ const FOOTER_LINKS = {
     ['Guides',         '/guides'],
     ['Exam Guides',    '/exam'],
     ['Pricing',        '/pricing'],
+    ['Locations',      '/locations'],
   ],
   Countries: [
     ['Germany',   '/country/germany'],
