@@ -391,10 +391,8 @@ export default function AboutPage() {
               </a>
               <MailtoLink
                 email="hello@overseasnursing.com"
-                className="inline-flex items-center justify-center gap-2 h-10 px-5 border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-[13.5px] font-medium rounded-xl transition-colors"
-              >
-                hello@overseasnursing.com
-              </MailtoLink>
+                reveal
+              />
             </div>
           </section>
 

@@ -62,7 +62,7 @@ export default function ContactPage() {
                 <h2 className="text-[15px] font-bold text-slate-800 mb-1">{title}</h2>
                 <p className="text-[13.5px] text-slate-500 leading-relaxed mb-3">{desc}</p>
                 {email ? (
-                  <MailtoLink email={email} className="inline-flex items-center text-[13px] font-semibold text-primary hover:underline">
+                  <MailtoLink email={email} reveal>
                     {label} →
                   </MailtoLink>
                 ) : (
