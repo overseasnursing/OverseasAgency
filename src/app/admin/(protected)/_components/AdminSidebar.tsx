@@ -28,6 +28,7 @@ const NAV: NavItem[] = [
   { href: '/admin/claim-listings',      label: 'Claim Requests',Icon: BadgeCheck,      exact: false, permission: 'claim-listings', superOnly: false },
   { href: '/admin/settings',           label: 'Settings',      Icon: Settings,        exact: false, permission: 'settings',    superOnly: false },
   { href: '/admin/employees',          label: 'Employees',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
+  { href: '/admin/users',              label: 'All Users',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
 ]
 
 type Props = {
