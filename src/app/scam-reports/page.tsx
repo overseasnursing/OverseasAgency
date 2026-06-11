@@ -2,7 +2,9 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { AlertTriangle, XCircle, ShieldCheck, FileText } from 'lucide-react'
 import { getAllScamReports, getScamReportStats } from '@/lib/data/scamReports'
+import { fetchAgenciesForSearch } from '@/lib/data/fetchAgencies'
 import { ScamReportsListClient } from './ScamReportsListClient'
+import { ScamAgencySearch } from './_components/ScamAgencySearch'
 
 export const revalidate = 86400
 
@@ -26,9 +28,10 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ScamReportsPage() {
-  const stats = getScamReportStats()
-  const reports = getAllScamReports()
+export default async function ScamReportsPage() {
+  const stats     = getScamReportStats()
+  const reports   = getAllScamReports()
+  const agencies  = await fetchAgenciesForSearch(200)
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -80,13 +83,8 @@ export default function ScamReportsPage() {
                 These reports are submitted by nurses who lost money to fraudulent agencies. Every incident includes a full timeline, warning signs missed, and lessons learned. All reports are verified by our team before publication.
               </p>
 
-              {/* Warning strip */}
-              <div className="mt-6 flex items-start gap-3 p-4 bg-[#FEF3C7] border border-[#FDE68A] rounded-xl">
-                <AlertTriangle size={16} className="text-[#92400E] flex-shrink-0 mt-0.5" />
-                <p className="text-[13px] text-[#92400E] leading-relaxed">
-                  <span className="font-semibold">Before paying any agency:</span> search their name on this platform. Verify their registration. Get every fee in writing.
-                </p>
-              </div>
+              {/* Agency scam search */}
+              <ScamAgencySearch agencies={agencies} reports={reports} />
             </div>
 
             {/* Right: stat cards */}
@@ -126,15 +124,6 @@ export default function ScamReportsPage() {
         </div>
       </div>
 
-      {/* Warning banner */}
-      <div className="bg-[#DC2626] text-white">
-        <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-3 flex items-center gap-3">
-          <AlertTriangle size={15} className="flex-shrink-0" />
-          <p className="text-[13px] font-medium">
-            {stats.unresolved} of {stats.total} reported agencies are still operating and actively recruiting. Read warning signs before signing with any agency.
-          </p>
-        </div>
-      </div>
 
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
