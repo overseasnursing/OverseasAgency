@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Building2, ChevronRight, TrendingUp } from 'lucide-react'
+import { MapPin, Building2, ChevronRight, TrendingUp, IndianRupee } from 'lucide-react'
 import { getAllStatesFromDb, getStatePageData } from '@/lib/data/getAgencyLocationData'
 import { fetchAgenciesByState } from '@/lib/data/fetchAgencies'
 import { AgencyCard } from '@/components/agencies/AgencyCard'

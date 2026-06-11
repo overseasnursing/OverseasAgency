@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 interface Props {
   videoId: string
@@ -11,10 +12,12 @@ interface Props {
 export function LazyYouTube({ videoId, title, className = 'w-full h-full' }: Props) {
   const [loaded, setLoaded] = useState(false)
   const [thumbReady, setThumbReady] = useState(false)
+  const [useFallback, setUseFallback] = useState(false)
 
   // maxresdefault (1280×720) when available; hqdefault (480×360) always exists.
-  const thumbnail = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
-  const fallback  = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+  const thumbnail = useFallback
+    ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+    : `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
 
   if (loaded) {
     return (
@@ -36,25 +39,18 @@ export function LazyYouTube({ videoId, title, className = 'w-full h-full' }: Pro
       className="relative w-full h-full group focus:outline-none bg-slate-900"
     >
       {/* Thumbnail — shown once loaded to avoid flash of broken icon */}
-      <img
+      <Image
         src={thumbnail}
         alt=""
         aria-hidden="true"
-        loading="lazy"
-        decoding="async"
-        width={1280}
-        height={720}
+        fill
+        sizes="(max-width: 768px) 100vw, 50vw"
         onLoad={() => setThumbReady(true)}
-        onError={(e) => {
-          // maxresdefault may not exist for every video — fall back to hqdefault
-          const img = e.currentTarget
-          if (img.src !== fallback) {
-            img.src = fallback
-          }
-        }}
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
+        onError={() => { if (!useFallback) setUseFallback(true) }}
+        className={`object-cover transition-opacity duration-300 ${
           thumbReady ? 'opacity-100' : 'opacity-0'
         }`}
+        unoptimized
       />
 
       {/* Dark gradient overlay — always visible so play button stands out */}
