@@ -1,14 +1,16 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Star, ShieldCheck, ChevronRight, IndianRupee } from 'lucide-react'
+import { MapPin, ChevronRight } from 'lucide-react'
 import { getAllStatesFromDb } from '@/lib/data/getAgencyLocationData'
 import { getLocationPageData } from '@/lib/data/getLocationData'
+import { fetchAgenciesByCity } from '@/lib/data/fetchAgencies'
 import { buildCityAgencyMetadata } from '@/lib/seo/metadata'
 import { buildBreadcrumbSchema, buildFaqSchema, buildCollectionPageSchema, buildAgencyItemListSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { ContentCluster } from '@/components/seo/RelatedContent'
+import { AgencyCard } from '@/components/agencies/AgencyCard'
 
 export const revalidate = 86400
 
@@ -41,19 +43,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   })
 }
 
-/* ── Helpers ────────────────────────────────────────────────────────── */
-
-const TRUST = {
-  verified:   { bg: 'bg-[#DCFCE7]', text: 'text-[#166534]', label: 'Verified' },
-  trusted:    { bg: 'bg-[#DBEAFE]', text: 'text-[#1D4ED8]', label: 'Trusted' },
-  unverified: { bg: 'bg-slate-100',  text: 'text-slate-500',  label: 'Listed' },
-} as const
-
 /* ── Page ───────────────────────────────────────────────────────────── */
 
 export default async function CityAgencyPage({ params }: PageProps) {
   const { stateSlug, citySlug } = await params
-  const data = await getLocationPageData(citySlug)
+  const [data, agencies] = await Promise.all([
+    getLocationPageData(citySlug),
+    fetchAgenciesByCity(citySlug),
+  ])
   if (!data) notFound()
 
   const path = `/agencies/${stateSlug}/${citySlug}`
@@ -154,66 +151,11 @@ export default async function CityAgencyPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {data.agencies.length > 0 ? (
-                <div className="flex flex-col gap-4">
-                  {data.agencies.map((agency) => {
-                    const trust = TRUST[agency.trustLevel] ?? TRUST.unverified
-                    return (
-                      <Link
-                        key={agency.slug}
-                        href={`/agency/${agency.slug}`}
-                        className="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-primary/30 hover:shadow-card transition-all"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h3 className="text-[16px] font-bold text-slate-800 group-hover:text-primary transition-colors">
-                                {agency.name}
-                              </h3>
-                              <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${trust.bg} ${trust.text}`}>
-                                <ShieldCheck size={10} />
-                                {trust.label}
-                              </span>
-                            </div>
-
-                            {agency.rating > 0 ? (
-                              <div className="flex items-center gap-1 mb-3">
-                                <Star size={13} className="text-[#F59E0B] fill-[#F59E0B]" />
-                                <span className="text-[13px] font-semibold text-slate-700">{agency.rating}</span>
-                                <span className="text-[12px] text-slate-400">({agency.reviewCount} reviews)</span>
-                              </div>
-                            ) : (
-                              <p className="text-[12px] text-slate-400 mb-3">No reviews yet</p>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-3 text-[12.5px] text-slate-500">
-                              <span className="flex items-center gap-1">
-                                <MapPin size={11} />
-                                {agency.address}
-                              </span>
-                              {agency.feeRangeDisplay !== '—' && (
-                                <span className="flex items-center gap-1">
-                                  <IndianRupee size={11} />
-                                  {agency.feeRangeDisplay}
-                                </span>
-                              )}
-                            </div>
-
-                            {agency.destinations.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-3">
-                                {agency.destinations.slice(0, 4).map((d) => (
-                                  <span key={d} className="text-[11.5px] text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md">
-                                    {d}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <ChevronRight size={18} className="text-slate-300 group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
-                        </div>
-                      </Link>
-                    )
-                  })}
+              {agencies.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {agencies.map((agency) => (
+                    <AgencyCard key={agency.id} agency={agency} />
+                  ))}
                 </div>
               ) : (
                 <p className="text-[14px] text-slate-400 py-8 text-center">No agencies found for this city.</p>
