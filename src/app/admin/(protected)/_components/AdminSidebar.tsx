@@ -32,13 +32,14 @@ const NAV: NavItem[] = [
 ]
 
 type Props = {
-  email:       string
-  name:        string | null
+  email:        string
+  name:         string | null
   isSuperAdmin: boolean
-  permissions: AdminPermission[] | null
+  permissions:  AdminPermission[] | null
+  badges:       Record<string, number>
 }
 
-export function AdminSidebar({ email, name, isSuperAdmin, permissions }: Props) {
+export function AdminSidebar({ email, name, isSuperAdmin, permissions, badges }: Props) {
   const pathname = usePathname()
 
   function isActive(href: string, exact: boolean) {
@@ -77,6 +78,7 @@ export function AdminSidebar({ email, name, isSuperAdmin, permissions }: Props) 
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Menu</p>
         {visibleNav.map(({ href, label, Icon, exact }) => {
           const active = isActive(href, exact)
+          const badge  = badges[href] ?? 0
           return (
             <a
               key={href}
@@ -90,7 +92,15 @@ export function AdminSidebar({ email, name, isSuperAdmin, permissions }: Props) 
               aria-current={active ? 'page' : undefined}
             >
               <Icon size={15} strokeWidth={active ? 2.5 : 2} />
-              {label}
+              <span className="flex-1 truncate">{label}</span>
+              {badge > 0 && (
+                <span className={[
+                  'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10.5px] font-bold leading-none flex-shrink-0',
+                  active ? 'bg-white/25 text-white' : 'bg-[#EF4444] text-white',
+                ].join(' ')}>
+                  {badge > 99 ? '99+' : badge}
+                </span>
+              )}
             </a>
           )
         })}
