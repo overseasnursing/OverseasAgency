@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { EligibilityCalculator } from '@/app/pricing/EligibilityCalculator'
+import { fetchFeaturedAgencies } from '@/lib/data/fetchAgencies'
 
 export const metadata: Metadata = {
   title: 'Check Your Eligibility — Which Country Suits You Best?',
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default function EligibilityPage() {
-  return <EligibilityCalculator />
+export default async function EligibilityPage() {
+  const agencies = await fetchFeaturedAgencies(50)
+  return <EligibilityCalculator agencies={agencies} />
 }

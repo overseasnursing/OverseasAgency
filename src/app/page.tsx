@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import { Container } from '@/components/layout/Container'
 import { SectionWrapper } from '@/components/layout/SectionWrapper'
 import { FlagIcon } from '@/components/ui/FlagIcon'
-import { getAllAgencies } from '@/lib/data/agencies'
 import { PLATFORM_REVIEWS } from '@/lib/data/reviews'
 import { getAllCountries } from '@/lib/data/countries'
 import { getAllExams } from '@/lib/data/exams'
+import { fetchFeaturedAgencies, fetchAgenciesForSearch } from '@/lib/data/fetchAgencies'
 import type { CountryDetail, SalaryInfo } from '@/types/countryDetail'
 import type { PlatformReview } from '@/types/review'
 import type { Agency } from '@/types/agency'
@@ -360,16 +360,19 @@ function ExamGuideCard({ exam }: { exam: ExamPageData }) {
 
 /* ── Page ────────────────────────────────────────────────────────── */
 
-export default function HomePage() {
-  const agencies  = getAllAgencies()
+export default async function HomePage() {
   const countries = getAllCountries()
   const exams     = getAllExams()
 
-  const featuredAgencies = agencies.filter((a) => a.featured).slice(0, 6)
+  const [featuredAgencies, searchAgenciesRaw] = await Promise.all([
+    fetchFeaturedAgencies(6),
+    fetchAgenciesForSearch(100),
+  ])
+
   const featuredReviews  = PLATFORM_REVIEWS.filter((r) => r.featured).slice(0, 6)
 
   // Lightweight search data — only the fields the GlobalSearchBar needs
-  const searchAgencies:  SearchAgency[]  = agencies.map(a  => ({ slug: a.slug,  name: a.name,     location: a.location      }))
+  const searchAgencies:  SearchAgency[]  = searchAgenciesRaw
   const searchCountries: SearchCountry[] = countries.map(c => ({ slug: c.slug,  name: c.name                                }))
   const searchExams:     SearchExam[]    = exams.map(e     => ({ slug: e.slug,  examName: e.examName, examFullName: e.examFullName }))
 

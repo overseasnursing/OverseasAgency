@@ -150,7 +150,6 @@ export function AgencyCard({ agency }: AgencyCardProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-                onClick={e => e.stopPropagation()}
               >
                 <GoogleGLogo size={14} />
                 <div className="flex items-center gap-0.5">

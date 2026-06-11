@@ -3,10 +3,8 @@
 import React, { useState } from 'react'
 import { ArrowRight, ArrowLeft, CheckCircle, Clock, Banknote, Globe, TrendingUp, RotateCcw } from 'lucide-react'
 import { FlagIcon } from '@/components/ui/FlagIcon'
-import { getAllAgencies } from '@/lib/data/agencies'
+import { AgencyCard } from '@/components/agencies/AgencyCard'
 import type { Agency } from '@/types/agency'
-
-const ALL_AGENCIES = getAllAgencies()
 
 /* ── Types ────────────────────────────────────────────────────────── */
 
@@ -359,64 +357,17 @@ const COUNTRY_DISPLAY_NAMES: Record<CountrySlug, string[]> = {
   dubai:     ['UAE', 'Dubai'],
 }
 
-function getAgenciesForCountry(slug: CountrySlug): Agency[] {
+function getAgenciesForCountry(slug: CountrySlug, allAgencies: Agency[]): Agency[] {
   const names = COUNTRY_DISPLAY_NAMES[slug]
-  return ALL_AGENCIES
+  return allAgencies
     .filter(a => a.countries.some(c => names.includes(c)) && a.trustLevel !== 'scam-reported')
     .sort((a, b) => b.transparencyScore - a.transparencyScore || b.rating - a.rating)
     .slice(0, 3)
 }
 
-/* ── Agency card ──────────────────────────────────────────────────── */
-
-function AgencyCard({ agency }: { agency: Agency }) {
-  const initials = agency.name.split(' ').slice(0, 2).map(w => w[0]).join('')
-  const trustConfig: Record<string, { label: string; cls: string }> = {
-    verified:       { label: 'Verified',    cls: 'bg-[#DCFCE7] text-[#166534]' },
-    trusted:        { label: 'Trusted',     cls: 'bg-[#DBEAFE] text-[#1D4ED8]' },
-    unverified:     { label: 'Unverified',  cls: 'bg-slate-100 text-slate-500' },
-    'scam-reported':{ label: 'Scam Report', cls: 'bg-red-100 text-red-700' },
-  }
-  const trust = trustConfig[agency.trustLevel]
-
-  return (
-    <a
-      href={`/agency/${agency.slug}`}
-      className="group bg-white rounded-xl border border-slate-200 p-4 hover:border-primary/30 hover:shadow-card transition-all flex flex-col gap-3"
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-[13px] font-bold text-primary">{initials}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13.5px] font-semibold text-slate-800 leading-tight truncate">{agency.name}</p>
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold mt-1 ${trust.cls}`}>
-            {trust.label}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 text-[12px] text-slate-500 flex-wrap">
-        <span className="font-medium text-[#92400E]">★ {agency.rating}</span>
-        <span className="text-slate-300">·</span>
-        <span>{agency.reviewCount} reviews</span>
-        <span className="text-slate-300">·</span>
-        <span>₹{agency.pricing.minLakhs}L–{agency.pricing.maxLakhs}L</span>
-      </div>
-
-      <p className="text-[12px] text-slate-500 leading-relaxed line-clamp-2">{agency.tagline}</p>
-
-      <div className="flex items-center justify-between text-[11.5px]">
-        <span className="text-slate-400">{agency.location}</span>
-        <span className="text-[#166534] font-semibold">{agency.transparencyScore}% transparent</span>
-      </div>
-    </a>
-  )
-}
-
 /* ── Main component ───────────────────────────────────────────────── */
 
-export function EligibilityCalculator() {
+export function EligibilityCalculator({ agencies }: { agencies: Agency[] }) {
   const [step, setStep]       = useState<number>(0) // 0 = intro, 1–8 = questions, 9 = results
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<string | null>(null)
@@ -474,7 +425,7 @@ export function EligibilityCalculator() {
   if (isIntro) {
     return (
       <div className="min-h-[60vh] flex items-center">
-        <div className="max-w-[600px] mx-auto text-center px-4">
+        <div className="w-full max-w-content mx-auto px-5 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#DBEAFE] text-[#1D4ED8] rounded-full text-[12.5px] font-semibold mb-6">
             <TrendingUp size={13} />
             Free · 8 questions · 3 minutes
@@ -512,7 +463,7 @@ export function EligibilityCalculator() {
   /* ── Results screen ── */
   if (isResults) {
     return (
-      <div className="max-w-[720px] mx-auto px-4 py-10">
+      <div className="w-full max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#DCFCE7] text-[#166534] rounded-full text-[12.5px] font-semibold mb-5">
             <CheckCircle size={13} />
@@ -535,7 +486,7 @@ export function EligibilityCalculator() {
 
         {/* Agency rows for top 2 countries */}
         {topTwo.map((r) => {
-          const countryAgencies = getAgenciesForCountry(r.slug)
+          const countryAgencies = getAgenciesForCountry(r.slug, agencies)
           const meta = COUNTRY_META[r.slug]
           if (countryAgencies.length === 0) return null
           return (
@@ -606,7 +557,7 @@ export function EligibilityCalculator() {
   const cols = currentQ.options.length <= 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
 
   return (
-    <div className="max-w-[640px] mx-auto px-4 py-10">
+    <div className="w-full max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
       {/* Progress */}
       <div className="mb-8">
         <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide mb-3">

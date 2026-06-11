@@ -139,6 +139,7 @@ export async function verifyClaimOtp(
   claimId: string,
   otp: string,
 ): Promise<{ success?: boolean; error?: string }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const { data, error } = await db
@@ -177,6 +178,7 @@ export async function verifyClaimOtp(
 export async function resendClaimOtp(
   claimId: string,
 ): Promise<{ success?: boolean; error?: string }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const { data, error } = await db

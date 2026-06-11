@@ -4,6 +4,7 @@ import { ClaimListingsClient } from './_components/ClaimListingsClient'
 export const dynamic = 'force-dynamic'
 
 async function fetchClaims() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const { data } = await db

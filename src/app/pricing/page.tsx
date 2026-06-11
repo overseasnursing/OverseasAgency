@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Container } from '@/components/layout/Container'
 import { EligibilityCalculator } from './EligibilityCalculator'
+import { fetchFeaturedAgencies } from '@/lib/data/fetchAgencies'
 import { getAllPricingCountrySlugs, getPricingData } from '@/lib/data/pricing'
 import { FlagIcon } from '@/components/ui/FlagIcon'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
@@ -31,7 +32,8 @@ const PRICING_HUB_SCHEMAS = [
   ]),
 ]
 
-export default function EligibilityPage() {
+export default async function EligibilityPage() {
+  const agencies = await fetchFeaturedAgencies(50)
   const slugs = getAllPricingCountrySlugs()
   const countries = slugs.flatMap((slug) => {
     const data = getPricingData(slug)
@@ -106,7 +108,7 @@ export default function EligibilityPage() {
           </div>
         </section>
 
-        <EligibilityCalculator />
+        <EligibilityCalculator agencies={agencies} />
       </Container>
     </div>
   )

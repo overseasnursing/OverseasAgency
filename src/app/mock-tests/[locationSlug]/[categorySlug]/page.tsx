@@ -117,7 +117,7 @@ export default async function CategoryPage({ params }: PageProps) {
   }
   const reviewCount = reviews.length
   const avgRating = reviewCount > 0
-    ? Math.round((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviewCount) * 10) / 10
+    ? Math.round((reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / reviewCount) * 10) / 10
     : 0
 
   // FAQs: prefer guide content FAQs; fall back to static exam-type FAQs
