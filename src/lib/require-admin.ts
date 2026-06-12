@@ -9,6 +9,7 @@ export type AdminPermission =
   | 'mock-tests'
   | 'settings'
   | 'claim-listings'
+  | 'blogs'
 
 export type AdminUser = {
   userId:      string
