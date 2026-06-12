@@ -32,6 +32,13 @@ export async function saveBlogPost(formData: FormData) {
 
   const status = formData.get('status') as 'draft' | 'published'
 
+  // FAQs are passed as JSON string from the client
+  let faqs: { q: string; a: string }[] = []
+  try {
+    const raw = formData.get('faqs') as string
+    if (raw) faqs = JSON.parse(raw)
+  } catch { faqs = [] }
+
   const input: BlogPostInput = {
     slug,
     title,
@@ -46,6 +53,7 @@ export async function saveBlogPost(formData: FormData) {
     seo_title:       (formData.get('seo_title') as string)?.trim() || null,
     seo_description: (formData.get('seo_description') as string)?.trim() || null,
     tags,
+    faqs,
   }
 
   if (id) {

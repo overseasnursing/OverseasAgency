@@ -11,7 +11,7 @@ const CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.clarity.ms https://static.cloudflareinsights.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 https://maps.gstatic.com https://maps.googleapis.com https://flagcdn.com https://i.ytimg.com",
+  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 https://maps.gstatic.com https://maps.googleapis.com https://flagcdn.com https://i.ytimg.com https://*.r2.dev https://*.cloudflarestorage.com https://agency.overseasnursing.com https://blog.overseasnursing.com https://mock.overseasnursing.com",
   "frame-src https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
   "connect-src 'self' https://*.supabase.co https://*.supabase.in http://127.0.0.1:54321 wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://cloudflareinsights.com",
   "font-src 'self'",
@@ -48,6 +48,13 @@ const nextConfig = {
       { protocol: 'http',  hostname: '127.0.0.1', port: '54321', pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: '*.supabase.co',            pathname: '/storage/v1/object/public/**' },
       { protocol: 'https', hostname: 'flagcdn.com' },
+      // Cloudflare R2 — generic r2.dev fallback
+      { protocol: 'https', hostname: '*.r2.dev' },
+      { protocol: 'https', hostname: '*.cloudflarestorage.com' },
+      // Cloudflare R2 custom domains
+      { protocol: 'https', hostname: 'agency.overseasnursing.com' },
+      { protocol: 'https', hostname: 'blog.overseasnursing.com' },
+      { protocol: 'https', hostname: 'mock.overseasnursing.com' },
     ],
   },
 

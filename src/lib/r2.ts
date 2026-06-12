@@ -27,17 +27,23 @@ export async function uploadToR2(
   buffer:      Buffer,
   contentType: string,
 ): Promise<string> {
-  await r2.send(
-    new PutObjectCommand({
-      Bucket:      bucket,
-      Key:         path,
-      Body:        buffer,
-      ContentType: contentType,
-    }),
-  )
-
   const base = BUCKET_PUBLIC_URLS[bucket]
-  if (!base) throw new Error(`R2 public URL not configured for bucket: ${bucket}`)
+  if (!base) throw new Error(`R2_${bucket.toUpperCase().replace(/-/g, '_')}_URL env var not set`)
 
-  return `${base}/${path}`
+  try {
+    await r2.send(
+      new PutObjectCommand({
+        Bucket:      bucket,
+        Key:         path,
+        Body:        buffer,
+        ContentType: contentType,
+      }),
+    )
+  } catch (err) {
+    console.error(`[R2 upload] bucket=${bucket} path=${path}`, err)
+    throw err
+  }
+
+  // Strip trailing slash from base URL to avoid double slashes
+  return `${base.replace(/\/$/, '')}/${path}`
 }

@@ -128,6 +128,9 @@ export const STATIC_SITEMAP_ENTRIES: SitemapEntry[] = [
   { path: '/reviews',        changeFrequency: 'daily',   priority: 0.9 },
   { path: '/scam-reports',   changeFrequency: 'daily',   priority: 0.9 },
 
+  // Blog
+  { path: '/blog',           changeFrequency: 'daily',   priority: 0.9 },
+
   // Secondary listing pages
   { path: '/compare',        changeFrequency: 'weekly',  priority: 0.8 },
   { path: '/exam',           changeFrequency: 'monthly', priority: 0.8 },

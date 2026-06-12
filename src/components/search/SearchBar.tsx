@@ -2,14 +2,17 @@
 
 import React, { useRef } from 'react'
 import { Search, X } from 'lucide-react'
-import { TRENDING_SEARCHES } from '@/lib/data/agencies'
+
+const TOP_COUNTRIES = ['Germany', 'UK', 'Australia', 'Canada', 'UAE', 'Ireland', 'New Zealand']
 
 interface SearchBarProps {
-  value: string
-  onChange: (value: string) => void
+  value:             string
+  onChange:          (value: string) => void
+  selectedCountry?:  string | null
+  onCountrySelect?:  (country: string | null) => void
 }
 
-export function SearchBar({ value, onChange }: SearchBarProps) {
+export function SearchBar({ value, onChange, selectedCountry, onCountrySelect }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   return (
@@ -42,21 +45,27 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         )}
       </div>
 
-      {/* Trending searches */}
-      {!value && (
+      {/* Top country chips */}
+      {onCountrySelect && (
         <div className="flex items-center flex-wrap gap-2 mt-3">
-          <span className="text-[12px] font-medium text-slate-400 mr-1">
-            Trending:
-          </span>
-          {TRENDING_SEARCHES.map((term) => (
-            <button
-              key={term}
-              onClick={() => onChange(term)}
-              className="px-3 py-1.5 bg-white border border-slate-200 hover:border-primary hover:text-primary text-[12.5px] text-slate-600 font-medium rounded-full transition-colors shadow-sm"
-            >
-              {term}
-            </button>
-          ))}
+          <span className="text-[12px] font-medium text-slate-400 mr-1">Top:</span>
+          {TOP_COUNTRIES.map((country) => {
+            const active = selectedCountry === country
+            return (
+              <button
+                key={country}
+                onClick={() => onCountrySelect(active ? null : country)}
+                className={[
+                  'px-3 py-1.5 text-[12.5px] font-medium rounded-full border transition-colors',
+                  active
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary hover:text-primary shadow-sm',
+                ].join(' ')}
+              >
+                {country}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

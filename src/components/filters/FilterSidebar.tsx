@@ -73,13 +73,6 @@ export function FilterSidebar({ filters, onChange, resultCount, availableStates,
     onChange({ ...filters, state, city: null })
   }
 
-  const toggleCountry = (country: string) => {
-    const next = filters.countries.includes(country)
-      ? filters.countries.filter((c) => c !== country)
-      : [...filters.countries, country]
-    onChange({ ...filters, countries: next })
-  }
-
   return (
     <aside
       className="w-full"
@@ -130,24 +123,12 @@ export function FilterSidebar({ filters, onChange, resultCount, availableStates,
 
       {/* Country */}
       <FilterSection title="Destination Country">
-        <div className="space-y-2.5">
-          {COUNTRIES.map((country) => (
-            <label
-              key={country}
-              className="flex items-center gap-2.5 cursor-pointer group"
-            >
-              <input
-                type="checkbox"
-                checked={filters.countries.includes(country)}
-                onChange={() => toggleCountry(country)}
-                className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/30 cursor-pointer"
-              />
-              <span className="text-[14px] text-slate-600 group-hover:text-slate-800 transition-colors">
-                {country}
-              </span>
-            </label>
-          ))}
-        </div>
+        <SearchableSelect
+          options={COUNTRIES}
+          value={filters.countries[0] ?? null}
+          onChange={(country) => onChange({ ...filters, countries: country ? [country] : [] })}
+          placeholder="All countries"
+        />
       </FilterSection>
 
       {/* Price */}

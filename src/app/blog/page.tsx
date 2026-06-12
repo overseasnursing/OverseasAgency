@@ -1,28 +1,86 @@
 import type { Metadata } from 'next'
 import React from 'react'
+import Image from 'next/image'
 import { getPublishedBlogPosts } from '@/lib/db/blogs'
 import { ArrowRight, BookOpen, Calendar, User } from 'lucide-react'
 
-export const revalidate = 3600 // ISR: refresh every hour
+export const revalidate = 3600
+
+const BASE = 'https://overseasnursing.com'
 
 export const metadata: Metadata = {
-  title: 'Blog — OverseasNursing.com | Guides, Tips & Insights for Nurses Going Abroad',
+  title: 'Blog — Guides, Tips & Insights for Nurses Going Abroad',
   description:
     'Expert articles for Indian nurses planning to migrate overseas. Covers Germany, UK, Australia, Dubai, salary comparisons, visa steps, exam tips and agency reviews.',
-  alternates: { canonical: 'https://overseasnursing.com/blog' },
+  keywords: 'overseas nursing blog, nurse migration guide, nursing jobs abroad, Germany nursing, UK nursing, Indian nurses abroad',
+  robots: { index: true, follow: true },
+  alternates: { canonical: `${BASE}/blog` },
   openGraph: {
-    title: 'OverseasNursing Blog',
+    title: 'OverseasNursing Blog — Guides & Insights',
     description: 'Expert guides and insights for nurses migrating abroad from India.',
-    url: 'https://overseasnursing.com/blog',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+    url: `${BASE}/blog`,
+    type: 'website',
+    locale: 'en_IN',
+    images: [{ url: `${BASE}/opengraph-image`, width: 1200, height: 630, alt: 'OverseasNursing Blog' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OverseasNursing Blog — Guides & Insights',
+    description: 'Expert guides and insights for nurses migrating abroad from India.',
+    images: [`${BASE}/opengraph-image`],
   },
 }
 
 export default async function BlogPage() {
   const posts = await getPublishedBlogPosts()
 
+  const blogSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'OverseasNursing Blog',
+    description: 'Expert articles for Indian nurses planning to migrate overseas.',
+    url: `${BASE}/blog`,
+    inLanguage: 'en-IN',
+    publisher: {
+      '@type': 'Organization',
+      name: 'OverseasNursing.com',
+      url: BASE,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${BASE}/logo.png`,
+        width: 200,
+        height: 60,
+      },
+    },
+  }
+
+  const itemListSchema = posts.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Latest Blog Posts — OverseasNursing',
+    url: `${BASE}/blog`,
+    numberOfItems: posts.length,
+    itemListElement: posts.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${BASE}/blog/${p.slug}`,
+      name: p.title,
+    })),
+  } : null
+
   return (
     <main className="min-h-screen bg-slate-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+      />
+      {itemListSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        />
+      )}
+
       {/* Header */}
       <section className="bg-white border-b border-slate-100 py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
@@ -31,7 +89,7 @@ export default async function BlogPage() {
             <span>Blog</span>
           </div>
           <h1 className="text-[32px] font-bold text-slate-900 leading-tight mb-3">
-            Guides & Insights for Overseas Nurses
+            Guides &amp; Insights for Overseas Nurses
           </h1>
           <p className="text-[15px] text-slate-500 max-w-xl">
             Practical advice for Indian nurses planning to work in Germany, UK, Australia, Dubai and beyond.
@@ -56,13 +114,16 @@ export default async function BlogPage() {
               >
                 <div className="flex gap-0">
                   {post.cover_image_url && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={post.cover_image_url}
-                      alt={post.title}
-                      className="w-48 h-full object-cover flex-shrink-0 hidden sm:block"
-                      loading="lazy"
-                    />
+                    <div className="relative w-48 flex-shrink-0 hidden sm:block" style={{ minHeight: '140px' }}>
+                      <Image
+                        src={post.cover_image_url}
+                        alt={post.title}
+                        fill
+                        className="object-cover"
+                        sizes="192px"
+                        loading="lazy"
+                      />
+                    </div>
                   )}
                   <div className="p-5 flex-1 flex flex-col gap-2">
                     {post.tags?.length > 0 && (

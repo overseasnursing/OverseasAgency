@@ -32,8 +32,8 @@ const URL_COLUMNS: Array<{ table: string; column: string }> = [
   { table: 'agencies',              column: 'featured_image_url' },
   { table: 'mock_test_questions',   column: 'image_url' },
   { table: 'mock_test_questions',   column: 'explanation_image_url' },
-  { table: 'guide_contents',        column: 'author_profile_photo' },
-  { table: 'guide_contents',        column: 'reviewer_profile_photo' },
+  { table: 'admin_profile',          column: 'author_profile_photo' },
+  { table: 'admin_profile',          column: 'reviewer_profile_photo' },
   { table: 'blog_posts',            column: 'cover_image_url' },
 ]
 
