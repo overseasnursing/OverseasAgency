@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin, isSuperAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 import { normalizeWebsiteUrl } from '@/lib/utils/url'
+import { uploadToR2 } from '@/lib/r2'
 
 /**
  * Checks whether a website domain is already registered to another agency.
@@ -146,8 +147,6 @@ export async function uploadAgencyAsset(
 ): Promise<{ url?: string; error?: string }> {
   await requireAdmin()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db   = createAdminClient() as any
   const file = formData.get('file') as File | null
 
   if (!file || file.size === 0) return { error: 'No file provided' }
@@ -160,18 +159,14 @@ export async function uploadAgencyAsset(
   // Slug must be safe before embedding in storage path
   const safeSlug = agencySlug.replace(/[^a-z0-9-]/g, '').slice(0, 80)
   const path     = `${type}s/${safeSlug}-${Date.now()}.${ext}`
+  const buffer   = Buffer.from(await file.arrayBuffer())
 
-  const bytes  = await file.arrayBuffer()
-  const buffer = Buffer.from(bytes)
-
-  const { error } = await db.storage
-    .from('agency-assets')
-    .upload(path, buffer, { contentType: file.type, upsert: true })
-
-  if (error) return { error: error.message }
-
-  const { data } = db.storage.from('agency-assets').getPublicUrl(path)
-  return { url: data.publicUrl }
+  try {
+    const url = await uploadToR2('agency-assets', path, buffer, file.type)
+    return { url }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Upload failed' }
+  }
 }
 
 /* ── Agency CRUD ────────────────────────────────────────────────────── */

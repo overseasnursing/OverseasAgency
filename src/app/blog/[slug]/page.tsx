@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import React from 'react'
 import { notFound } from 'next/navigation'
-import Markdown from 'markdown-to-jsx'
 import { getBlogPostBySlug, getPublishedBlogSlugs } from '@/lib/db/blogs'
 import { Calendar, User, ArrowLeft, Tag } from 'lucide-react'
 
@@ -131,11 +130,12 @@ export default async function BlogPostPage({ params }: Props) {
           )}
         </div>
 
-        {/* Content */}
+        {/* Content — Tiptap saves HTML, render it directly */}
         {post.content ? (
-          <div className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-[22px] prose-h3:text-[18px] prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
-            <Markdown>{post.content}</Markdown>
-          </div>
+          <div
+            className="prose prose-slate max-w-none prose-headings:font-bold prose-h1:text-[28px] prose-h2:text-[22px] prose-h3:text-[18px] prose-p:text-[15px] prose-p:leading-relaxed prose-li:text-[15px] prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:w-full"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
         ) : (
           <p className="text-slate-400 italic">No content yet.</p>
         )}
