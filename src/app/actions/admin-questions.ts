@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
+import { uploadToR2 } from '@/lib/r2'
 
 const now = () => new Date().toISOString()
 
@@ -58,13 +59,14 @@ export async function uploadQuestionImage(
   if (file.size > 5 * 1024 * 1024) return { error: 'File must be under 5 MB' }
   const ext = ALLOWED_MIME[file.type]
   if (!ext) return { error: 'Only JPEG, PNG or WebP allowed' }
-  const path = `questions/${type}s/${Date.now()}.${ext}`
-  const { error } = await db.storage
-    .from('mock-test-assets')
-    .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: true })
-  if (error) return { error: error.message }
-  const { data } = db.storage.from('mock-test-assets').getPublicUrl(path)
-  return { url: data.publicUrl }
+  const path   = `questions/${type}s/${Date.now()}.${ext}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+  try {
+    const url = await uploadToR2('mock-test-assets', path, buffer, file.type)
+    return { url }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Upload failed' }
+  }
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */

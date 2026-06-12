@@ -3,6 +3,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { uploadToR2 } from '@/lib/r2'
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 
@@ -253,11 +254,10 @@ export async function uploadAgencyAssetAsOwner(
   const bytes  = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
 
-  const { error } = await db.storage
-    .from('agency-assets')
-    .upload(path, buffer, { contentType: file.type, upsert: true })
-  if (error) return { error: error.message }
-
-  const { data } = db.storage.from('agency-assets').getPublicUrl(path)
-  return { url: data.publicUrl }
+  try {
+    const url = await uploadToR2('agency-assets', path, buffer, file.type)
+    return { url }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Upload failed' }
+  }
 }

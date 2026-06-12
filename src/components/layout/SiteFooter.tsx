@@ -12,6 +12,7 @@ const FOOTER_LINKS = {
     ['Exams',             '/exam'],
   ],
   Discover: [
+    ['Blog',           '/blog'],
     ['Salary Guides',  '/salary'],
     ['Compare',        '/compare'],
     ['Reviews',        '/reviews'],
