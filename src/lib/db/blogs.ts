@@ -1,5 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export type BlogFaq = { q: string; a: string }
+
 export type BlogPost = {
   id:              string
   slug:            string
@@ -13,6 +15,7 @@ export type BlogPost = {
   seo_title:       string | null
   seo_description: string | null
   tags:            string[]
+  faqs:            BlogFaq[]
   created_at:      string
   updated_at:      string
 }

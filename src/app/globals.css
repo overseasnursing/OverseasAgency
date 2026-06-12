@@ -154,6 +154,30 @@ textarea:focus-visible {
 .text-balance { text-wrap: balance; }
 
 /* ─────────────────────────────────────────────────────────────────
+   Blog content — preserve spacing written in Tiptap editor
+───────────────────────────────────────────────────────────────── */
+.blog-content p:empty,
+.blog-content p:has(> br:only-child) {
+  /* Empty paragraphs are blank lines the author intentionally added */
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  min-height: 1rem;
+}
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.blog-content p { margin-bottom: 1rem; }
+.blog-content ul,
+.blog-content ol { margin-bottom: 1rem; }
+.blog-content blockquote { margin: 1.5rem 0; }
+
+/* ─────────────────────────────────────────────────────────────────
    Accessibility
 ───────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://overseasnursing.com'),
   title: {
     default:  'OverseasNursing — Find Trusted Nursing Migration Agencies',
-    template: '%s | OverseasNursing',
+    template: '%s',
   },
   description:
     'Compare real nurse reviews, transparent migration costs, exam guidance and scam reports. Find trusted overseas nursing agencies for Germany, UK, Australia, Canada & Dubai.',

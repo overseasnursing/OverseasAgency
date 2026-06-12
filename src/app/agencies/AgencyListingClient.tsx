@@ -193,6 +193,10 @@ export function AgencyListingClient({ agencies, initialCountry }: AgencyListingC
         <SearchBar
           value={filters.search}
           onChange={(search) => setFilters((f) => ({ ...f, search }))}
+          selectedCountry={filters.countries[0] ?? null}
+          onCountrySelect={(country) =>
+            setFilters((f) => ({ ...f, countries: country ? [country] : [] }))
+          }
         />
       </div>
 

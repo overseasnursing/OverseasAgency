@@ -4,7 +4,7 @@ import React, { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Loader2, Save, Trash2, AlertCircle, CheckCircle,
-  ImagePlus, X,
+  ImagePlus, X, Plus, HelpCircle,
 } from 'lucide-react'
 import { saveBlogPost, deleteBlogPostAction } from '@/app/actions/blog-posts'
 import { uploadBlogImage } from '@/app/actions/blog-upload'
@@ -31,6 +31,7 @@ export function BlogForm({ initial }: Props) {
   const [slug,       setSlug]       = useState(initial?.slug  ?? '')
   const [content,    setContent]    = useState(initial?.content ?? '')
   const [coverUrl,   setCoverUrl]   = useState(initial?.cover_image_url ?? '')
+  const [faqs,       setFaqs]       = useState<{ q: string; a: string }[]>(initial?.faqs ?? [])
   const [coverUploading, startCoverUpload] = useTransition()
   const coverInputRef = useRef<HTMLInputElement>(null)
 
@@ -61,6 +62,7 @@ export function BlogForm({ initial }: Props) {
     // inject values managed in state
     fd.set('content',         content)
     fd.set('cover_image_url', coverUrl)
+    fd.set('faqs',            JSON.stringify(faqs.filter(f => f.q.trim())))
     startSave(async () => {
       try {
         await saveBlogPost(fd)
@@ -197,6 +199,79 @@ export function BlogForm({ initial }: Props) {
       <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-3">
         <h2 className="text-[13px] font-bold text-slate-700 uppercase tracking-wide">Content</h2>
         <TiptapEditor value={content} onChange={setContent} />
+      </div>
+
+      {/* ── FAQs ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-[13px] font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2">
+              <HelpCircle size={14} className="text-slate-400" />
+              FAQs
+              {faqs.length > 0 && (
+                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full font-bold">{faqs.length}</span>
+              )}
+            </h2>
+            <p className="text-[11.5px] text-slate-400 mt-0.5">Added to page as FAQ schema for Google</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFaqs(f => [...f, { q: '', a: '' }])}
+            className="flex items-center gap-1.5 h-8 px-3 bg-primary/10 hover:bg-primary/20 text-primary text-[12.5px] font-semibold rounded-lg transition-colors"
+          >
+            <Plus size={13} /> Add FAQ
+          </button>
+        </div>
+
+        {faqs.length === 0 ? (
+          <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+            <HelpCircle size={24} className="text-slate-300 mx-auto mb-2" />
+            <p className="text-[13px] text-slate-400">No FAQs yet. Click &ldquo;Add FAQ&rdquo; to start.</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {faqs.map((faq, i) => (
+              <div key={i} className="border border-slate-200 rounded-xl p-4 flex flex-col gap-3 bg-slate-50/50">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">FAQ {i + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => setFaqs(f => f.filter((_, idx) => idx !== i))}
+                    className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+                <div>
+                  <label className={labelCls}>Question</label>
+                  <input
+                    value={faq.q}
+                    onChange={e => setFaqs(f => f.map((x, idx) => idx === i ? { ...x, q: e.target.value } : x))}
+                    className={inputCls}
+                    placeholder="e.g. How long does it take to get a job in Germany?"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Answer</label>
+                  <textarea
+                    value={faq.a}
+                    rows={3}
+                    onChange={e => setFaqs(f => f.map((x, idx) => idx === i ? { ...x, a: e.target.value } : x))}
+                    className={textareaCls}
+                    placeholder="Write a clear, concise answer…"
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setFaqs(f => [...f, { q: '', a: '' }])}
+              className="flex items-center gap-1.5 h-8 px-3 border border-dashed border-slate-300 text-slate-500 hover:border-primary hover:text-primary text-[12.5px] font-medium rounded-lg transition-colors self-start"
+            >
+              <Plus size={13} /> Add another FAQ
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Publish ── */}

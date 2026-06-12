@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient }   from '@/lib/supabase/admin'
+import { getPublishedBlogPosts } from '@/lib/db/blogs'
 import { getAllCountrySlugs }  from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
 import { getApprovedScamReports } from '@/lib/db/scam-reports'
@@ -69,11 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     mockLocations,
     mockCategories,
     agencyStates,
+    blogPosts,
   ] = await Promise.all([
     getAgenciesFromDb(),
     getMockTestLocationsFromDb(),
     getMockTestCategoriesFromDb(),
     getAllStatesFromDb(),
+    getPublishedBlogPosts(),
   ])
 
   /* ── Static pages ── */
@@ -184,8 +187,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.9,
   }))
 
+  /* ── Blog post pages ── */
+  const blogPostPages: MetadataRoute.Sitemap = blogPosts.map(p => ({
+    url: url(`/blog/${p.slug}`),
+    lastModified: new Date(p.updated_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
+
   return [
     ...staticPages,
+    ...blogPostPages,
     ...countryPages,
     ...agencyPages,
     ...agencyStatePages,
