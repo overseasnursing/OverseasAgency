@@ -1,17 +1,17 @@
 'use client'
 
-import React, { useState, useTransition, useRef } from 'react'
+import React, { useState, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
   Loader2, Plus, X, Save, Trash2, AlertCircle, CheckCircle,
   Building2, MapPin, Mail, Globe, MessageCircle,
   Star, Shield, DollarSign, Users, BookOpen, ChevronDown, ChevronUp,
-  Award, Video, Briefcase, ImagePlus, Upload,
+  Award, Video, Briefcase, ImagePlus, Upload, ExternalLink,
 } from 'lucide-react'
 import {
   saveAgency, deleteAgency, saveBranch, deleteBranch, saveFaq, deleteFaq,
-  uploadAgencyAsset,
+  uploadAgencyAsset, checkWebsiteExists,
   type AgencyInput, type BranchInput, type FaqInput,
 } from '@/app/actions/admin-agencies'
 import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
@@ -468,6 +468,8 @@ function FaqEditor({ agencyId, initialFaqs }: { agencyId: string; initialFaqs: A
 
 /* ─── Main Form ─────────────────────────────────────────────────────── */
 
+type WebsiteStatus = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid'
+
 export default function AgencyForm({ initialData }: { initialData: AgencyFullData | null }) {
   const isEdit = !!initialData
   const router = useRouter()
@@ -475,6 +477,36 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
   const [form, setForm] = useState<AgencyInput>(initialData ?? empty())
   const [saveResult, setSaveResult] = useState<{ ok: boolean; msg: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Website duplicate-check state
+  const [websiteStatus, setWebsiteStatus]   = useState<WebsiteStatus>('idle')
+  const [websiteConflict, setWebsiteConflict] = useState<{ name: string; slug: string } | null>(null)
+  const websiteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleWebsiteChange = useCallback((url: string) => {
+    set('website', url)
+    setWebsiteConflict(null)
+
+    if (websiteTimerRef.current) clearTimeout(websiteTimerRef.current)
+
+    const trimmed = url.trim()
+    if (!trimmed) { setWebsiteStatus('idle'); return }
+
+    // Basic URL sanity — must look like a domain
+    const looksLikeUrl = /[a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}/.test(trimmed)
+    if (!looksLikeUrl) { setWebsiteStatus('invalid'); return }
+
+    setWebsiteStatus('checking')
+    websiteTimerRef.current = setTimeout(async () => {
+      const result = await checkWebsiteExists(trimmed, initialData?.id)
+      if (result.exists && result.agency) {
+        setWebsiteStatus('taken')
+        setWebsiteConflict(result.agency)
+      } else {
+        setWebsiteStatus('ok')
+      }
+    }, 600)
+  }, [initialData?.id])
 
   function set<K extends keyof AgencyInput>(k: K, v: AgencyInput[K]) {
     setForm(prev => ({ ...prev, [k]: v }))
@@ -657,8 +689,49 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           <Field label="WhatsApp Number" hint="Include country code e.g. +91 98765 43210">
             <div className="relative"><MessageCircle size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" /><input className={`${inputCls} pl-8`} value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="+91 98765 43210" /></div>
           </Field>
-          <Field label="Website URL">
-            <div className="relative"><Globe size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" /><input className={`${inputCls} pl-8`} value={form.website} onChange={e => set('website', e.target.value)} placeholder="https://agency.com" /></div>
+          <Field label="Website URL" hint="Used as a unique identifier — one website per agency">
+            <div className="relative">
+              <Globe size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <input
+                className={[
+                  inputCls, 'pl-8 pr-8',
+                  websiteStatus === 'taken'   ? 'border-[#EF4444] focus:border-[#EF4444] focus:ring-[#EF4444]/20' : '',
+                  websiteStatus === 'ok'      ? 'border-[#22C55E] focus:border-[#22C55E] focus:ring-[#22C55E]/20' : '',
+                  websiteStatus === 'invalid' ? 'border-[#F59E0B] focus:border-[#F59E0B] focus:ring-[#F59E0B]/20' : '',
+                ].join(' ')}
+                value={form.website}
+                onChange={e => handleWebsiteChange(e.target.value)}
+                placeholder="https://agency.com"
+              />
+              {/* Right-side status icon */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                {websiteStatus === 'checking' && <Loader2 size={13} className="animate-spin text-slate-400" />}
+                {websiteStatus === 'ok'       && <CheckCircle size={13} className="text-[#22C55E]" />}
+                {websiteStatus === 'taken'    && <AlertCircle size={13} className="text-[#EF4444]" />}
+                {websiteStatus === 'invalid'  && <AlertCircle size={13} className="text-[#F59E0B]" />}
+              </div>
+            </div>
+            {/* Status message */}
+            {websiteStatus === 'checking' && (
+              <p className="text-[11px] text-slate-400 mt-1">Checking for duplicates…</p>
+            )}
+            {websiteStatus === 'ok' && (
+              <p className="text-[11px] text-[#166534] mt-1">✓ Website is available — no duplicate found.</p>
+            )}
+            {websiteStatus === 'invalid' && (
+              <p className="text-[11px] text-[#92400E] mt-1">Enter a valid URL — e.g. https://agencyname.com</p>
+            )}
+            {websiteStatus === 'taken' && websiteConflict && (
+              <p className="text-[11.5px] text-[#B91C1C] mt-1 flex items-center gap-1.5 flex-wrap">
+                <AlertCircle size={11} />
+                Already registered to&nbsp;
+                <a href={`/admin/agencies/${websiteConflict.slug}`} target="_blank" rel="noopener noreferrer"
+                  className="font-semibold underline inline-flex items-center gap-0.5 hover:text-[#991B1B]">
+                  {websiteConflict.name} <ExternalLink size={10} />
+                </a>
+                — each agency must have a unique website.
+              </p>
+            )}
           </Field>
           <Field label="Current Job Openings URL" hint="Link to their job listings page — shown as a CTA on the profile">
             <div className="relative"><Briefcase size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" /><input className={`${inputCls} pl-8`} value={form.current_openings_url} onChange={e => set('current_openings_url', e.target.value)} placeholder="https://agency.com/jobs" /></div>
@@ -905,7 +978,7 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
             </button>
           )}
           <a href="/admin/agencies" className="h-9 px-4 border border-slate-200 text-slate-600 hover:bg-slate-50 text-[13px] font-semibold rounded-xl transition-colors flex items-center">Cancel</a>
-          <button type="submit" disabled={isPending || !form.name || !form.slug || !form.city || !form.state}
+          <button type="submit" disabled={isPending || !form.name || !form.slug || !form.city || !form.state || websiteStatus === 'taken' || websiteStatus === 'checking'}
             className="flex items-center gap-2 h-9 px-5 bg-primary hover:bg-primary-hover text-white text-[13px] font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
             {isEdit ? 'Save Changes' : 'Create Agency'}
