@@ -4,6 +4,63 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin, isSuperAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 
+/* ── URL normalisation ──────────────────────────────────────────────── */
+
+/**
+ * Strips protocol, www, path, and trailing slash to get the bare domain.
+ * Used as the uniqueness key for agencies — prevents duplicate entries
+ * for http/https/www variants of the same site.
+ *
+ * Examples:
+ *   https://www.abc-nursing.com/about → abc-nursing.com
+ *   http://abc-nursing.com            → abc-nursing.com
+ *   www.abc-nursing.com               → abc-nursing.com
+ *   abc-nursing.com                   → abc-nursing.com
+ */
+export function normalizeWebsiteUrl(raw: string): string {
+  const trimmed = raw.trim().toLowerCase()
+  if (!trimmed) return ''
+  const withProto = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`
+  try {
+    const u = new URL(withProto)
+    let host = u.hostname
+    if (host.startsWith('www.')) host = host.slice(4)
+    return host
+  } catch {
+    // Fallback for unparseable strings
+    return trimmed.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0]
+  }
+}
+
+/**
+ * Checks whether a website domain is already registered to another agency.
+ * Pass `excludeId` when editing an existing agency so it doesn't flag itself.
+ */
+export async function checkWebsiteExists(
+  url: string,
+  excludeId?: string,
+): Promise<{ exists: boolean; agency?: { name: string; slug: string } }> {
+  await requireAdmin()
+  const domain = normalizeWebsiteUrl(url)
+  if (!domain || domain.length < 4) return { exists: false }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { data: rows } = await db
+    .from('agencies')
+    .select('id, name, slug, website')
+    .not('website', 'is', null)
+
+  for (const row of rows ?? []) {
+    if (excludeId && row.id === excludeId) continue
+    const rowDomain = normalizeWebsiteUrl(row.website ?? '')
+    if (rowDomain && rowDomain === domain) {
+      return { exists: true, agency: { name: row.name, slug: row.slug } }
+    }
+  }
+  return { exists: false }
+}
+
 /* ── Types ─────────────────────────────────────────────────────────── */
 
 export type AgencyInput = {
@@ -218,6 +275,14 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     // Verification URLs
     mea_license_url:               data.mea_license_url           || null,
     company_registration_url:      data.company_registration_url  || null,
+  }
+
+  // Duplicate website guard — reject if another agency already uses the same domain
+  if (data.website) {
+    const dupCheck = await checkWebsiteExists(data.website, data.id)
+    if (dupCheck.exists && dupCheck.agency) {
+      return { error: `Website already registered to "${dupCheck.agency.name}". Each agency must have a unique website.` }
+    }
   }
 
   if (data.id) {
