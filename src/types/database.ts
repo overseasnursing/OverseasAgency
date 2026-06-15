@@ -306,6 +306,119 @@ export type Database = {
           }
         ]
       }
+      jobs: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          country: string
+          city: string | null
+          agency_id: string | null
+          posted_by_user_id: string
+          job_type: string
+          experience_required: string | null
+          salary: string | null
+          description: string
+          status: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
+          expiry_date: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          country: string
+          city?: string | null
+          agency_id?: string | null
+          posted_by_user_id: string
+          job_type: string
+          experience_required?: string | null
+          salary?: string | null
+          description: string
+          status?: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
+          expiry_date: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          title?: string
+          slug?: string
+          country?: string
+          city?: string | null
+          agency_id?: string | null
+          job_type?: string
+          experience_required?: string | null
+          salary?: string | null
+          description?: string
+          status?: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
+          expiry_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'jobs_agency_id_fkey'
+            columns: ['agency_id']
+            isOneToOne: false
+            referencedRelation: 'agencies'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'jobs_posted_by_user_id_fkey'
+            columns: ['posted_by_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      job_applications: {
+        Row: {
+          id: string
+          job_id: string
+          user_id: string
+          full_name: string
+          email: string
+          phone: string
+          current_country: string
+          cv_url: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          job_id: string
+          user_id: string
+          full_name: string
+          email: string
+          phone: string
+          current_country: string
+          cv_url: string
+          created_at?: string
+        }
+        Update: {
+          full_name?: string
+          email?: string
+          phone?: string
+          current_country?: string
+          cv_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'job_applications_job_id_fkey'
+            columns: ['job_id']
+            isOneToOne: false
+            referencedRelation: 'jobs'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'job_applications_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: Record<string, never>
     Functions: {

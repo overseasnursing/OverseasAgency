@@ -8,12 +8,13 @@ async function fetchPendingCounts() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = createAdminClient() as any
-    const [reviews, examReviews, scamReports, newAgencies, claimRequests] = await Promise.all([
+    const [reviews, examReviews, scamReports, newAgencies, claimRequests, jobs] = await Promise.all([
       db.from('reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       db.from('mock_test_reviews').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       db.from('scam_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       db.from('agency_submissions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       db.from('claim_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending_approval'),
+      db.from('jobs').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ])
     return {
       '/admin/reviews':             reviews.count      ?? 0,
@@ -21,6 +22,7 @@ async function fetchPendingCounts() {
       '/admin/scam-reports':        scamReports.count  ?? 0,
       '/admin/agency-submissions':  newAgencies.count  ?? 0,
       '/admin/claim-listings':      claimRequests.count ?? 0,
+      '/admin/jobs':                jobs.count         ?? 0,
     } as Record<string, number>
   } catch {
     return {} as Record<string, number>

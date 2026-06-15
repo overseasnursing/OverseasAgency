@@ -15,6 +15,7 @@ const BUCKET_PUBLIC_URLS: Record<string, string> = {
   'agency-assets':    process.env.R2_AGENCY_ASSETS_URL    ?? '',
   'mock-test-assets': process.env.R2_MOCK_TEST_ASSETS_URL ?? '',
   'blog-assets':      process.env.R2_BLOG_ASSETS_URL      ?? '',
+  'cv-assets':        process.env.R2_CV_ASSETS_URL        ?? '',
 }
 
 /**

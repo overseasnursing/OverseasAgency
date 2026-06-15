@@ -1,2 +1,0 @@
-ALTER TABLE public.branches
-  ADD COLUMN IF NOT EXISTS pin_code text;

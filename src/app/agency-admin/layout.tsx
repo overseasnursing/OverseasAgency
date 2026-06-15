@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Building2, LayoutDashboard, Settings, LogOut } from 'lucide-react'
+import { Briefcase, ClipboardList, LayoutDashboard, Settings, LogOut } from 'lucide-react'
 
 export default async function AgencyAdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -51,8 +51,10 @@ export default async function AgencyAdminLayout({ children }: { children: React.
         <aside className="w-44 flex-shrink-0 hidden sm:block">
           <nav className="flex flex-col gap-1 sticky top-20">
             {[
-              { href: '/agency-admin',      icon: LayoutDashboard, label: 'Dashboard' },
-              { href: '/agency-admin/edit', icon: Settings,        label: 'Edit Listing' },
+              { href: '/agency-admin',              icon: LayoutDashboard, label: 'Dashboard' },
+              { href: '/agency-admin/edit',         icon: Settings,        label: 'Edit Listing' },
+              { href: '/agency-admin/jobs',         icon: Briefcase,       label: 'My Jobs' },
+              { href: '/agency-admin/applications', icon: ClipboardList,   label: 'Applications' },
             ].map(({ href, icon: Icon, label }) => (
               <Link
                 key={href}
@@ -74,6 +76,12 @@ export default async function AgencyAdminLayout({ children }: { children: React.
             </Link>
             <Link href="/agency-admin/edit" className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-600 hover:border-primary hover:text-primary transition-colors">
               <Settings size={14} /> Edit Listing
+            </Link>
+            <Link href="/agency-admin/jobs" className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-600 hover:border-primary hover:text-primary transition-colors">
+              <Briefcase size={14} /> My Jobs
+            </Link>
+            <Link href="/agency-admin/applications" className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-600 hover:border-primary hover:text-primary transition-colors">
+              <ClipboardList size={14} /> Applications
             </Link>
           </div>
         </div>
