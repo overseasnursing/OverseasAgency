@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { LayoutDashboard, BookOpen, LogOut } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Briefcase, LogOut } from 'lucide-react'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -31,6 +31,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 <Link href="/dashboard/mock-tests"
                   className="flex items-center gap-1.5 h-8 px-3 text-[13px] font-medium text-slate-600 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
                   <BookOpen size={13} /> Mock Tests
+                </Link>
+                <Link href="/dashboard/applications"
+                  className="flex items-center gap-1.5 h-8 px-3 text-[13px] font-medium text-slate-600 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors">
+                  <Briefcase size={13} /> My Applications
                 </Link>
               </nav>
             </div>

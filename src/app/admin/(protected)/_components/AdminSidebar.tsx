@@ -4,7 +4,7 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import {
   Shield, LayoutDashboard, Building2, Star, ShieldAlert,
-  LogOut, ExternalLink, ClipboardList, Settings, Users, MessageSquare, BadgeCheck, BookOpen,
+  LogOut, ExternalLink, ClipboardList, Settings, Users, MessageSquare, BadgeCheck, BookOpen, Briefcase, FileText,
 } from 'lucide-react'
 import type { AdminPermission } from '@/lib/require-admin'
 
@@ -27,7 +27,9 @@ const NAV: NavItem[] = [
   { href: '/admin/agency-submissions',  label: 'New Agencies',  Icon: Building2,       exact: false, permission: 'agencies',    superOnly: false },
   { href: '/admin/claim-listings',      label: 'Claim Requests',Icon: BadgeCheck,      exact: false, permission: 'claim-listings', superOnly: false },
   { href: '/admin/blogs',               label: 'Blog Posts',    Icon: BookOpen,        exact: false, permission: 'blogs',          superOnly: false },
-  { href: '/admin/settings',           label: 'Settings',      Icon: Settings,        exact: false, permission: 'settings',    superOnly: false },
+  { href: '/admin/jobs',               label: 'Jobs',          Icon: Briefcase,       exact: false, permission: 'jobs',         superOnly: false },
+  { href: '/admin/applications',       label: 'Applications',  Icon: FileText,        exact: false, permission: 'applications', superOnly: false },
+  { href: '/admin/settings',           label: 'Settings',      Icon: Settings,        exact: false, permission: 'settings',     superOnly: false },
   { href: '/admin/employees',          label: 'Employees',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
   { href: '/admin/users',              label: 'All Users',     Icon: Users,           exact: false, permission: null,          superOnly: true  },
 ]

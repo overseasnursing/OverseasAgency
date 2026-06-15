@@ -13,35 +13,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
+CREATE SCHEMA IF NOT EXISTS "public";
+
+
+ALTER SCHEMA "public" OWNER TO "pg_database_owner";
+
+
 COMMENT ON SCHEMA "public" IS 'standard public schema';
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
-
-
-
-
-
-
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
-
-
-
 
 
 
@@ -72,36 +50,17 @@ $$;
 ALTER FUNCTION "public"."is_admin"() OWNER TO "postgres";
 
 
-CREATE OR REPLACE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'pg_catalog'
+CREATE OR REPLACE FUNCTION "public"."set_blog_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
     AS $$
-DECLARE
-  cmd record;
 BEGIN
-  FOR cmd IN
-    SELECT *
-    FROM pg_event_trigger_ddl_commands()
-    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
-      AND object_type IN ('table','partitioned table')
-  LOOP
-     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
-      BEGIN
-        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
-        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
-      EXCEPTION
-        WHEN OTHERS THEN
-          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
-      END;
-     ELSE
-        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
-     END IF;
-  END LOOP;
+  NEW.updated_at = now();
+  RETURN NEW;
 END;
 $$;
 
 
-ALTER FUNCTION "public"."rls_auto_enable"() OWNER TO "postgres";
+ALTER FUNCTION "public"."set_blog_updated_at"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."set_updated_at"() RETURNS "trigger"
@@ -117,9 +76,15 @@ CREATE OR REPLACE FUNCTION "public"."sync_mock_test_question_count"() RETURNS "t
     AS $$
 BEGIN
   UPDATE public.mock_tests
-     SET total_questions = (SELECT COUNT(*) FROM public.mock_test_questions WHERE mock_test_id = COALESCE(NEW.mock_test_id, OLD.mock_test_id) AND is_active = true),
-         updated_at = now()
-   WHERE id = COALESCE(NEW.mock_test_id, OLD.mock_test_id);
+  SET total_questions = (
+      SELECT COUNT(*)
+      FROM public.mock_test_questions
+      WHERE mock_test_id = COALESCE(NEW.mock_test_id, OLD.mock_test_id)
+        AND is_active = true
+  ),
+  updated_at = now()
+  WHERE id = COALESCE(NEW.mock_test_id, OLD.mock_test_id);
+
   RETURN COALESCE(NEW, OLD);
 END;
 $$;
@@ -229,10 +194,6 @@ CREATE TABLE IF NOT EXISTS "public"."agencies" (
     "google_place_id" "text",
     "google_rating" numeric(2,1),
     "google_review_count" integer,
-    "pricing_is_free" boolean DEFAULT false NOT NULL,
-    "pricing_free_note" "text",
-    "mea_license_url" "text",
-    "company_registration_url" "text",
     CONSTRAINT "agencies_trust_level_check" CHECK (("trust_level" = ANY (ARRAY['verified'::"text", 'trusted'::"text", 'unverified'::"text", 'scam-reported'::"text"])))
 );
 
@@ -253,17 +214,26 @@ CREATE TABLE IF NOT EXISTS "public"."agency_faqs" (
 ALTER TABLE "public"."agency_faqs" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."agency_votes" (
+CREATE TABLE IF NOT EXISTS "public"."blog_posts" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "agency_id" "uuid" NOT NULL,
-    "user_id" "uuid" NOT NULL,
-    "vote" boolean NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
+    "slug" "text" NOT NULL,
+    "title" "text" NOT NULL,
+    "excerpt" "text",
+    "content" "text",
+    "cover_image_url" "text",
+    "author_name" "text" DEFAULT 'OverseasNursing Team'::"text",
+    "status" "text" DEFAULT 'draft'::"text" NOT NULL,
+    "published_at" timestamp with time zone,
+    "seo_title" "text",
+    "seo_description" "text",
+    "tags" "text"[] DEFAULT '{}'::"text"[],
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "blog_posts_status_check" CHECK (("status" = ANY (ARRAY['draft'::"text", 'published'::"text"])))
 );
 
 
-ALTER TABLE "public"."agency_votes" OWNER TO "postgres";
+ALTER TABLE "public"."blog_posts" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."branches" (
@@ -370,8 +340,7 @@ CREATE TABLE IF NOT EXISTS "public"."mock_test_category_guides" (
     "faqs" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
     "related_links" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "destination_overrides" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL
 );
 
 
@@ -607,8 +576,6 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     "is_banned" boolean DEFAULT false NOT NULL,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "admin_name" "text",
-    "admin_permissions" "text"[],
     CONSTRAINT "users_role_check" CHECK (("role" = ANY (ARRAY['registered_user'::"text", 'agency'::"text", 'admin'::"text"])))
 );
 
@@ -636,13 +603,13 @@ ALTER TABLE ONLY "public"."agency_faqs"
 
 
 
-ALTER TABLE ONLY "public"."agency_votes"
-    ADD CONSTRAINT "agency_votes_agency_id_user_id_key" UNIQUE ("agency_id", "user_id");
+ALTER TABLE ONLY "public"."blog_posts"
+    ADD CONSTRAINT "blog_posts_pkey" PRIMARY KEY ("id");
 
 
 
-ALTER TABLE ONLY "public"."agency_votes"
-    ADD CONSTRAINT "agency_votes_pkey" PRIMARY KEY ("id");
+ALTER TABLE ONLY "public"."blog_posts"
+    ADD CONSTRAINT "blog_posts_slug_key" UNIQUE ("slug");
 
 
 
@@ -781,6 +748,14 @@ ALTER TABLE ONLY "public"."users"
 
 
 
+CREATE INDEX "blog_posts_slug_idx" ON "public"."blog_posts" USING "btree" ("slug");
+
+
+
+CREATE INDEX "blog_posts_status_published_at_idx" ON "public"."blog_posts" USING "btree" ("status", "published_at" DESC);
+
+
+
 CREATE INDEX "idx_achievements_user_id" ON "public"."user_achievements" USING "btree" ("user_id");
 
 
@@ -893,6 +868,10 @@ CREATE UNIQUE INDEX "idx_unique_active_attempt" ON "public"."mock_test_attempts"
 
 
 
+CREATE OR REPLACE TRIGGER "blog_posts_updated_at" BEFORE UPDATE ON "public"."blog_posts" FOR EACH ROW EXECUTE FUNCTION "public"."set_blog_updated_at"();
+
+
+
 CREATE OR REPLACE TRIGGER "set_agencies_updated_at" BEFORE UPDATE ON "public"."agencies" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
@@ -915,16 +894,6 @@ CREATE OR REPLACE TRIGGER "trg_sync_question_count" AFTER INSERT OR DELETE OR UP
 
 ALTER TABLE ONLY "public"."agency_faqs"
     ADD CONSTRAINT "agency_faqs_agency_id_fkey" FOREIGN KEY ("agency_id") REFERENCES "public"."agencies"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."agency_votes"
-    ADD CONSTRAINT "agency_votes_agency_id_fkey" FOREIGN KEY ("agency_id") REFERENCES "public"."agencies"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."agency_votes"
-    ADD CONSTRAINT "agency_votes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE CASCADE;
 
 
 
@@ -1139,23 +1108,7 @@ CREATE POLICY "agencies_select_active" ON "public"."agencies" FOR SELECT USING (
 ALTER TABLE "public"."agency_faqs" ENABLE ROW LEVEL SECURITY;
 
 
-ALTER TABLE "public"."agency_votes" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "agency_votes_delete" ON "public"."agency_votes" FOR DELETE USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "agency_votes_insert" ON "public"."agency_votes" FOR INSERT WITH CHECK (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "agency_votes_select" ON "public"."agency_votes" FOR SELECT USING (true);
-
-
-
-CREATE POLICY "agency_votes_update" ON "public"."agency_votes" FOR UPDATE USING (("auth"."uid"() = "user_id"));
-
+ALTER TABLE "public"."blog_posts" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."branches" ENABLE ROW LEVEL SECURITY;
@@ -1194,6 +1147,10 @@ ALTER TABLE "public"."mock_tests" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."notification_queue" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "public can read published blog posts" ON "public"."blog_posts" FOR SELECT USING (("status" = 'published'::"text"));
+
 
 
 ALTER TABLE "public"."reviews" ENABLE ROW LEVEL SECURITY;
@@ -1266,162 +1223,10 @@ CREATE POLICY "users_update_own" ON "public"."users" FOR UPDATE USING (("id" = "
 
 
 
-
-
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
-
-
 GRANT USAGE ON SCHEMA "public" TO "postgres";
 GRANT USAGE ON SCHEMA "public" TO "anon";
 GRANT USAGE ON SCHEMA "public" TO "authenticated";
 GRANT USAGE ON SCHEMA "public" TO "service_role";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1437,9 +1242,9 @@ GRANT ALL ON FUNCTION "public"."is_admin"() TO "service_role";
 
 
 
-GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "anon";
-GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "authenticated";
-GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "service_role";
+GRANT ALL ON FUNCTION "public"."set_blog_updated_at"() TO "anon";
+GRANT ALL ON FUNCTION "public"."set_blog_updated_at"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."set_blog_updated_at"() TO "service_role";
 
 
 
@@ -1452,21 +1257,6 @@ GRANT ALL ON FUNCTION "public"."set_updated_at"() TO "service_role";
 GRANT ALL ON FUNCTION "public"."sync_mock_test_question_count"() TO "anon";
 GRANT ALL ON FUNCTION "public"."sync_mock_test_question_count"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."sync_mock_test_question_count"() TO "service_role";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1488,9 +1278,9 @@ GRANT ALL ON TABLE "public"."agency_faqs" TO "service_role";
 
 
 
-GRANT MAINTAIN ON TABLE "public"."agency_votes" TO "anon";
-GRANT MAINTAIN ON TABLE "public"."agency_votes" TO "authenticated";
-GRANT MAINTAIN ON TABLE "public"."agency_votes" TO "service_role";
+GRANT ALL ON TABLE "public"."blog_posts" TO "anon";
+GRANT ALL ON TABLE "public"."blog_posts" TO "authenticated";
+GRANT ALL ON TABLE "public"."blog_posts" TO "service_role";
 
 
 
@@ -1512,9 +1302,9 @@ GRANT ALL ON TABLE "public"."mock_test_attempts" TO "service_role";
 
 
 
-GRANT MAINTAIN ON TABLE "public"."mock_test_bookmarks" TO "anon";
-GRANT MAINTAIN ON TABLE "public"."mock_test_bookmarks" TO "authenticated";
-GRANT MAINTAIN ON TABLE "public"."mock_test_bookmarks" TO "service_role";
+GRANT ALL ON TABLE "public"."mock_test_bookmarks" TO "anon";
+GRANT ALL ON TABLE "public"."mock_test_bookmarks" TO "authenticated";
+GRANT ALL ON TABLE "public"."mock_test_bookmarks" TO "service_role";
 
 
 
@@ -1548,9 +1338,9 @@ GRANT ALL ON TABLE "public"."mock_tests" TO "service_role";
 
 
 
-GRANT MAINTAIN ON TABLE "public"."notification_queue" TO "anon";
-GRANT MAINTAIN ON TABLE "public"."notification_queue" TO "authenticated";
-GRANT MAINTAIN ON TABLE "public"."notification_queue" TO "service_role";
+GRANT ALL ON TABLE "public"."notification_queue" TO "anon";
+GRANT ALL ON TABLE "public"."notification_queue" TO "authenticated";
+GRANT ALL ON TABLE "public"."notification_queue" TO "service_role";
 
 
 
@@ -1572,15 +1362,15 @@ GRANT ALL ON TABLE "public"."scam_reports" TO "service_role";
 
 
 
-GRANT MAINTAIN ON TABLE "public"."user_achievements" TO "anon";
-GRANT MAINTAIN ON TABLE "public"."user_achievements" TO "authenticated";
-GRANT MAINTAIN ON TABLE "public"."user_achievements" TO "service_role";
+GRANT ALL ON TABLE "public"."user_achievements" TO "anon";
+GRANT ALL ON TABLE "public"."user_achievements" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_achievements" TO "service_role";
 
 
 
-GRANT MAINTAIN ON TABLE "public"."user_notification_preferences" TO "anon";
-GRANT MAINTAIN ON TABLE "public"."user_notification_preferences" TO "authenticated";
-GRANT MAINTAIN ON TABLE "public"."user_notification_preferences" TO "service_role";
+GRANT ALL ON TABLE "public"."user_notification_preferences" TO "anon";
+GRANT ALL ON TABLE "public"."user_notification_preferences" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_notification_preferences" TO "service_role";
 
 
 
@@ -1590,21 +1380,15 @@ GRANT ALL ON TABLE "public"."user_profiles" TO "service_role";
 
 
 
-GRANT MAINTAIN ON TABLE "public"."user_streaks" TO "anon";
-GRANT MAINTAIN ON TABLE "public"."user_streaks" TO "authenticated";
-GRANT MAINTAIN ON TABLE "public"."user_streaks" TO "service_role";
+GRANT ALL ON TABLE "public"."user_streaks" TO "anon";
+GRANT ALL ON TABLE "public"."user_streaks" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_streaks" TO "service_role";
 
 
 
 GRANT ALL ON TABLE "public"."users" TO "anon";
 GRANT ALL ON TABLE "public"."users" TO "authenticated";
 GRANT ALL ON TABLE "public"."users" TO "service_role";
-
-
-
-
-
-
 
 
 
@@ -1636,327 +1420,6 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TAB
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-drop extension if exists "pg_net";
-
-revoke delete on table "public"."agency_votes" from "anon";
-
-revoke insert on table "public"."agency_votes" from "anon";
-
-revoke references on table "public"."agency_votes" from "anon";
-
-revoke select on table "public"."agency_votes" from "anon";
-
-revoke trigger on table "public"."agency_votes" from "anon";
-
-revoke truncate on table "public"."agency_votes" from "anon";
-
-revoke update on table "public"."agency_votes" from "anon";
-
-revoke delete on table "public"."agency_votes" from "authenticated";
-
-revoke insert on table "public"."agency_votes" from "authenticated";
-
-revoke references on table "public"."agency_votes" from "authenticated";
-
-revoke select on table "public"."agency_votes" from "authenticated";
-
-revoke trigger on table "public"."agency_votes" from "authenticated";
-
-revoke truncate on table "public"."agency_votes" from "authenticated";
-
-revoke update on table "public"."agency_votes" from "authenticated";
-
-revoke delete on table "public"."agency_votes" from "service_role";
-
-revoke insert on table "public"."agency_votes" from "service_role";
-
-revoke references on table "public"."agency_votes" from "service_role";
-
-revoke select on table "public"."agency_votes" from "service_role";
-
-revoke trigger on table "public"."agency_votes" from "service_role";
-
-revoke truncate on table "public"."agency_votes" from "service_role";
-
-revoke update on table "public"."agency_votes" from "service_role";
-
-revoke delete on table "public"."mock_test_bookmarks" from "anon";
-
-revoke insert on table "public"."mock_test_bookmarks" from "anon";
-
-revoke references on table "public"."mock_test_bookmarks" from "anon";
-
-revoke select on table "public"."mock_test_bookmarks" from "anon";
-
-revoke trigger on table "public"."mock_test_bookmarks" from "anon";
-
-revoke truncate on table "public"."mock_test_bookmarks" from "anon";
-
-revoke update on table "public"."mock_test_bookmarks" from "anon";
-
-revoke delete on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke insert on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke references on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke select on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke trigger on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke truncate on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke update on table "public"."mock_test_bookmarks" from "authenticated";
-
-revoke delete on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke insert on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke references on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke select on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke trigger on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke truncate on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke update on table "public"."mock_test_bookmarks" from "service_role";
-
-revoke delete on table "public"."notification_queue" from "anon";
-
-revoke insert on table "public"."notification_queue" from "anon";
-
-revoke references on table "public"."notification_queue" from "anon";
-
-revoke select on table "public"."notification_queue" from "anon";
-
-revoke trigger on table "public"."notification_queue" from "anon";
-
-revoke truncate on table "public"."notification_queue" from "anon";
-
-revoke update on table "public"."notification_queue" from "anon";
-
-revoke delete on table "public"."notification_queue" from "authenticated";
-
-revoke insert on table "public"."notification_queue" from "authenticated";
-
-revoke references on table "public"."notification_queue" from "authenticated";
-
-revoke select on table "public"."notification_queue" from "authenticated";
-
-revoke trigger on table "public"."notification_queue" from "authenticated";
-
-revoke truncate on table "public"."notification_queue" from "authenticated";
-
-revoke update on table "public"."notification_queue" from "authenticated";
-
-revoke delete on table "public"."notification_queue" from "service_role";
-
-revoke insert on table "public"."notification_queue" from "service_role";
-
-revoke references on table "public"."notification_queue" from "service_role";
-
-revoke select on table "public"."notification_queue" from "service_role";
-
-revoke trigger on table "public"."notification_queue" from "service_role";
-
-revoke truncate on table "public"."notification_queue" from "service_role";
-
-revoke update on table "public"."notification_queue" from "service_role";
-
-revoke delete on table "public"."user_achievements" from "anon";
-
-revoke insert on table "public"."user_achievements" from "anon";
-
-revoke references on table "public"."user_achievements" from "anon";
-
-revoke select on table "public"."user_achievements" from "anon";
-
-revoke trigger on table "public"."user_achievements" from "anon";
-
-revoke truncate on table "public"."user_achievements" from "anon";
-
-revoke update on table "public"."user_achievements" from "anon";
-
-revoke delete on table "public"."user_achievements" from "authenticated";
-
-revoke insert on table "public"."user_achievements" from "authenticated";
-
-revoke references on table "public"."user_achievements" from "authenticated";
-
-revoke select on table "public"."user_achievements" from "authenticated";
-
-revoke trigger on table "public"."user_achievements" from "authenticated";
-
-revoke truncate on table "public"."user_achievements" from "authenticated";
-
-revoke update on table "public"."user_achievements" from "authenticated";
-
-revoke delete on table "public"."user_achievements" from "service_role";
-
-revoke insert on table "public"."user_achievements" from "service_role";
-
-revoke references on table "public"."user_achievements" from "service_role";
-
-revoke select on table "public"."user_achievements" from "service_role";
-
-revoke trigger on table "public"."user_achievements" from "service_role";
-
-revoke truncate on table "public"."user_achievements" from "service_role";
-
-revoke update on table "public"."user_achievements" from "service_role";
-
-revoke delete on table "public"."user_notification_preferences" from "anon";
-
-revoke insert on table "public"."user_notification_preferences" from "anon";
-
-revoke references on table "public"."user_notification_preferences" from "anon";
-
-revoke select on table "public"."user_notification_preferences" from "anon";
-
-revoke trigger on table "public"."user_notification_preferences" from "anon";
-
-revoke truncate on table "public"."user_notification_preferences" from "anon";
-
-revoke update on table "public"."user_notification_preferences" from "anon";
-
-revoke delete on table "public"."user_notification_preferences" from "authenticated";
-
-revoke insert on table "public"."user_notification_preferences" from "authenticated";
-
-revoke references on table "public"."user_notification_preferences" from "authenticated";
-
-revoke select on table "public"."user_notification_preferences" from "authenticated";
-
-revoke trigger on table "public"."user_notification_preferences" from "authenticated";
-
-revoke truncate on table "public"."user_notification_preferences" from "authenticated";
-
-revoke update on table "public"."user_notification_preferences" from "authenticated";
-
-revoke delete on table "public"."user_notification_preferences" from "service_role";
-
-revoke insert on table "public"."user_notification_preferences" from "service_role";
-
-revoke references on table "public"."user_notification_preferences" from "service_role";
-
-revoke select on table "public"."user_notification_preferences" from "service_role";
-
-revoke trigger on table "public"."user_notification_preferences" from "service_role";
-
-revoke truncate on table "public"."user_notification_preferences" from "service_role";
-
-revoke update on table "public"."user_notification_preferences" from "service_role";
-
-revoke delete on table "public"."user_streaks" from "anon";
-
-revoke insert on table "public"."user_streaks" from "anon";
-
-revoke references on table "public"."user_streaks" from "anon";
-
-revoke select on table "public"."user_streaks" from "anon";
-
-revoke trigger on table "public"."user_streaks" from "anon";
-
-revoke truncate on table "public"."user_streaks" from "anon";
-
-revoke update on table "public"."user_streaks" from "anon";
-
-revoke delete on table "public"."user_streaks" from "authenticated";
-
-revoke insert on table "public"."user_streaks" from "authenticated";
-
-revoke references on table "public"."user_streaks" from "authenticated";
-
-revoke select on table "public"."user_streaks" from "authenticated";
-
-revoke trigger on table "public"."user_streaks" from "authenticated";
-
-revoke truncate on table "public"."user_streaks" from "authenticated";
-
-revoke update on table "public"."user_streaks" from "authenticated";
-
-revoke delete on table "public"."user_streaks" from "service_role";
-
-revoke insert on table "public"."user_streaks" from "service_role";
-
-revoke references on table "public"."user_streaks" from "service_role";
-
-revoke select on table "public"."user_streaks" from "service_role";
-
-revoke trigger on table "public"."user_streaks" from "service_role";
-
-revoke truncate on table "public"."user_streaks" from "service_role";
-
-revoke update on table "public"."user_streaks" from "service_role";
-
-CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-
-  create policy "agency_assets_admin_delete"
-  on "storage"."objects"
-  as permissive
-  for delete
-  to public
-using ((bucket_id = 'agency-assets'::text));
-
-
-
-  create policy "agency_assets_admin_update"
-  on "storage"."objects"
-  as permissive
-  for update
-  to public
-using ((bucket_id = 'agency-assets'::text));
-
-
-
-  create policy "agency_assets_admin_write"
-  on "storage"."objects"
-  as permissive
-  for insert
-  to public
-with check ((bucket_id = 'agency-assets'::text));
-
-
-
-  create policy "agency_assets_public_read"
-  on "storage"."objects"
-  as permissive
-  for select
-  to public
-using ((bucket_id = 'agency-assets'::text));
 
 
 

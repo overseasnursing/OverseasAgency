@@ -45,11 +45,6 @@ export const metadata: Metadata = {
     'nursing agency reviews',
     'overseas nursing scams',
   ],
-  icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
-  },
   alternates: {
     canonical: 'https://overseasnursing.com',
     languages: {

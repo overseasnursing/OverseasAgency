@@ -10,6 +10,8 @@ export type AdminPermission =
   | 'settings'
   | 'claim-listings'
   | 'blogs'
+  | 'jobs'
+  | 'applications'
 
 export type AdminUser = {
   userId:      string
