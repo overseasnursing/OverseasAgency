@@ -112,11 +112,9 @@ export async function SiteFooter() {
         <div className="grid grid-cols-12 gap-8 mb-12">
           {/* Brand + social icons */}
           <div className="col-span-12 lg:col-span-4">
-            <a
-              href="/"
-              className="text-[16px] font-bold text-slate-800 hover:text-primary transition-colors"
-            >
-              OverseasNursing
+            <a href="/" aria-label="OverseasNursing — home">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="OverseasNursing" className="h-9 w-auto" />
             </a>
             <p className="mt-3 text-[14px] text-slate-500 leading-relaxed max-w-[220px]">
               Helping nurses safely navigate overseas migration — reviews, pricing, and scam protection.
