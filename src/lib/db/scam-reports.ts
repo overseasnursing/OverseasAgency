@@ -89,13 +89,18 @@ export async function getScamReportStats(): Promise<{
   total: number; pending: number; approved: number; rejected: number
 }> {
   const db = createAdminClient()
-  const { data, error } = await db.from('scam_reports').select('status')
-  if (error || !data) return { total: 0, pending: 0, approved: 0, rejected: 0 }
+  const [total, pending, approved, rejected] = await Promise.all([
+    db.from('scam_reports').select('*', { count: 'exact', head: true }),
+    db.from('scam_reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    db.from('scam_reports').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+    db.from('scam_reports').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+  ])
+  if (total.error) console.error('[scam-reports] getScamReportStats:', total.error.message)
   return {
-    total:    data.length,
-    pending:  data.filter((r) => r.status === 'pending').length,
-    approved: data.filter((r) => r.status === 'approved').length,
-    rejected: data.filter((r) => r.status === 'rejected').length,
+    total:    total.count    ?? 0,
+    pending:  pending.count  ?? 0,
+    approved: approved.count ?? 0,
+    rejected: rejected.count ?? 0,
   }
 }
 

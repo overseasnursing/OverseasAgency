@@ -1,5 +1,4 @@
 import React from 'react'
-import { Shield } from 'lucide-react'
 import { Container } from '@/components/layout/Container'
 import { NavbarClient } from './NavbarClient'
 
@@ -23,17 +22,9 @@ export function Navbar() {
         <div className="flex items-center justify-between h-[68px] relative">
 
           {/* Logo */}
-          <a
-            href="/"
-            className="flex items-center gap-2.5 flex-shrink-0 group"
-            aria-label="OverseasNursing — home"
-          >
-            <div className="w-8 h-8 bg-primary rounded-[9px] flex items-center justify-center">
-              <Shield size={15} className="text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-[16px] font-bold text-slate-800 group-hover:text-primary transition-colors">
-              OverseasNursing
-            </span>
+          <a href="/" className="flex items-center flex-shrink-0" aria-label="OverseasNursing — home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="OverseasNursing" className="h-10 w-auto" />
           </a>
 
           {/* Desktop nav links */}
