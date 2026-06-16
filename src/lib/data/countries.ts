@@ -800,3 +800,29 @@ export function getAllCountrySlugs(): string[] {
 export function getAllCountries(): CountryDetail[] {
   return Object.values(COUNTRY_MAP)
 }
+
+// Maps normalizeCountry() keys (src/app/jobs/[slug]/_data/countryMappings.ts)
+// to the country page slugs that actually exist in COUNTRY_MAP.
+const COUNTRY_KEY_TO_PAGE_SLUG: Record<string, string> = {
+  'uae':       'dubai',
+  'uk':        'uk',
+  'germany':   'germany',
+  'australia': 'australia',
+  'canada':    'canada',
+}
+
+/**
+ * Real guide links for a job's country — only returns the country overview
+ * page plus its curated related guides, both of which are confirmed to
+ * exist, so callers never render a broken link.
+ */
+export function getCountryGuideLinks(normalizedCountryKey: string): { name: string; href: string }[] {
+  const pageSlug = COUNTRY_KEY_TO_PAGE_SLUG[normalizedCountryKey]
+  if (!pageSlug) return []
+  const country = getCountryDetail(pageSlug)
+  if (!country) return []
+  return [
+    { name: `${country.name} Nursing Migration Guide`, href: `/country/${country.slug}` },
+    ...country.relatedGuides.map((g) => ({ name: g.title, href: `/guides/${g.slug}` })),
+  ]
+}

@@ -3,25 +3,21 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import {
   MapPin, Building2, Calendar,
-  ArrowRight, BookOpen, ClipboardList,
+  ArrowRight, ClipboardList,
   FileText, AlertCircle, ChevronRight, Star, ExternalLink,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getJobBySlugPublic, getSimilarJobs } from '@/lib/db/jobs'
 import { hasUserApplied } from '@/lib/db/job-applications'
 import { fetchAgenciesByCountry } from '@/lib/data/fetchAgencies'
+import { getMockTestLinksForCountry } from '@/lib/data/getMockTestData'
+import { getCountryGuideLinks } from '@/lib/data/countries'
 import { buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { JobCard } from '../_components/JobCard'
 import { ApplySection } from './ApplySection'
 import type { Agency } from '@/types/agency'
-import {
-  normalizeCountry,
-  EXAM_MAP,
-  MOCK_TEST_MAP,
-  GUIDE_MAP,
-  type CountryLink,
-} from './_data/countryMappings'
+import { normalizeCountry, type CountryLink } from './_data/countryMappings'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -118,13 +114,12 @@ export default async function JobDetailPage({ params }: PageProps) {
   const appliedStatus = isLoggedIn ? await hasUserApplied(job.id, user.id) : false
 
   const countryKey = normalizeCountry(job.country)
-  const exams      = EXAM_MAP[countryKey]      ?? []
-  const mockTests  = MOCK_TEST_MAP[countryKey] ?? []
-  const guides     = GUIDE_MAP[countryKey]     ?? []
+  const guides      = getCountryGuideLinks(countryKey)
 
-  const [similarJobs, countryAgencies] = await Promise.all([
+  const [similarJobs, countryAgencies, mockTests] = await Promise.all([
     getSimilarJobs(job.country, job.id, 6),
     fetchAgenciesByCountry([job.country], 3),
+    getMockTestLinksForCountry(countryKey),
   ])
 
   const breadcrumbs = buildBreadcrumbSchema([
@@ -376,30 +371,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* ── SECTION 3: Related Nursing Exams ── */}
-          {exams.length > 0 && (
-            <section className="mb-14">
-              <h2 className="text-[20px] font-bold text-slate-800 mb-2">
-                Required Exams for {job.country}
-              </h2>
-              <p className="text-[13.5px] text-slate-500 mb-5">
-                Certifications and exams you will need to practice nursing in {job.country}.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {exams.map((item) => (
-                  <LinkCard
-                    key={item.name}
-                    item={item}
-                    iconBg="bg-[#EFF6FF]"
-                    Icon={BookOpen}
-                    iconColor="text-[#1D4ED8]"
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* ── SECTION 4: Mock Tests ── */}
+          {/* ── SECTION 3: Mock Tests ── */}
           {mockTests.length > 0 && (
             <section className="mb-14">
               <h2 className="text-[20px] font-bold text-slate-800 mb-2">
@@ -422,7 +394,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* ── SECTION 5: Related Agencies ── */}
+          {/* ── SECTION 4: Related Agencies ── */}
           {countryAgencies.length > 0 && (
             <section className="mb-14">
               <div className="flex items-center justify-between mb-5">
@@ -444,7 +416,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* ── SECTION 6: Country Guides ── */}
+          {/* ── SECTION 5: Country Guides ── */}
           {guides.length > 0 && (
             <section className="mb-8">
               <h2 className="text-[20px] font-bold text-slate-800 mb-2">

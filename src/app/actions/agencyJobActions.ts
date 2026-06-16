@@ -105,6 +105,8 @@ export async function saveAgencyJob(
     if (error) return { error: error.message }
     revalidatePath('/agency-admin/jobs')
     revalidatePath(`/agency-admin/jobs/${id}`)
+    revalidatePath('/jobs')
+    revalidatePath(`/jobs/${slug}`)
     return { error: null, id }
   }
 
@@ -132,5 +134,7 @@ export async function saveAgencyJob(
 
   if (error) return { error: error.message }
   revalidatePath('/agency-admin/jobs')
+  revalidatePath('/jobs')
+  revalidatePath(`/jobs/${slug}`)
   return { error: null, id: data.id }
 }

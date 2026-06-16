@@ -16,22 +16,28 @@ function slugify(text: string): string {
 export async function approveJob(jobId: string): Promise<void> {
   await requireAdmin()
   const db = createAdminClient()
-  await db.from('jobs').update({ status: 'approved', updated_at: new Date().toISOString() }).eq('id', jobId)
+  const { data } = await db.from('jobs').update({ status: 'approved', updated_at: new Date().toISOString() }).eq('id', jobId).select('slug').single()
   revalidatePath('/admin/jobs')
+  revalidatePath('/jobs')
+  if (data?.slug) revalidatePath(`/jobs/${data.slug}`)
 }
 
 export async function holdJob(jobId: string): Promise<void> {
   await requireAdmin()
   const db = createAdminClient()
-  await db.from('jobs').update({ status: 'hold', updated_at: new Date().toISOString() }).eq('id', jobId)
+  const { data } = await db.from('jobs').update({ status: 'hold', updated_at: new Date().toISOString() }).eq('id', jobId).select('slug').single()
   revalidatePath('/admin/jobs')
+  revalidatePath('/jobs')
+  if (data?.slug) revalidatePath(`/jobs/${data.slug}`)
 }
 
 export async function rejectJob(jobId: string): Promise<void> {
   await requireAdmin()
   const db = createAdminClient()
-  await db.from('jobs').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', jobId)
+  const { data } = await db.from('jobs').update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', jobId).select('slug').single()
   revalidatePath('/admin/jobs')
+  revalidatePath('/jobs')
+  if (data?.slug) revalidatePath(`/jobs/${data.slug}`)
 }
 
 export async function saveJob(
@@ -83,6 +89,8 @@ export async function saveJob(
     if (error) return { error: error.message }
     revalidatePath('/admin/jobs')
     revalidatePath(`/admin/jobs/${id}`)
+    revalidatePath('/jobs')
+    revalidatePath(`/jobs/${slug}`)
     return { error: null, id }
   }
 
@@ -111,5 +119,7 @@ export async function saveJob(
 
   if (error) return { error: error.message }
   revalidatePath('/admin/jobs')
+  revalidatePath('/jobs')
+  revalidatePath(`/jobs/${slug}`)
   return { error: null, id: data.id }
 }
