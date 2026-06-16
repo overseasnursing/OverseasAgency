@@ -177,9 +177,9 @@ export default async function JobDetailPage({ params }: PageProps) {
                       {job.job_type}
                     </span>
                   )}
-                  {job.salary && (
+                  {job.salary_amount != null && (
                     <span className="px-2.5 py-0.5 bg-[#F0FDF4] text-[#166534] text-[11.5px] font-semibold rounded-full">
-                      {job.salary}
+                      {job.salary_currency ?? ''} {job.salary_amount.toLocaleString('en-IN')}
                     </span>
                   )}
                   {isExpired && (
@@ -196,7 +196,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[13px] text-slate-500">
                   <span className="flex items-center gap-1.5">
                     <MapPin size={13} className="flex-shrink-0" />
-                    {job.country}{job.city ? ` · ${job.city}` : ''}
+                    {[job.city, job.state, job.country].filter(Boolean).join(' · ')}
                   </span>
                   {job.agency_name && (
                     <span className="flex items-center gap-1.5">
@@ -223,9 +223,10 @@ export default async function JobDetailPage({ params }: PageProps) {
               {/* Description */}
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
                 <h2 className="text-[17px] font-bold text-slate-800 mb-4">About this Role</h2>
-                <p className="text-[14px] text-slate-600 leading-relaxed whitespace-pre-line">
-                  {job.description}
-                </p>
+                <div
+                  className="prose prose-slate max-w-none prose-headings:font-bold prose-h1:text-[22px] prose-h2:text-[18px] prose-h3:text-[15px] prose-p:text-[14px] prose-p:leading-relaxed prose-li:text-[14px] prose-a:text-primary prose-a:no-underline hover:prose-a:underline"
+                  dangerouslySetInnerHTML={{ __html: job.description }}
+                />
               </div>
             </div>
 
@@ -238,10 +239,13 @@ export default async function JobDetailPage({ params }: PageProps) {
 
                 <div className="mb-5">
                   <QuickFact label="Country"    value={job.country} />
-                  {job.city               && <QuickFact label="City"        value={job.city} />}
-                  {job.job_type           && <QuickFact label="Job Type"    value={job.job_type} />}
-                  {job.experience_required && <QuickFact label="Experience" value={job.experience_required} />}
-                  {job.salary             && <QuickFact label="Salary"      value={job.salary} />}
+                  {job.state              && <QuickFact label="State"      value={job.state} />}
+                  {job.city               && <QuickFact label="City"       value={job.city} />}
+                  {job.job_type           && <QuickFact label="Job Type"   value={job.job_type} />}
+                  {job.experience_years != null && <QuickFact label="Experience" value={`${job.experience_years}+ years`} />}
+                  {job.salary_amount != null && (
+                    <QuickFact label="Salary" value={`${job.salary_currency ?? ''} ${job.salary_amount.toLocaleString('en-IN')}`} />
+                  )}
                   <QuickFact label="Posted"    value={postedDate} />
                 </div>
 

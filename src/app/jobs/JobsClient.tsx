@@ -4,30 +4,44 @@ import React, { useState, useMemo } from 'react'
 import { Search, X, Briefcase } from 'lucide-react'
 import { JobCard } from './_components/JobCard'
 import type { ActiveJobListing } from '@/lib/db/jobs'
+import { EXPERIENCE_FILTER_RANGES } from '@/lib/jobConstants'
 
 interface JobsClientProps {
   jobs: ActiveJobListing[]
 }
 
 export function JobsClient({ jobs }: JobsClientProps) {
-  const [search, setSearch]   = useState('')
-  const [country, setCountry] = useState('')
+  const [search, setSearch]       = useState('')
+  const [country, setCountry]     = useState('')
+  const [experience, setExperience] = useState('')
+  const [currency, setCurrency]   = useState('')
 
   const countries = useMemo(() => {
     const all = jobs.map((j) => j.country).filter(Boolean)
     return [...new Set(all)].sort()
   }, [jobs])
 
+  const currencies = useMemo(() => {
+    const all = jobs.map((j) => j.salary_currency).filter((c): c is string => Boolean(c))
+    return [...new Set(all)].sort()
+  }, [jobs])
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
+    const range = EXPERIENCE_FILTER_RANGES.find((r) => r.label === experience)
     return jobs.filter((j) => {
       if (q && !j.title.toLowerCase().includes(q)) return false
       if (country && j.country !== country) return false
+      if (currency && j.salary_currency !== currency) return false
+      if (range) {
+        if (j.experience_years == null) return false
+        if (j.experience_years < range.min || j.experience_years > range.max) return false
+      }
       return true
     })
-  }, [jobs, search, country])
+  }, [jobs, search, country, experience, currency])
 
-  const hasFilters = search.length > 0 || country.length > 0
+  const hasFilters = search.length > 0 || country.length > 0 || experience.length > 0 || currency.length > 0
 
   return (
     <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-8 md:py-10">
@@ -60,13 +74,37 @@ export function JobsClient({ jobs }: JobsClientProps) {
         <select
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          className="h-11 px-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-card sm:w-48"
+          className="h-11 px-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-card sm:w-44"
         >
           <option value="">All Countries</option>
           {countries.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
+
+        <select
+          value={experience}
+          onChange={(e) => setExperience(e.target.value)}
+          className="h-11 px-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-card sm:w-40"
+        >
+          <option value="">Any Experience</option>
+          {EXPERIENCE_FILTER_RANGES.map((r) => (
+            <option key={r.label} value={r.label}>{r.label}</option>
+          ))}
+        </select>
+
+        {currencies.length > 0 && (
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="h-11 px-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all shadow-card sm:w-36"
+          >
+            <option value="">Any Currency</option>
+            {currencies.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* Count */}
@@ -97,7 +135,7 @@ export function JobsClient({ jobs }: JobsClientProps) {
                 Try clearing your filters to see all open positions.
               </p>
               <button
-                onClick={() => { setSearch(''); setCountry('') }}
+                onClick={() => { setSearch(''); setCountry(''); setExperience(''); setCurrency('') }}
                 className="px-5 py-2.5 bg-primary hover:bg-primary-hover text-white text-[13px] font-semibold rounded-xl transition-colors"
               >
                 Clear filters

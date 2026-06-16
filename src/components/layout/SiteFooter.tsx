@@ -5,6 +5,7 @@ const FOOTER_LINKS = {
   Navigate: [
     ['Home',              '/'],
     ['Agencies',          '/agencies'],
+    ['Jobs',              '/jobs'],
     ['Mock Test',         '/mock-tests'],
     ['Check Eligibility', '/eligibility'],
     ['Scam Reports',      '/scam-reports'],

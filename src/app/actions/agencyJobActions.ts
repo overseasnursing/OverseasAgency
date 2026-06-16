@@ -46,16 +46,26 @@ export async function saveAgencyJob(
   const id                  = formData.get('id') as string | null
   const title               = (formData.get('title') as string ?? '').trim()
   const country             = (formData.get('country') as string ?? '').trim()
+  const state                = (formData.get('state') as string ?? '').trim() || null
   const city                = (formData.get('city') as string ?? '').trim() || null
   const job_type            = (formData.get('job_type') as string ?? '').trim()
-  const experience_required = (formData.get('experience_required') as string ?? '').trim() || null
-  const salary              = (formData.get('salary') as string ?? '').trim() || null
+  const experience_years_raw = (formData.get('experience_years') as string ?? '').trim()
+  const experience_years    = experience_years_raw ? parseInt(experience_years_raw, 10) : null
+  const salary_currency     = (formData.get('salary_currency') as string ?? '').trim() || null
+  const salary_amount_raw   = (formData.get('salary_amount') as string ?? '').trim()
+  const salary_amount       = salary_amount_raw ? parseInt(salary_amount_raw, 10) : null
   const description         = (formData.get('description') as string ?? '').trim()
   const expiry_date_raw     = (formData.get('expiry_date') as string ?? '').trim()
   const slug_raw            = (formData.get('slug') as string ?? '').trim()
 
   if (!title || !country || !job_type || !description || !expiry_date_raw) {
     return { error: 'Required fields are missing.' }
+  }
+  if (experience_years_raw && (Number.isNaN(experience_years) || (experience_years as number) < 0)) {
+    return { error: 'Experience required must be a positive number.' }
+  }
+  if (salary_amount_raw && (Number.isNaN(salary_amount) || (salary_amount as number) < 0)) {
+    return { error: 'Salary amount must be a positive number.' }
   }
 
   const slug        = slug_raw || slugify(title)
@@ -80,10 +90,12 @@ export async function saveAgencyJob(
         title,
         slug,
         country,
+        state,
         city,
         job_type,
-        experience_required,
-        salary,
+        experience_years,
+        salary_currency,
+        salary_amount,
         description,
         expiry_date,
         updated_at: new Date().toISOString(),
@@ -103,10 +115,12 @@ export async function saveAgencyJob(
       title,
       slug,
       country,
+      state,
       city,
       job_type,
-      experience_required,
-      salary,
+      experience_years,
+      salary_currency,
+      salary_amount,
       description,
       expiry_date,
       status:            'pending',

@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Loader2, Save, AlertCircle, CheckCircle } from 'lucide-react'
 import { saveAgencyJob } from '@/app/actions/agencyJobActions'
 import type { JobRow } from '@/lib/db/jobs'
+import { JOB_COUNTRIES, JOB_CURRENCIES } from '@/lib/jobConstants'
+import { TiptapEditor } from '@/components/admin/TiptapEditor'
 
-const inputCls    = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white'
-const labelCls    = 'block text-[12px] font-semibold text-slate-600 mb-1'
-const textareaCls = inputCls + ' resize-none leading-relaxed'
+const inputCls = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white'
+const labelCls = 'block text-[12px] font-semibold text-slate-600 mb-1'
 
 function slugify(text: string): string {
   return text
@@ -27,10 +28,12 @@ export function AgencyJobForm({ initialData }: Props) {
   const [pending, startSave] = useTransition()
   const [notice, setNotice]  = useState<{ type: 'ok' | 'err'; msg: string } | null>(null)
   const [title, setTitle]    = useState(initialData?.title ?? '')
+  const [description, setDescription] = useState(initialData?.description ?? '')
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
+    fd.set('description', description)
     // Auto-generate slug on create; preserve existing slug on edit
     if (!isEdit) fd.set('slug', slugify(title))
     startSave(async () => {
@@ -78,15 +81,26 @@ export function AgencyJobForm({ initialData }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <label className={labelCls}>Country *</label>
-            <input
+            <select
               name="country"
               required
               defaultValue={initialData?.country ?? ''}
               className={inputCls}
-              placeholder="e.g. Germany"
+            >
+              <option value="" disabled>Select country</option>
+              {JOB_COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>State</label>
+            <input
+              name="state"
+              defaultValue={initialData?.state ?? ''}
+              className={inputCls}
+              placeholder="e.g. Bavaria (optional)"
             />
           </div>
           <div>
@@ -95,7 +109,7 @@ export function AgencyJobForm({ initialData }: Props) {
               name="city"
               defaultValue={initialData?.city ?? ''}
               className={inputCls}
-              placeholder="e.g. Berlin"
+              placeholder="e.g. Berlin (optional)"
             />
           </div>
         </div>
@@ -112,24 +126,41 @@ export function AgencyJobForm({ initialData }: Props) {
             />
           </div>
           <div>
-            <label className={labelCls}>Experience Required</label>
+            <label className={labelCls}>Experience Required (years)</label>
             <input
-              name="experience_required"
-              defaultValue={initialData?.experience_required ?? ''}
+              name="experience_years"
+              type="number"
+              min={0}
+              step={1}
+              defaultValue={initialData?.experience_years ?? ''}
               className={inputCls}
-              placeholder="e.g. 2+ years ICU"
+              placeholder="e.g. 2"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className={labelCls}>Salary</label>
-            <input
-              name="salary"
-              defaultValue={initialData?.salary ?? ''}
+            <label className={labelCls}>Salary Currency</label>
+            <select
+              name="salary_currency"
+              defaultValue={initialData?.salary_currency ?? ''}
               className={inputCls}
-              placeholder="e.g. €3,000 / month"
+            >
+              <option value="">Not specified</option>
+              {JOB_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>Salary Amount</label>
+            <input
+              name="salary_amount"
+              type="number"
+              min={0}
+              step={1}
+              defaultValue={initialData?.salary_amount ?? ''}
+              className={inputCls}
+              placeholder="e.g. 3000"
             />
           </div>
           <div>
@@ -147,14 +178,7 @@ export function AgencyJobForm({ initialData }: Props) {
 
         <div>
           <label className={labelCls}>Description *</label>
-          <textarea
-            name="description"
-            required
-            rows={10}
-            defaultValue={initialData?.description ?? ''}
-            className={textareaCls}
-            placeholder="Describe the role: responsibilities, requirements, benefits, and anything a candidate needs to know…"
-          />
+          <TiptapEditor value={description} onChange={setDescription} />
         </div>
       </div>
 

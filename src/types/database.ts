@@ -312,12 +312,16 @@ export type Database = {
           title: string
           slug: string
           country: string
+          state: string | null
           city: string | null
           agency_id: string | null
           posted_by_user_id: string
           job_type: string
           experience_required: string | null
+          experience_years: number | null
           salary: string | null
+          salary_currency: string | null
+          salary_amount: number | null
           description: string
           status: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
           expiry_date: string
@@ -329,12 +333,16 @@ export type Database = {
           title: string
           slug: string
           country: string
+          state?: string | null
           city?: string | null
           agency_id?: string | null
           posted_by_user_id: string
           job_type: string
           experience_required?: string | null
+          experience_years?: number | null
           salary?: string | null
+          salary_currency?: string | null
+          salary_amount?: number | null
           description: string
           status?: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
           expiry_date: string
@@ -345,11 +353,15 @@ export type Database = {
           title?: string
           slug?: string
           country?: string
+          state?: string | null
           city?: string | null
           agency_id?: string | null
           job_type?: string
           experience_required?: string | null
+          experience_years?: number | null
           salary?: string | null
+          salary_currency?: string | null
+          salary_amount?: number | null
           description?: string
           status?: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
           expiry_date?: string
