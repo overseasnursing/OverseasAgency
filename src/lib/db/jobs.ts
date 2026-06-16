@@ -61,6 +61,11 @@ export async function getJobBySlug(slug: string): Promise<JobRow | null> {
 export type JobDetailRow = JobRow & {
   agency_name: string | null
   agency_slug: string | null
+  agency_logo_url: string | null
+  agency_rating: number | null
+  agency_review_count: number
+  agency_google_rating: number | null
+  agency_google_review_count: number | null
 }
 
 export async function getJobBySlugPublic(slug: string): Promise<JobDetailRow | null> {
@@ -69,7 +74,7 @@ export async function getJobBySlugPublic(slug: string): Promise<JobDetailRow | n
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('jobs')
-    .select('*, agencies(name, slug)')
+    .select('*, agencies(name, slug, logo_url, rating, review_count, google_rating, google_review_count)')
     .eq('slug', slug)
     .in('status', ['approved', 'expired'])
     .single()
@@ -81,9 +86,14 @@ export async function getJobBySlugPublic(slug: string): Promise<JobDetailRow | n
   const row = data as any
   return {
     ...row,
-    agencies:     undefined,
-    agency_name:  row.agencies?.name ?? null,
-    agency_slug:  row.agencies?.slug ?? null,
+    agencies:                    undefined,
+    agency_name:                 row.agencies?.name ?? null,
+    agency_slug:                 row.agencies?.slug ?? null,
+    agency_logo_url:             row.agencies?.logo_url ?? null,
+    agency_rating:               row.agencies?.rating ?? null,
+    agency_review_count:         row.agencies?.review_count ?? 0,
+    agency_google_rating:        row.agencies?.google_rating ?? null,
+    agency_google_review_count:  row.agencies?.google_review_count ?? null,
   }
 }
 
@@ -97,7 +107,7 @@ export async function getSimilarJobs(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('jobs')
-    .select('id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, description, created_at, expiry_date, agency_id, agencies(name)')
+    .select('id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies(name)')
     .eq('status', 'approved')
     .gte('expiry_date', new Date().toISOString())
     .eq('country', country)
@@ -120,6 +130,7 @@ export async function getSimilarJobs(
     experience_years: row.experience_years ?? null,
     salary_currency:  row.salary_currency ?? null,
     salary_amount:    row.salary_amount ?? null,
+    logo_url:         row.logo_url ?? null,
     description:      row.description,
     created_at:       row.created_at,
     expiry_date:      row.expiry_date,
@@ -140,6 +151,7 @@ export type ActiveJobListing = {
   experience_years: number | null
   salary_currency: string | null
   salary_amount: number | null
+  logo_url: string | null
   description: string
   created_at: string
   expiry_date: string
@@ -153,7 +165,7 @@ export async function getActiveJobs(): Promise<ActiveJobListing[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('jobs')
-    .select('id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, description, created_at, expiry_date, agency_id, agencies(name)')
+    .select('id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies(name)')
     .eq('status', 'approved')
     .gte('expiry_date', new Date().toISOString())
     .order('created_at', { ascending: false })
@@ -173,6 +185,7 @@ export async function getActiveJobs(): Promise<ActiveJobListing[]> {
     experience_years: row.experience_years ?? null,
     salary_currency:  row.salary_currency ?? null,
     salary_amount:    row.salary_amount ?? null,
+    logo_url:         row.logo_url ?? null,
     description:      row.description,
     created_at:       row.created_at,
     expiry_date:      row.expiry_date,

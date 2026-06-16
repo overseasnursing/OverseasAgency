@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Save, AlertCircle, CheckCircle } from 'lucide-react'
+import { Loader2, Save, AlertCircle, CheckCircle, Upload, X } from 'lucide-react'
 import { saveJob } from '@/app/actions/admin-jobs'
+import { uploadJobLogo } from '@/app/actions/job-upload'
 import type { JobRow } from '@/lib/db/jobs'
 import { JOB_COUNTRIES, JOB_CURRENCIES } from '@/lib/jobConstants'
 import { TiptapEditor } from '@/components/admin/TiptapEditor'
@@ -30,10 +31,27 @@ export function JobForm({ initialData }: Props) {
   const [title, setTitle]    = useState(initialData?.title ?? '')
   const [slug,  setSlug]     = useState(initialData?.slug  ?? '')
   const [description, setDescription] = useState(initialData?.description ?? '')
+  const [logoUrl, setLogoUrl] = useState(initialData?.logo_url ?? '')
+  const [logoUploading, startLogoUpload] = useTransition()
+  const logoFileRef = useRef<HTMLInputElement>(null)
+  const [applyType, setApplyType] = useState<'direct' | 'redirect'>(initialData?.apply_type ?? 'direct')
 
   function handleTitleChange(v: string) {
     setTitle(v)
     if (!isEdit) setSlug(slugify(v))
+  }
+
+  function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    startLogoUpload(async () => {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await uploadJobLogo(fd)
+      if (res.url) setLogoUrl(res.url)
+      else setNotice({ type: 'err', msg: res.error ?? 'Logo upload failed' })
+    })
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -58,6 +76,7 @@ export function JobForm({ initialData }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {initialData?.id && <input type="hidden" name="id" value={initialData.id} />}
+      <input type="hidden" name="logo_url" value={logoUrl} />
 
       {notice && (
         <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-[13px] font-medium ${
@@ -194,6 +213,85 @@ export function JobForm({ initialData }: Props) {
         <div>
           <label className={labelCls}>Description *</label>
           <TiptapEditor value={description} onChange={setDescription} />
+        </div>
+
+        <div>
+          <label className={labelCls}>Employer Logo (optional)</label>
+          <div className="flex items-center gap-3">
+            {logoUrl ? (
+              <div className="relative w-14 h-14 rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt="Employer logo" className="w-full h-full object-contain" />
+                <button
+                  type="button"
+                  onClick={() => setLogoUrl('')}
+                  className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-white border border-slate-200 rounded-full text-slate-500 hover:text-[#B91C1C] transition-colors"
+                  aria-label="Remove logo"
+                >
+                  <X size={11} />
+                </button>
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-xl border border-dashed border-slate-200 flex items-center justify-center flex-shrink-0 bg-slate-50">
+                <Upload size={16} className="text-slate-300" />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => logoFileRef.current?.click()}
+              disabled={logoUploading}
+              className="h-9 px-4 flex items-center gap-2 text-[13px] font-semibold text-slate-600 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-60"
+            >
+              {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+              {logoUrl ? 'Replace logo' : 'Upload logo'}
+            </button>
+            <input
+              ref={logoFileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleLogoFileChange}
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1.5">
+            Shown on the job listing card and detail page. Square image recommended.
+          </p>
+        </div>
+
+        <div>
+          <label className={labelCls}>How to Apply *</label>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-[13px] text-slate-700 cursor-pointer">
+              <input
+                type="radio"
+                name="apply_type"
+                value="direct"
+                checked={applyType === 'direct'}
+                onChange={() => setApplyType('direct')}
+              />
+              Direct Apply — candidates apply on OverseasNursing
+            </label>
+            <label className="flex items-center gap-2 text-[13px] text-slate-700 cursor-pointer">
+              <input
+                type="radio"
+                name="apply_type"
+                value="redirect"
+                checked={applyType === 'redirect'}
+                onChange={() => setApplyType('redirect')}
+              />
+              Redirect — send candidates to an external URL to apply
+            </label>
+          </div>
+          {applyType === 'redirect' && (
+            <input
+              name="redirect_url"
+              type="url"
+              required
+              defaultValue={initialData?.redirect_url ?? ''}
+              className={`${inputCls} mt-2`}
+              placeholder="https://example.com/careers/job-123"
+            />
+          )}
         </div>
       </div>
 

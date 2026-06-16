@@ -17,13 +17,21 @@ export function JobCard({ job }: { job: ActiveJobListing }) {
     <article className="bg-white rounded-card shadow-card hover:shadow-card-md border border-slate-100 transition-shadow flex flex-col p-4 gap-3">
 
       {/* Title */}
-      <div>
-        <h2 className="text-[15px] font-bold text-slate-800 leading-tight line-clamp-2 mb-1.5">
-          {job.title}
-        </h2>
-        <div className="flex items-center gap-1 text-[12px] text-slate-500">
-          <MapPin size={11} className="flex-shrink-0" />
-          <span>{[job.city, job.state, job.country].filter(Boolean).join(' · ')}</span>
+      <div className="flex items-start gap-3">
+        {job.logo_url && (
+          <div className="w-10 h-10 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0 bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={job.logo_url} alt="" className="w-full h-full object-contain" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-[15px] font-bold text-slate-800 leading-tight line-clamp-2 mb-1.5">
+            {job.title}
+          </h2>
+          <div className="flex items-center gap-1 text-[12px] text-slate-500">
+            <MapPin size={11} className="flex-shrink-0" />
+            <span>{[job.city, job.state, job.country].filter(Boolean).join(' · ')}</span>
+          </div>
         </div>
       </div>
 

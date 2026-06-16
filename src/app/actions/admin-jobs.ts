@@ -54,6 +54,10 @@ export async function saveJob(
   const description         = (formData.get('description') as string ?? '').trim()
   const expiry_date_raw     = (formData.get('expiry_date') as string ?? '').trim()
   const slug_raw            = (formData.get('slug') as string ?? '').trim()
+  const logo_url            = (formData.get('logo_url') as string ?? '').trim() || null
+  const apply_type_raw      = (formData.get('apply_type') as string ?? 'direct').trim()
+  const apply_type          = apply_type_raw === 'redirect' ? 'redirect' : 'direct'
+  const redirect_url        = (formData.get('redirect_url') as string ?? '').trim() || null
 
   if (!title || !country || !job_type || !description || !expiry_date_raw) {
     return { error: 'Required fields are missing.' }
@@ -64,6 +68,9 @@ export async function saveJob(
   if (salary_amount_raw && (Number.isNaN(salary_amount) || (salary_amount as number) < 0)) {
     return { error: 'Salary amount must be a positive number.' }
   }
+  if (apply_type === 'redirect' && !redirect_url) {
+    return { error: 'Redirect URL is required when apply method is set to Redirect.' }
+  }
 
   const slug        = slug_raw || slugify(title)
   const expiry_date = new Date(expiry_date_raw + 'T23:59:59.000Z').toISOString()
@@ -71,7 +78,7 @@ export async function saveJob(
   if (id) {
     const { error } = await db
       .from('jobs')
-      .update({ title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, description, expiry_date, updated_at: new Date().toISOString() })
+      .update({ title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, apply_type, redirect_url, description, expiry_date, updated_at: new Date().toISOString() })
       .eq('id', id)
     if (error) return { error: error.message }
     revalidatePath('/admin/jobs')
@@ -91,6 +98,9 @@ export async function saveJob(
       experience_years,
       salary_currency,
       salary_amount,
+      logo_url,
+      apply_type,
+      redirect_url,
       description,
       expiry_date,
       status: 'approved',
