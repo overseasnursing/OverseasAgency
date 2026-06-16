@@ -106,6 +106,63 @@ export async function getMockTestLocationWithCategories(locationSlug: string): P
   return { location: loc, categories }
 }
 
+// Maps normalizeCountry() keys (src/app/jobs/[slug]/_data/countryMappings.ts)
+// to the country_slug values actually stored on mock_test_locations rows.
+const COUNTRY_KEY_TO_LOCATION_COUNTRY_SLUG: Record<string, string> = {
+  'uae':          'dubai',
+  'saudi-arabia': 'saudi',
+  'uk':           'uk',
+  'germany':      'germany',
+  'australia':    'australia',
+  'canada':       'canada',
+  'ireland':      'ireland',
+  'new-zealand':  'new-zealand',
+  'singapore':    'singapore',
+  'bahrain':      'bahrain',
+  'qatar':        'qatar',
+  'kuwait':       'kuwait',
+  'usa':          'usa',
+  'austria':      'austria',
+  'switzerland':  'switzerland',
+}
+
+/**
+ * Real, DB-backed mock test links for a job's country — only returns
+ * entries for locations/categories that actually exist and are active,
+ * so callers never render a broken link.
+ */
+export async function getMockTestLinksForCountry(
+  normalizedCountryKey: string,
+): Promise<{ name: string; href: string }[]> {
+  const countrySlug = COUNTRY_KEY_TO_LOCATION_COUNTRY_SLUG[normalizedCountryKey]
+  if (!countrySlug) return []
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { data: loc } = await db
+    .from('mock_test_locations')
+    .select('id, slug')
+    .eq('country_slug', countrySlug)
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle()
+  if (!loc) return []
+
+  const { data: cats } = await db
+    .from('mock_test_categories')
+    .select('name, slug')
+    .eq('location_id', loc.id)
+    .eq('is_active', true)
+    .order('name')
+  if (!cats?.length) return []
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return cats.map((c: any) => ({
+    name: `${c.name} Mock Test`,
+    href: `/mock-tests/${loc.slug}/${c.slug}`,
+  }))
+}
+
 export type SiblingCategory = { id: string; name: string; slug: string }
 
 export async function getMockTestCategoryData(locationSlug: string, categorySlug: string): Promise<{
