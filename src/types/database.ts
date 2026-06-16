@@ -322,6 +322,9 @@ export type Database = {
           salary: string | null
           salary_currency: string | null
           salary_amount: number | null
+          logo_url: string | null
+          apply_type: 'direct' | 'redirect'
+          redirect_url: string | null
           description: string
           status: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
           expiry_date: string
@@ -343,6 +346,9 @@ export type Database = {
           salary?: string | null
           salary_currency?: string | null
           salary_amount?: number | null
+          logo_url?: string | null
+          apply_type?: 'direct' | 'redirect'
+          redirect_url?: string | null
           description: string
           status?: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
           expiry_date: string
@@ -362,6 +368,9 @@ export type Database = {
           salary?: string | null
           salary_currency?: string | null
           salary_amount?: number | null
+          logo_url?: string | null
+          apply_type?: 'direct' | 'redirect'
+          redirect_url?: string | null
           description?: string
           status?: 'pending' | 'approved' | 'hold' | 'expired' | 'rejected'
           expiry_date?: string

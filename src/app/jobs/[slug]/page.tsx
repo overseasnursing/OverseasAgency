@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import {
   MapPin, Building2, Calendar,
   ArrowRight, BookOpen, ClipboardList,
-  FileText, AlertCircle, ChevronRight,
+  FileText, AlertCircle, ChevronRight, Star, ExternalLink,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getJobBySlugPublic, getSimilarJobs } from '@/lib/db/jobs'
@@ -171,22 +171,30 @@ export default async function JobDetailPage({ params }: PageProps) {
 
               {/* Title card */}
               <div className="bg-white border border-slate-200 rounded-2xl p-6">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {job.job_type && (
-                    <span className="px-2.5 py-0.5 bg-[#EFF6FF] text-[#1D4ED8] text-[11.5px] font-semibold rounded-full">
-                      {job.job_type}
-                    </span>
+                <div className="flex items-start gap-4 mb-3">
+                  {job.logo_url && (
+                    <div className="w-14 h-14 rounded-xl border border-slate-100 overflow-hidden flex-shrink-0 bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={job.logo_url} alt="" className="w-full h-full object-contain" />
+                    </div>
                   )}
-                  {job.salary_amount != null && (
-                    <span className="px-2.5 py-0.5 bg-[#F0FDF4] text-[#166534] text-[11.5px] font-semibold rounded-full">
-                      {job.salary_currency ?? ''} {job.salary_amount.toLocaleString('en-IN')}
-                    </span>
-                  )}
-                  {isExpired && (
-                    <span className="px-2.5 py-0.5 bg-slate-100 text-slate-500 text-[11.5px] font-semibold rounded-full">
-                      Expired
-                    </span>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {job.job_type && (
+                      <span className="px-2.5 py-0.5 bg-[#EFF6FF] text-[#1D4ED8] text-[11.5px] font-semibold rounded-full">
+                        {job.job_type}
+                      </span>
+                    )}
+                    {job.salary_amount != null && (
+                      <span className="px-2.5 py-0.5 bg-[#F0FDF4] text-[#166534] text-[11.5px] font-semibold rounded-full">
+                        {job.salary_currency ?? ''} {job.salary_amount.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                    {isExpired && (
+                      <span className="px-2.5 py-0.5 bg-slate-100 text-slate-500 text-[11.5px] font-semibold rounded-full">
+                        Expired
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <h1 className="text-[24px] sm:text-[28px] font-bold text-slate-900 leading-tight mb-4">
@@ -228,6 +236,80 @@ export default async function JobDetailPage({ params }: PageProps) {
                   dangerouslySetInnerHTML={{ __html: job.description }}
                 />
               </div>
+
+              {/* Posted By */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-6">
+                <h2 className="text-[17px] font-bold text-slate-800 mb-4">Posted By</h2>
+                {job.agency_name ? (
+                  <a
+                    href={job.agency_slug ? `/agency/${job.agency_slug}` : '#'}
+                    className="flex items-center gap-4 group"
+                  >
+                    <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 bg-white flex items-center justify-center">
+                      {job.agency_logo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={job.agency_logo_url} alt={job.agency_name} className="w-full h-full object-contain" />
+                      ) : (
+                        <span className="text-[15px] font-bold text-primary">
+                          {job.agency_name.split(' ').slice(0, 2).map((w) => w[0]).join('')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-bold text-slate-800 group-hover:text-primary transition-colors leading-tight">
+                        {job.agency_name}
+                      </p>
+                      {job.agency_review_count > 0 ? (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                              <Star
+                                key={i}
+                                size={12}
+                                fill={i <= Math.round(job.agency_rating ?? 0) ? '#F59E0B' : '#E2E8F0'}
+                                className={i <= Math.round(job.agency_rating ?? 0) ? 'text-[#F59E0B]' : 'text-slate-200'}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[13px] font-bold text-slate-800">{(job.agency_rating ?? 0).toFixed(1)}</span>
+                          <span className="text-[12px] text-slate-400">({job.agency_review_count})</span>
+                        </div>
+                      ) : job.agency_google_rating ? (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                              <Star
+                                key={i}
+                                size={12}
+                                fill={i <= Math.round(job.agency_google_rating ?? 0) ? '#F59E0B' : '#E2E8F0'}
+                                className={i <= Math.round(job.agency_google_rating ?? 0) ? 'text-[#F59E0B]' : 'text-slate-200'}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[13px] font-bold text-slate-800">{job.agency_google_rating.toFixed(1)}</span>
+                          <span className="text-[12px] text-slate-400">({job.agency_google_review_count} Google)</span>
+                        </div>
+                      ) : (
+                        <p className="text-[12px] text-slate-400 mt-1">No reviews yet</p>
+                      )}
+                    </div>
+                    <ChevronRight size={16} className="text-slate-300 flex-shrink-0" />
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100 bg-white flex items-center justify-center p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/logo.png" alt="OverseasNursing" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-bold text-slate-800 leading-tight">OverseasNursing</p>
+                      <p className="text-[12.5px] text-slate-500 leading-relaxed mt-1">
+                        Helping nurses safely navigate overseas migration — reviews, pricing, and scam protection.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right: quick facts + apply */}
@@ -249,14 +331,25 @@ export default async function JobDetailPage({ params }: PageProps) {
                   <QuickFact label="Posted"    value={postedDate} />
                 </div>
 
-                <ApplySection
-                  jobId={job.id}
-                  jobSlug={slug}
-                  isExpired={isExpired}
-                  isLoggedIn={isLoggedIn}
-                  hasApplied={appliedStatus}
-                  userEmail={user?.email ?? ''}
-                />
+                {job.apply_type === 'redirect' && job.redirect_url && !isExpired ? (
+                  <a
+                    href={job.redirect_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 h-11 w-full bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors"
+                  >
+                    Apply Now <ExternalLink size={15} />
+                  </a>
+                ) : (
+                  <ApplySection
+                    jobId={job.id}
+                    jobSlug={slug}
+                    isExpired={isExpired}
+                    isLoggedIn={isLoggedIn}
+                    hasApplied={appliedStatus}
+                    userEmail={user?.email ?? ''}
+                  />
+                )}
               </div>
             </div>
           </div>
