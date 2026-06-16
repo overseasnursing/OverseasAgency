@@ -8,6 +8,10 @@ function truncate(text: string, max: number): string {
   return text.slice(0, max).trimEnd() + '…'
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
 export function JobCard({ job }: { job: ActiveJobListing }) {
   return (
     <article className="bg-white rounded-card shadow-card hover:shadow-card-md border border-slate-100 transition-shadow flex flex-col p-4 gap-3">
@@ -19,7 +23,7 @@ export function JobCard({ job }: { job: ActiveJobListing }) {
         </h2>
         <div className="flex items-center gap-1 text-[12px] text-slate-500">
           <MapPin size={11} className="flex-shrink-0" />
-          <span>{job.country}{job.city ? ` · ${job.city}` : ''}</span>
+          <span>{[job.city, job.state, job.country].filter(Boolean).join(' · ')}</span>
         </div>
       </div>
 
@@ -42,16 +46,21 @@ export function JobCard({ job }: { job: ActiveJobListing }) {
       </div>
 
       {/* Badges */}
-      {(job.job_type || job.salary) && (
+      {(job.job_type || job.salary_amount != null || job.experience_years != null) && (
         <div className="flex flex-wrap gap-1.5">
           {job.job_type && (
             <span className="px-2 py-0.5 bg-[#EFF6FF] text-[#1D4ED8] text-[11px] font-medium rounded-full">
               {job.job_type}
             </span>
           )}
-          {job.salary && (
+          {job.salary_amount != null && (
             <span className="px-2 py-0.5 bg-[#F0FDF4] text-[#166534] text-[11px] font-medium rounded-full">
-              {job.salary}
+              {job.salary_currency ?? ''} {job.salary_amount.toLocaleString('en-IN')}
+            </span>
+          )}
+          {job.experience_years != null && (
+            <span className="px-2 py-0.5 bg-[#FEF3C7] text-[#92400E] text-[11px] font-medium rounded-full">
+              {job.experience_years}+ yrs
             </span>
           )}
         </div>
@@ -59,7 +68,7 @@ export function JobCard({ job }: { job: ActiveJobListing }) {
 
       {/* Description */}
       <p className="text-[12.5px] text-slate-500 leading-relaxed flex-1">
-        {truncate(job.description, 140)}
+        {truncate(stripHtml(job.description), 140)}
       </p>
 
       {/* CTA */}

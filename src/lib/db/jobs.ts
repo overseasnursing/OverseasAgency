@@ -97,7 +97,7 @@ export async function getSimilarJobs(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('jobs')
-    .select('id, title, slug, country, city, job_type, salary, description, created_at, expiry_date, agency_id, agencies(name)')
+    .select('id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, description, created_at, expiry_date, agency_id, agencies(name)')
     .eq('status', 'approved')
     .gte('expiry_date', new Date().toISOString())
     .eq('country', country)
@@ -110,18 +110,21 @@ export async function getSimilarJobs(
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data ?? []).map((row: any) => ({
-    id:          row.id,
-    title:       row.title,
-    slug:        row.slug,
-    country:     row.country,
-    city:        row.city ?? null,
-    job_type:    row.job_type,
-    salary:      row.salary ?? null,
-    description: row.description,
-    created_at:  row.created_at,
-    expiry_date: row.expiry_date,
-    agency_id:   row.agency_id ?? null,
-    agency_name: row.agencies?.name ?? null,
+    id:               row.id,
+    title:            row.title,
+    slug:             row.slug,
+    country:          row.country,
+    state:            row.state ?? null,
+    city:             row.city ?? null,
+    job_type:         row.job_type,
+    experience_years: row.experience_years ?? null,
+    salary_currency:  row.salary_currency ?? null,
+    salary_amount:    row.salary_amount ?? null,
+    description:      row.description,
+    created_at:       row.created_at,
+    expiry_date:      row.expiry_date,
+    agency_id:        row.agency_id ?? null,
+    agency_name:      row.agencies?.name ?? null,
   }))
 }
 
@@ -131,9 +134,12 @@ export type ActiveJobListing = {
   title: string
   slug: string
   country: string
+  state: string | null
   city: string | null
   job_type: string
-  salary: string | null
+  experience_years: number | null
+  salary_currency: string | null
+  salary_amount: number | null
   description: string
   created_at: string
   expiry_date: string
@@ -147,7 +153,7 @@ export async function getActiveJobs(): Promise<ActiveJobListing[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('jobs')
-    .select('id, title, slug, country, city, job_type, salary, description, created_at, expiry_date, agency_id, agencies(name)')
+    .select('id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, description, created_at, expiry_date, agency_id, agencies(name)')
     .eq('status', 'approved')
     .gte('expiry_date', new Date().toISOString())
     .order('created_at', { ascending: false })
@@ -157,18 +163,21 @@ export async function getActiveJobs(): Promise<ActiveJobListing[]> {
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data ?? []).map((row: any) => ({
-    id:          row.id,
-    title:       row.title,
-    slug:        row.slug,
-    country:     row.country,
-    city:        row.city ?? null,
-    job_type:    row.job_type,
-    salary:      row.salary ?? null,
-    description: row.description,
-    created_at:  row.created_at,
-    expiry_date: row.expiry_date,
-    agency_id:   row.agency_id ?? null,
-    agency_name: row.agencies?.name ?? null,
+    id:               row.id,
+    title:            row.title,
+    slug:             row.slug,
+    country:          row.country,
+    state:            row.state ?? null,
+    city:             row.city ?? null,
+    job_type:         row.job_type,
+    experience_years: row.experience_years ?? null,
+    salary_currency:  row.salary_currency ?? null,
+    salary_amount:    row.salary_amount ?? null,
+    description:      row.description,
+    created_at:       row.created_at,
+    expiry_date:      row.expiry_date,
+    agency_id:        row.agency_id ?? null,
+    agency_name:      row.agencies?.name ?? null,
   }))
 }
 

@@ -5,6 +5,7 @@ import { NavbarClient } from './NavbarClient'
 const NAV_LINKS = [
   { href: '/',             label: 'Home' },
   { href: '/agencies',     label: 'Agencies' },
+  { href: '/jobs',         label: 'Jobs' },
   { href: '/mock-tests',   label: 'Mock Test' },
   { href: '/eligibility',  label: 'Check Eligibility' },
   { href: '/scam-reports', label: 'Scam Report' },
