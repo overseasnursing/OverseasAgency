@@ -17,7 +17,6 @@ import {
   buildOrganizationSchema,
   buildMockTestProductSchema,
   buildGuidePersonSchema,
-  buildExamCategorySchema,
 } from '@/lib/seo/schemas'
 import { getMockTestContent } from '@/lib/data/getMockTestContent'
 import { ExamGuideContent } from './_components/ExamGuideContent'
@@ -152,36 +151,6 @@ export default async function CategoryPage({ params }: PageProps) {
     // 3. Organization
     buildOrganizationSchema(),
 
-    // 4. Course — single authoritative schema (replaces LearningResource + separate Course/reviews)
-    //    Always emitted; AggregateRating added when ≥3 reviews; hasCourseInstance per test
-    buildExamCategorySchema({
-      name:        pageTitle,
-      description: pageDesc,
-      path:        pagePath,
-      examName:    category.name,
-      tests:       tests.map(t => ({
-        name:             t.name,
-        slug:             t.slug,
-        duration_minutes: t.duration_minutes,
-        total_questions:  t.total_questions,
-        difficulty:       t.difficulty,
-      })),
-      avgRating,
-      reviewCount,
-      reviews: reviewCount > 0
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? reviews.map((r: any) => ({
-            reviewerName:    r.reviewer_name,
-            reviewerCountry: r.reviewer_country ?? null,
-            rating:          r.rating,
-            title:           r.review_title  ?? null,
-            text:            r.review_text   ?? null,
-            date:            r.created_at?.split('T')[0] ?? '',
-          }))
-        : [],
-    }),
-
-    // 5. Product — enables star ratings in Google Search (Quiz rich result deprecated 2023)
     buildMockTestProductSchema({
       name:        pageTitle,
       description: pageDesc,
