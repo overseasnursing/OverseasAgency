@@ -76,6 +76,27 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
   }
 }
 
+/**
+ * Fetches the full admin profile for the settings page.
+ * Unlike getAdminProfile(), never returns null just because author/reviewer
+ * names are empty — the settings page must show whatever is saved.
+ */
+export async function getAdminProfileForSettings(): Promise<AdminProfile | null> {
+  try {
+    const db = createAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (db as any)
+      .from('admin_profile')
+      .select('*')
+      .eq('id', FIXED_ROW_ID)
+      .single()
+    if (error || !data) return null
+    return rowToProfile(data as AdminProfileRow)
+  } catch {
+    return null
+  }
+}
+
 export type SiteSocialLinks = {
   facebook?: string
   instagram?: string
