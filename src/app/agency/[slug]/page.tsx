@@ -23,7 +23,7 @@ import { RelatedAgencies } from './components/RelatedAgencies'
 import { ContentAttribution } from '@/components/seo/ContentAttribution'
 import { getAttributionProfiles } from '@/lib/admin-profile'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
-import { buildBreadcrumbSchema, buildReviewSchema, buildAgencySchema, buildFaqSchema } from '@/lib/seo/schemas'
+import { buildBreadcrumbSchema, buildReviewSchema, buildAgencySchema, buildFaqSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
@@ -123,6 +123,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
       { name: 'Agencies', href: '/agencies' },
       { name: agency.name, href: `/agency/${agency.slug}` },
     ]),
+    buildOrganizationSchema(),
     ...(agency.faqs.length > 0 ? [buildFaqSchema(agency.faqs)] : []),
     ...agency.reviews
       .filter(r => r.body)

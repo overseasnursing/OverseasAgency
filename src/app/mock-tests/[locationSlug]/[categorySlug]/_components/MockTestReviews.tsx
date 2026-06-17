@@ -44,9 +44,15 @@ function formatDate(iso: string): string {
 export async function MockTestReviews({
   categoryId,
   examName,
+  totalCount,
+  totalAvg,
 }: {
-  categoryId: string
-  examName:   string
+  categoryId:  string
+  examName:    string
+  /** True total count from all approved reviews — passed from parent to avoid a second full-scan */
+  totalCount?: number
+  /** True average from all approved reviews */
+  totalAvg?:   number
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
@@ -78,9 +84,13 @@ export async function MockTestReviews({
 
   if (reviews.length === 0) return null
 
-  const avg = Math.round(
+  // Prefer the true aggregate passed from the parent (computed from ALL reviews, no limit).
+  // Fall back to computing from the fetched 20 if the parent didn't pass it.
+  const localAvg = Math.round(
     (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10,
   ) / 10
+  const avg        = totalAvg   ?? localAvg
+  const displayCount = totalCount ?? reviews.length
 
   // Difficulty distribution
   const diffCounts = { easy: 0, medium: 0, hard: 0 }
@@ -107,7 +117,7 @@ export async function MockTestReviews({
         <StarRow rating={Math.round(avg)} size={18} />
         <span className="text-[17px] font-bold text-slate-800">{avg.toFixed(1)}</span>
         <span className="text-[14px] text-slate-500">
-          / 5 &nbsp;·&nbsp; {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+          / 5 &nbsp;·&nbsp; {displayCount} review{displayCount !== 1 ? 's' : ''}
         </span>
       </div>
 

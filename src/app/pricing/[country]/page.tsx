@@ -2,7 +2,7 @@ import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPricingData, getAllPricingCountrySlugs } from '@/lib/data/pricing'
-import { buildArticleSchema } from '@/lib/seo/schemas'
+import { buildArticleSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { FlagIcon } from '@/components/ui/FlagIcon'
 
 import { PricingHero } from './components/PricingHero'
@@ -115,6 +115,7 @@ export default async function PricingPage({ params }: PageProps) {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(buildOrganizationSchema()) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />

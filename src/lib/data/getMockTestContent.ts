@@ -2,6 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { getGitFileDate } from '@/lib/utils/getGitFileDate'
 
 export type FaqItem  = { q: string; a: string }
 export type LinkItem = { label: string; href: string }
@@ -70,6 +71,12 @@ function readFromFile(categorySlug: string): MockTestContent | null {
     if (!fs.existsSync(filePath)) return null
     const { data, content } = matter(fs.readFileSync(filePath, 'utf-8'))
     const meta = data as MockTestContentMeta
+    // If modifiedDate not set in frontmatter, read it from the file's git commit history.
+    // This is more reliable than filesystem mtime in CI/CD environments where checkout
+    // resets file timestamps. Falls back to undefined if git is unavailable.
+    if (!meta.modifiedDate) {
+      meta.modifiedDate = getGitFileDate(filePath) ?? undefined
+    }
     return { meta, body: content.trim() }
   } catch {
     return null

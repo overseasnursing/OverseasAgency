@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getCountryDetail, getAllCountrySlugs } from '@/lib/data/countries'
 import { LAST_REVIEWED } from '@/lib/data/freshness'
-import { buildArticleSchema } from '@/lib/seo/schemas'
+import { buildArticleSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { FlagIcon } from '@/components/ui/FlagIcon'
 import { getAttributionProfiles } from '@/lib/admin-profile'
 
@@ -142,6 +142,10 @@ export default async function CountryPage({ params }: PageProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildOrganizationSchema()) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
