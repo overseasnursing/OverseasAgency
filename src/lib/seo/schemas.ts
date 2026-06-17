@@ -505,6 +505,12 @@ export function buildMockTestProductSchema(page: {
       priceCurrency:  'INR',
       availability:   'https://schema.org/InStock',
       url,
+      // PriceSpecification required by Google for Product rich results
+      priceSpecification: {
+        '@type':        'UnitPriceSpecification',
+        price:          0,
+        priceCurrency:  'INR',
+      },
     },
     ...aggregate,
     ...(reviewItems.length > 0 && { review: reviewItems }),
