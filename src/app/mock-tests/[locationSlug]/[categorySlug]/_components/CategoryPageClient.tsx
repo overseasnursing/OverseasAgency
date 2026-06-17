@@ -344,11 +344,12 @@ function TestCard({
         <button
           onClick={onStart}
           disabled={isStarting}
-          className="w-full flex items-center justify-center gap-2 h-11 bg-primary hover:bg-primary-hover text-white text-[14px] font-bold rounded-xl transition-colors disabled:opacity-70 shadow-sm"
+          className="w-full flex items-center justify-center gap-2 h-13 bg-primary hover:bg-primary-hover text-white text-[15px] font-extrabold rounded-xl transition-all disabled:opacity-70 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+          style={{ height: '52px' }}
         >
           {isStarting
-            ? <><Loader2 size={15} className="animate-spin" /> Setting up…</>
-            : <><Play size={14} /> Start Exam <ChevronRight size={15} /></>
+            ? <><Loader2 size={16} className="animate-spin" /> Setting up…</>
+            : <><Play size={16} fill="currentColor" /> Start Exam <ChevronRight size={16} /></>
           }
         </button>
       </div>
@@ -494,13 +495,23 @@ export function CategoryPageClient({
         </div>
       )}
 
-      {/* Trust note */}
-      <div className="mt-8 p-4 bg-primary/5 border border-primary/10 rounded-2xl text-center">
-        <p className="text-[12.5px] text-slate-600">
-          <span className="font-semibold text-primary">All mock tests are free.</span>{' '}
-          Create a free account to save your progress, track scores and access detailed explanations.
-        </p>
-      </div>
+      {/* Feature highlights */}
+      {tests.length > 0 && (
+        <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { emoji: '🎯', title: 'Timed Exams',      sub: 'Real exam conditions' },
+            { emoji: '⚡', title: 'Instant Results',   sub: 'See your score immediately' },
+            { emoji: '💡', title: 'Explanations',      sub: 'Learn from every answer' },
+            { emoji: '🆓', title: 'Completely Free',   sub: 'No sign-up required to browse' },
+          ].map(f => (
+            <div key={f.title} className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col items-center text-center shadow-sm">
+              <span className="text-[28px] mb-3 leading-none">{f.emoji}</span>
+              <p className="text-[13.5px] font-bold text-slate-800 mb-1">{f.title}</p>
+              <p className="text-[12px] text-slate-400 leading-snug">{f.sub}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   )
 }

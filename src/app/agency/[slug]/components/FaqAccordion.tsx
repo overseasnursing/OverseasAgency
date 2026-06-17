@@ -10,6 +10,7 @@ interface FaqAccordionProps {
 }
 
 function FaqItem({ faq, index }: { faq: AgencyDetail['faqs'][number]; index: number }) {
+  // First item open by default
   const [open, setOpen] = useState(index === 0)
   const id = `faq-${index}`
 
@@ -32,13 +33,19 @@ function FaqItem({ faq, index }: { faq: AgencyDetail['faqs'][number]; index: num
         />
       </button>
 
-      {open && (
-        <div id={id} role="region" aria-label={faq.question}>
-          <p className="px-5 pb-5 text-[14px] text-slate-600 leading-relaxed border-t border-slate-100 pt-4 whitespace-pre-wrap">
-            {faq.answer}
-          </p>
-        </div>
-      )}
+      {/* Always in DOM — Google indexes it; CSS height controls visibility */}
+      <div
+        id={id}
+        role="region"
+        aria-label={faq.question}
+        aria-hidden={!open}
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: open ? '600px' : '0px' }}
+      >
+        <p className="px-5 pb-5 text-[14px] text-slate-600 leading-relaxed border-t border-slate-100 pt-4 whitespace-pre-wrap">
+          {faq.answer}
+        </p>
+      </div>
     </div>
   )
 }

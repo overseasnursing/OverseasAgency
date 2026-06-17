@@ -15,7 +15,7 @@ import {
   buildFaqSchema,
   buildArticleSchema,
   buildOrganizationSchema,
-  buildQuizItemListSchema,
+  buildMockTestProductSchema,
   buildGuidePersonSchema,
   buildExamCategorySchema,
 } from '@/lib/seo/schemas'
@@ -44,19 +44,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const data = await getMockTestCategoryData(locationSlug, categorySlug)
   if (!data) return {}
   const { category, location, tests } = data
+  const totalQuestions = tests.reduce((s, t) => s + t.total_questions, 0)
   const title = category.seo_title || `${category.name} — Free Mock Tests | OverseasNursing`
   const desc  = category.seo_description || category.description ||
-    `Practice ${category.name} with free timed mock tests. Part of ${location.name} licensing preparation.`
+    `Practice ${category.name} with ${tests.length} free timed mock test${tests.length !== 1 ? 's' : ''}${totalQuestions > 0 ? ` and ${totalQuestions} questions` : ''}. Instant results + rationales. No sign-up needed for ${location.name} exam prep.`
   const ogImageUrl = `/api/og?type=exam&title=${encodeURIComponent(category.name)}&subtitle=${encodeURIComponent(location.name)}&tests=${tests.length}`
   return {
     title,
     description: desc,
+    robots: { index: true, follow: true },
     alternates: { canonical: `https://overseasnursing.com/mock-tests/${locationSlug}/${categorySlug}` },
     openGraph: {
       title,
       description: desc,
+      type: 'article',
+      locale: 'en_IN',
       url: `https://overseasnursing.com/mock-tests/${locationSlug}/${categorySlug}`,
       images: [{ url: ogImageUrl, width: 1200, height: 630, alt: title }],
+      siteName: 'OverseasNursing',
     },
     twitter: {
       card: 'summary_large_image',
@@ -73,16 +78,22 @@ export default async function CategoryPage({ params }: PageProps) {
   if (!data) notFound()
   const { location, category, tests, siblingCategories } = data
 
-  const avgDuration = tests.length
+  const avgDuration    = tests.length
     ? Math.round(tests.reduce((s, t) => s + t.duration_minutes, 0) / tests.length)
     : 0
-  const avgPass = tests.length
+  const avgPass        = tests.length
     ? Math.round(tests.reduce((s, t) => s + t.passing_percentage, 0) / tests.length)
     : 0
+  const totalQuestions = tests.reduce((s, t) => s + t.total_questions, 0)
 
   const pageTitle = category.seo_title || `${category.name} — Free Mock Tests | OverseasNursing`
+  // H1 shown on page: strip brand suffix so it reads naturally as a heading
+  const h1Title   = category.seo_title
+    ? category.seo_title.replace(/\s*[|—–]\s*OverseasNursing\.?com?$/i, '').trim()
+    : `${category.name} — Free Mock Tests`
   const pageDesc  = category.seo_description || category.description ||
-    `Practice ${category.name} with free timed mock tests. Part of ${location.name} licensing preparation.`
+    `Practice ${category.name} with ${tests.length} free timed mock test${tests.length !== 1 ? 's' : ''}${totalQuestions > 0 ? ` and ${totalQuestions} questions` : ''}. Instant results + rationales. No sign-up needed for ${location.name} exam prep.`
+  const dateModified = category.updated_at ? category.updated_at.split('T')[0] : new Date().toISOString().split('T')[0]
 
   const content = await getMockTestContent(category.id, categorySlug)
 
@@ -128,7 +139,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // Build all schemas; nulls are filtered at the end
   const rawSchemas: (Record<string, unknown> | null)[] = [
     // 1. WebPage
-    buildWebPageSchema({ title: pageTitle, description: pageDesc, path: pagePath }),
+    buildWebPageSchema({ title: pageTitle, description: pageDesc, path: pagePath, dateModified }),
 
     // 2. BreadcrumbList
     buildBreadcrumbSchema([
@@ -170,10 +181,27 @@ export default async function CategoryPage({ params }: PageProps) {
         : [],
     }),
 
-    // 5. Quiz ItemList — enriched with difficulty + assesses per item
-    tests.length > 0
-      ? buildQuizItemListSchema(tests, pagePath, category.name, category.name)
-      : null,
+    // 5. Product — enables star ratings in Google Search (Quiz rich result deprecated 2023)
+    buildMockTestProductSchema({
+      name:        pageTitle,
+      description: pageDesc,
+      path:        pagePath,
+      testCount:   tests.length,
+      imageUrl:    `/api/og?type=exam&title=${encodeURIComponent(category.name)}&subtitle=${encodeURIComponent(location.name)}&tests=${tests.length}`,
+      avgRating,
+      reviewCount,
+      reviews: reviewCount > 0
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? reviews.map((r: any) => ({
+            reviewerName:    r.reviewer_name,
+            reviewerCountry: r.reviewer_country ?? null,
+            rating:          r.rating,
+            title:           r.review_title  ?? null,
+            text:            r.review_text   ?? null,
+            date:            r.created_at?.split('T')[0] ?? '',
+          }))
+        : [],
+    }),
 
     // 6. TechArticle — only when study guide content exists
     content
@@ -236,7 +264,7 @@ export default async function CategoryPage({ params }: PageProps) {
               <BookOpen size={22} className="text-primary" />
             </div>
             <div className="flex-1">
-              <h1 className="text-title-sm font-bold text-slate-900">{category.name}</h1>
+              <h1 className="text-title-sm font-bold text-slate-900">{h1Title}</h1>
 
               {/* Aggregate rating — shown only when reviews exist */}
               {reviewCount > 0 && (
@@ -265,9 +293,10 @@ export default async function CategoryPage({ params }: PageProps) {
               {tests.length > 0 && (
                 <div className="flex flex-wrap gap-4 mt-4">
                   {[
-                    { label: 'Mock Tests', value: tests.length },
-                    { label: 'Avg Duration', value: avgDuration > 0 ? `${avgDuration} min` : '—' },
-                    { label: 'Avg Pass %', value: avgPass > 0 ? `${avgPass}%` : '—' },
+                    { label: 'Mock Tests',       value: tests.length },
+                    { label: 'Total Questions',  value: totalQuestions > 0 ? totalQuestions : '—' },
+                    { label: 'Avg Duration',     value: avgDuration > 0 ? `${avgDuration} min` : '—' },
+                    { label: 'Avg Pass %',       value: avgPass > 0 ? `${avgPass}%` : '—' },
                   ].map(s => (
                     <div key={s.label} className="bg-surface-section border border-slate-200 rounded-xl px-4 py-2 text-center min-w-[90px]">
                       <p className="text-[16px] font-bold text-primary">{s.value}</p>
@@ -283,11 +312,6 @@ export default async function CategoryPage({ params }: PageProps) {
 
       {/* Body */}
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-8">
-
-        {/* SEO intro */}
-        {category.seo_description && (
-          <p className="text-[13.5px] text-slate-500 mb-7 max-w-[720px] leading-relaxed">{category.seo_description}</p>
-        )}
 
         {/* Interactive section — passing criteria + test cards */}
         <CategoryPageClient
