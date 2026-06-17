@@ -474,10 +474,22 @@ export function buildMockTestProductSchema(page: {
       }
     : {}
 
+  // Stable @id for this Product entity — lets nested reviews back-reference it explicitly
+  const productId = `${url}#product`
+
   const reviewItems = (page.reviews ?? []).slice(0, 5).map(r => ({
     '@type': 'Review',
     ...(r.title && { name: r.title }),
-    author: { '@type': 'Person', name: r.reviewerName },
+    // itemReviewed links each review back to the Product entity unambiguously —
+    // Google requires this to associate the review text with the star rating
+    itemReviewed: { '@id': productId },
+    author: {
+      '@type': 'Person',
+      name:    r.reviewerName,
+      ...(r.reviewerCountry && {
+        address: { '@type': 'PostalAddress', addressCountry: r.reviewerCountry },
+      }),
+    },
     reviewRating: {
       '@type':     'Rating',
       ratingValue: r.rating,
@@ -491,6 +503,7 @@ export function buildMockTestProductSchema(page: {
   return {
     '@context': 'https://schema.org',
     '@type':    'Product',
+    '@id':      productId,
     name:       page.name,
     description: page.description,
     url,
@@ -505,7 +518,6 @@ export function buildMockTestProductSchema(page: {
       priceCurrency:  'INR',
       availability:   'https://schema.org/InStock',
       url,
-      // PriceSpecification required by Google for Product rich results
       priceSpecification: {
         '@type':        'UnitPriceSpecification',
         price:          0,
