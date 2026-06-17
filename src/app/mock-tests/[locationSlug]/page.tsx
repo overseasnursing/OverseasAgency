@@ -5,7 +5,7 @@ import { ChevronRight, BookOpen, Clock, HelpCircle } from 'lucide-react'
 import { getMockTestLocationWithCategories, getAllMockTestLocationSlugs } from '@/lib/data/getMockTestData'
 import { getExamGuidesForLocation } from '@/lib/data/exams'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
-import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
+import { buildWebPageSchema, buildBreadcrumbSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 
 export const revalidate = 3600
 
@@ -56,6 +56,7 @@ export default async function LocationPage({ params }: PageProps) {
       { name: 'Mock Tests', href: '/mock-tests' },
       { name: location.name, href: `/mock-tests/${locationSlug}` },
     ]),
+    buildOrganizationSchema(),
   ]
 
   return (

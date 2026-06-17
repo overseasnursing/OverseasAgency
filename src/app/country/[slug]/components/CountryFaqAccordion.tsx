@@ -5,7 +5,8 @@ import { ChevronDown } from 'lucide-react'
 import type { CountryFAQ } from '@/types/countryDetail'
 
 function FaqItem({ faq, index }: { faq: CountryFAQ; index: number }) {
-  const [open, setOpen] = useState(false)
+  // First item open by default
+  const [open, setOpen] = useState(index === 0)
   const id = `country-faq-${index}`
 
   return (
@@ -26,13 +27,20 @@ function FaqItem({ faq, index }: { faq: CountryFAQ; index: number }) {
           aria-hidden="true"
         />
       </button>
-      {open && (
-        <div id={id} role="region" aria-label={faq.question}>
-          <p className="px-5 pb-5 text-[14px] text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
-            {faq.answer}
-          </p>
-        </div>
-      )}
+
+      {/* Always in DOM — Google indexes it; CSS height controls visibility */}
+      <div
+        id={id}
+        role="region"
+        aria-label={faq.question}
+        aria-hidden={!open}
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: open ? '600px' : '0px' }}
+      >
+        <p className="px-5 pb-5 text-[14px] text-slate-600 leading-relaxed border-t border-slate-100 pt-4">
+          {faq.answer}
+        </p>
+      </div>
     </div>
   )
 }

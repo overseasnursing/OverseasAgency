@@ -167,7 +167,7 @@ export type SiblingCategory = { id: string; name: string; slug: string }
 
 export async function getMockTestCategoryData(locationSlug: string, categorySlug: string): Promise<{
   location: { id: string; name: string; slug: string; country_slug: string | null }
-  category: { id: string; name: string; slug: string; description: string; seo_title: string; seo_description: string }
+  category: { id: string; name: string; slug: string; description: string; seo_title: string; seo_description: string; updated_at: string }
   tests: PublicTest[]
   siblingCategories: SiblingCategory[]
 } | null> {
@@ -188,7 +188,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
   } catch { /* column not yet migrated */ }
 
   const { data: cat } = await db
-    .from('mock_test_categories').select('id, name, slug, description, seo_title, seo_description')
+    .from('mock_test_categories').select('id, name, slug, description, seo_title, seo_description, updated_at')
     .eq('slug', categorySlug).eq('location_id', loc.id).eq('is_active', true).single()
   if (!cat) return null
 
@@ -267,6 +267,7 @@ export async function getMockTestCategoryData(locationSlug: string, categorySlug
       description: cat.description ?? '',
       seo_title: cat.seo_title ?? '',
       seo_description: cat.seo_description ?? '',
+      updated_at: cat.updated_at ?? new Date().toISOString(),
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tests: (tests ?? []).map((t: any) => {

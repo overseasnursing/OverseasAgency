@@ -231,6 +231,8 @@ export function buildWebPageSchema(page: {
   title: string
   description: string
   path: string
+  dateModified?: string
+  datePublished?: string
 }) {
   return {
     '@context': 'https://schema.org',
@@ -239,6 +241,8 @@ export function buildWebPageSchema(page: {
     description: page.description,
     url: abs(page.path),
     isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: BASE_URL },
+    ...(page.dateModified  && { dateModified:  toSchemaDate(page.dateModified) }),
+    ...(page.datePublished && { datePublished: toSchemaDate(page.datePublished) }),
   }
 }
 
@@ -433,52 +437,77 @@ export function buildLearningResourceSchema(page: {
   }
 }
 
-// ─── Quiz ItemList (enriched — one item per mock test) ────────────────────────
+// ─── Product schema for mock test category pages ─────────────────────────────
+// Google deprecated the Quiz rich result; Product + AggregateRating is the
+// reliable path to star ratings in search results for a free digital product.
 
-export function buildQuizItemListSchema(
-  tests: Array<{
-    name:             string
-    slug:             string
-    duration_minutes: number
-    total_questions:  number
-    difficulty?:      string
-  }>,
-  basePath:     string,
-  categoryName: string,
-  examName?:    string,
-) {
-  if (!tests.length) return null
+export function buildMockTestProductSchema(page: {
+  name:         string
+  description:  string
+  path:         string
+  testCount:    number
+  imageUrl?:    string
+  avgRating?:   number
+  reviewCount?: number
+  reviews?: Array<{
+    reviewerName:    string
+    reviewerCountry: string | null
+    rating:          number
+    title:           string | null
+    text:            string | null
+    date:            string
+  }>
+}) {
+  const url = abs(page.path)
+
+  // Include AggregateRating from the first review — Google's Product rich result
+  // requires at least 1 review + visible reviews on the page.
+  const aggregate = (page.reviewCount ?? 0) >= 1 && (page.avgRating ?? 0) > 0
+    ? {
+        aggregateRating: {
+          '@type':      'AggregateRating',
+          ratingValue:  (page.avgRating ?? 0).toFixed(1),
+          reviewCount:  page.reviewCount,
+          bestRating:   '5',
+          worstRating:  '1',
+        },
+      }
+    : {}
+
+  const reviewItems = (page.reviews ?? []).slice(0, 5).map(r => ({
+    '@type': 'Review',
+    ...(r.title && { name: r.title }),
+    author: { '@type': 'Person', name: r.reviewerName },
+    reviewRating: {
+      '@type':     'Rating',
+      ratingValue: r.rating,
+      bestRating:  5,
+      worstRating: 1,
+    },
+    ...(r.text && { reviewBody: r.text }),
+    datePublished: r.date,
+  }))
+
   return {
     '@context': 'https://schema.org',
-    '@type':    'ItemList',
-    name:       `${categoryName} — Mock Tests`,
-    numberOfItems: tests.length,
-    itemListElement: tests.map((t, i) => ({
-      '@type':   'ListItem',
-      position:  i + 1,
-      item: {
-        '@type': ['Quiz', 'LearningResource'],
-        name:    t.name,
-        url:     abs(`${basePath}/${t.slug}`),
-        timeRequired:    `PT${t.duration_minutes}M`,
-        numberOfItems:   t.total_questions,
-        educationalLevel: 'Professional',
-        inLanguage:      'en',
-        isAccessibleForFree: true,
-        ...(t.difficulty && {
-          educationalAlignment: {
-            '@type':         'AlignmentObject',
-            alignmentType:   'educationalDifficulty',
-            targetName:      t.difficulty.charAt(0).toUpperCase() + t.difficulty.slice(1),
-          },
-        }),
-        ...(examName && {
-          assesses: examName,
-          about:    { '@type': 'DefinedTerm', name: examName },
-        }),
-        provider: { '@type': 'Organization', name: 'OverseasNursing', url: BASE_URL },
-      },
-    })),
+    '@type':    'Product',
+    name:       page.name,
+    description: page.description,
+    url,
+    ...(page.imageUrl && { image: abs(page.imageUrl) }),
+    brand: {
+      '@type': 'Brand',
+      name:    'OverseasNursing',
+    },
+    offers: {
+      '@type':        'Offer',
+      price:          '0',
+      priceCurrency:  'INR',
+      availability:   'https://schema.org/InStock',
+      url,
+    },
+    ...aggregate,
+    ...(reviewItems.length > 0 && { review: reviewItems }),
   }
 }
 

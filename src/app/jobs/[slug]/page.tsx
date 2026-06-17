@@ -117,7 +117,7 @@ export default async function JobDetailPage({ params }: PageProps) {
   const guides      = getCountryGuideLinks(countryKey)
 
   const [similarJobs, countryAgencies, mockTests] = await Promise.all([
-    getSimilarJobs(job.country, job.id, 6),
+    getSimilarJobs(job.country, job.id, 3),
     fetchAgenciesByCountry([job.country], 3),
     getMockTestLinksForCountry(countryKey),
   ])
@@ -349,21 +349,26 @@ export default async function JobDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* ── SECTION 2: Similar Jobs ── */}
+          {/* ── SECTION 2: Similar Jobs (priority — shown immediately after job details) ── */}
           {similarJobs.length > 0 && (
             <section className="mb-14">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[20px] font-bold text-slate-800">
-                  Similar Jobs in {job.country}
-                </h2>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-[22px] font-bold text-slate-900">
+                    Similar Jobs in {job.country}
+                  </h2>
+                  <p className="text-[13px] text-slate-500 mt-1">
+                    More {job.country} nursing opportunities you might like
+                  </p>
+                </div>
                 <a
                   href={`/jobs?country=${encodeURIComponent(job.country)}`}
-                  className="text-[13px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors"
+                  className="text-[13px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors flex-shrink-0"
                 >
                   View all <ArrowRight size={13} />
                 </a>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {similarJobs.map((j) => (
                   <JobCard key={j.id} job={j} />
                 ))}
@@ -371,34 +376,22 @@ export default async function JobDetailPage({ params }: PageProps) {
             </section>
           )}
 
-          {/* ── SECTION 3: Mock Tests ── */}
-          {mockTests.length > 0 && (
-            <section className="mb-14">
-              <h2 className="text-[20px] font-bold text-slate-800 mb-2">
-                Mock Tests for {job.country}
-              </h2>
-              <p className="text-[13.5px] text-slate-500 mb-5">
-                Practice with free mock tests to prepare for your nursing exams.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {mockTests.map((item) => (
-                  <LinkCard
-                    key={item.name}
-                    item={item}
-                    iconBg="bg-[#F0FDF4]"
-                    Icon={ClipboardList}
-                    iconColor="text-[#166534]"
-                  />
-                ))}
-              </div>
-            </section>
+          {/* ── DIVIDER: separates job content from supporting resources ── */}
+          {(countryAgencies.length > 0 || mockTests.length > 0 || guides.length > 0) && (
+            <div className="flex items-center gap-4 mb-12">
+              <div className="flex-1 h-px bg-slate-200" />
+              <span className="text-[11.5px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                Resources for {job.country}
+              </span>
+              <div className="flex-1 h-px bg-slate-200" />
+            </div>
           )}
 
-          {/* ── SECTION 4: Related Agencies ── */}
+          {/* ── SECTION 3: Related Agencies ── */}
           {countryAgencies.length > 0 && (
-            <section className="mb-14">
+            <section className="mb-12">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-[20px] font-bold text-slate-800">
+                <h2 className="text-[18px] font-bold text-slate-800">
                   Agencies Recruiting for {job.country}
                 </h2>
                 <a
@@ -416,17 +409,40 @@ export default async function JobDetailPage({ params }: PageProps) {
             </section>
           )}
 
+          {/* ── SECTION 4: Mock Tests ── */}
+          {mockTests.length > 0 && (
+            <section className="mb-12">
+              <h2 className="text-[18px] font-bold text-slate-800 mb-2">
+                Mock Tests for {job.country}
+              </h2>
+              <p className="text-[13px] text-slate-500 mb-5">
+                Practice with free mock tests to prepare for your nursing exams.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {mockTests.slice(0, 3).map((item) => (
+                  <LinkCard
+                    key={item.name}
+                    item={item}
+                    iconBg="bg-[#F0FDF4]"
+                    Icon={ClipboardList}
+                    iconColor="text-[#166634]"
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* ── SECTION 5: Country Guides ── */}
           {guides.length > 0 && (
             <section className="mb-8">
-              <h2 className="text-[20px] font-bold text-slate-800 mb-2">
+              <h2 className="text-[18px] font-bold text-slate-800 mb-2">
                 {job.country} Nursing Guides
               </h2>
-              <p className="text-[13.5px] text-slate-500 mb-5">
+              <p className="text-[13px] text-slate-500 mb-5">
                 Everything you need to know about nursing migration to {job.country}.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {guides.map((item) => (
+                {guides.slice(0, 3).map((item) => (
                   <LinkCard
                     key={item.name}
                     item={item}
