@@ -31,6 +31,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
 
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+/** Formats "2026-06-15" → "15 Jun 2026" — timezone-safe, no Date constructor quirks */
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return `${d} ${MONTHS[(m ?? 1) - 1]} ${y}`
+}
+
 type PageProps = { params: Promise<{ locationSlug: string; categorySlug: string }> }
 
 export async function generateStaticParams() {
@@ -92,15 +99,36 @@ export default async function CategoryPage({ params }: PageProps) {
     : `${category.name} — Free Mock Tests`
   const pageDesc  = category.seo_description || category.description ||
     `Practice ${category.name} with ${tests.length} free timed mock test${tests.length !== 1 ? 's' : ''}${totalQuestions > 0 ? ` and ${totalQuestions} questions` : ''}. Instant results + rationales. No sign-up needed for ${location.name} exam prep.`
-  const dateModified = category.updated_at ? category.updated_at.split('T')[0] : new Date().toISOString().split('T')[0]
 
+  // Must be before dateModified so the git/frontmatter date can be read
   const content = await getMockTestContent(category.id, categorySlug)
+
+  // Priority: git/frontmatter date on the .md file  →  DB modified_date  →  category DB updated_at  →  today
+  const dateModified =
+    content?.meta.modifiedDate
+    ?? (category.updated_at ? category.updated_at.split('T')[0] : null)
+    ?? new Date().toISOString().split('T')[0]
 
   const pagePath = `/mock-tests/${locationSlug}/${categorySlug}`
 
-  // Fetch reviews for schema + display
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
+
+  // Fetch 1 — true aggregate (no limit): used in schema aggregateRating + top star display.
+  // Only selects the rating column so it is very lightweight even with many reviews.
+  const { data: allRatings } = await db
+    .from('mock_test_reviews')
+    .select('rating')
+    .eq('category_id', category.id)
+    .eq('status', 'approved')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const trueCount: number = (allRatings ?? []).length
+  const trueAvg: number = trueCount > 0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? Math.round(((allRatings as { rating: number }[]).reduce((s, r) => s + r.rating, 0) / trueCount) * 10) / 10
+    : 0
+
+  // Fetch 2 — 20 most recent full reviews: used for individual review cards + schema review[] array.
   const { data: reviewRows, error: reviewErr } = await db
     .from('mock_test_reviews')
     .select('reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at')
@@ -125,10 +153,6 @@ export default async function CategoryPage({ params }: PageProps) {
   } else {
     reviews = reviewRows
   }
-  const reviewCount = reviews.length
-  const avgRating = reviewCount > 0
-    ? Math.round((reviews.reduce((s: number, r: { rating: number }) => s + r.rating, 0) / reviewCount) * 10) / 10
-    : 0
 
   // FAQs: prefer guide content FAQs; fall back to static exam-type FAQs
   const guideFaqs = content?.meta.faqs ?? []
@@ -157,9 +181,9 @@ export default async function CategoryPage({ params }: PageProps) {
       path:        pagePath,
       testCount:   tests.length,
       imageUrl:    `/api/og?type=exam&title=${encodeURIComponent(category.name)}&subtitle=${encodeURIComponent(location.name)}&tests=${tests.length}`,
-      avgRating,
-      reviewCount,
-      reviews: reviewCount > 0
+      avgRating:   trueAvg,
+      reviewCount: trueCount,
+      reviews: trueCount > 0
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? reviews.map((r: any) => ({
             reviewerName:    r.reviewer_name,
@@ -235,22 +259,30 @@ export default async function CategoryPage({ params }: PageProps) {
             <div className="flex-1">
               <h1 className="text-title-sm font-bold text-slate-900">{h1Title}</h1>
 
-              {/* Aggregate rating — shown only when reviews exist */}
-              {reviewCount > 0 && (
+              {/* Freshness signal — visible to Google and users */}
+              <p className="text-[12px] text-slate-400 mt-1.5">
+                Last updated:{' '}
+                <time dateTime={dateModified} className="font-medium text-slate-500">
+                  {fmtDate(dateModified)}
+                </time>
+              </p>
+
+              {/* Aggregate rating — shown only when reviews exist; uses true total count */}
+              {trueCount > 0 && (
                 <a
                   href="#candidate-reviews"
                   className="inline-flex items-center gap-2 mt-2 group"
                 >
                   <div className="flex items-center gap-0.5">
                     {[1, 2, 3, 4, 5].map(i => (
-                      <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={i <= Math.round(avgRating) ? '#F59E0B' : '#E2E8F0'}>
+                      <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={i <= Math.round(trueAvg) ? '#F59E0B' : '#E2E8F0'}>
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                       </svg>
                     ))}
                   </div>
-                  <span className="text-[14px] font-bold text-slate-800">{avgRating.toFixed(1)}</span>
+                  <span className="text-[14px] font-bold text-slate-800">{trueAvg.toFixed(1)}</span>
                   <span className="text-[13px] text-slate-500 group-hover:text-primary transition-colors">
-                    ({reviewCount} Review{reviewCount !== 1 ? 's' : ''})
+                    ({trueCount} Review{trueCount !== 1 ? 's' : ''})
                   </span>
                 </a>
               )}
@@ -311,7 +343,12 @@ export default async function CategoryPage({ params }: PageProps) {
         )}
 
         {/* Nurse reviews for this exam category */}
-        <MockTestReviews categoryId={category.id} examName={category.name} />
+        <MockTestReviews
+          categoryId={category.id}
+          examName={category.name}
+          totalCount={trueCount}
+          totalAvg={trueAvg}
+        />
 
         {/* Inline review form — lets users review any test without taking the exam */}
         {tests.length > 0 && (

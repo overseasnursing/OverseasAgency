@@ -50,21 +50,26 @@ export function buildFaqSchema(faqs: { question: string; answer: string }[]) {
 // ─── Organization ──────────────────────────────────────────────────────────────
 
 const ORGANIZATION_ENTITY = {
-  '@type': 'Organization',
-  name: 'OverseasNursing',
+  '@type':       'Organization',
+  '@id':         `${BASE_URL}#organization`,
+  name:          'OverseasNursing',
   alternateName: 'OverseasNursing.com',
-  url: BASE_URL,
+  url:           BASE_URL,
+  // PNG required — Google does not index SVG for Organization logo rich results
   logo: {
-    '@type': 'ImageObject',
-    url: `${BASE_URL}/og-image.svg`,
+    '@type':    'ImageObject',
+    url:        `${BASE_URL}/logo.png`,
+    contentUrl: `${BASE_URL}/logo.png`,
+    width:      1312,
+    height:     218,
   },
   description:
     'OverseasNursing is the independent comparison and review platform for Indian nurses migrating to Germany, UK, Australia, Canada, and Dubai. Real nurse reviews, transparent agency pricing, scam alerts, and expert exam guides.',
   foundingDate: '2024',
   contactPoint: {
-    '@type': 'ContactPoint',
-    contactType: 'customer support',
-    email: 'hello@overseasnursing.com',
+    '@type':           'ContactPoint',
+    contactType:       'customer support',
+    email:             'hello@overseasnursing.com',
     availableLanguage: ['English'],
   },
   sameAs: ['https://twitter.com/overseasnursing', 'https://instagram.com/overseasnursing'],
@@ -73,15 +78,24 @@ const ORGANIZATION_ENTITY = {
     'Indian nurse visa',
     'OET exam preparation',
     'NCLEX-RN exam',
+    'DHA exam preparation',
     'Germany nursing migration',
     'UK NMC registration',
     'Australia AHPRA registration',
+    'Canada nursing migration',
     'Nursing agency reviews',
     'Migration agency scams',
   ],
-  areaServed: { '@type': 'Country', name: 'India' },
+  // Destination countries the platform covers — not the nurses' country of origin
+  areaServed: [
+    { '@type': 'Country', name: 'Germany' },
+    { '@type': 'Country', name: 'United Kingdom' },
+    { '@type': 'Country', name: 'Australia' },
+    { '@type': 'Country', name: 'Canada' },
+    { '@type': 'Country', name: 'United Arab Emirates' },
+  ],
   audience: {
-    '@type': 'Audience',
+    '@type':      'Audience',
     audienceType: 'Indian registered nurses planning overseas migration',
   },
 }
@@ -216,7 +230,7 @@ export function buildArticleSchema(article: {
       '@type': 'Organization',
       name: SITE_NAME,
       url: BASE_URL,
-      logo: { '@type': 'ImageObject', url: `${BASE_URL}/og-image.svg` },
+      logo: { '@type': 'ImageObject', url: `${BASE_URL}/logo.png`, width: 1312, height: 218 },
     },
     audience: {
       '@type': 'Audience',
@@ -474,10 +488,22 @@ export function buildMockTestProductSchema(page: {
       }
     : {}
 
+  // Stable @id for this Product entity — lets nested reviews back-reference it explicitly
+  const productId = `${url}#product`
+
   const reviewItems = (page.reviews ?? []).slice(0, 5).map(r => ({
     '@type': 'Review',
     ...(r.title && { name: r.title }),
-    author: { '@type': 'Person', name: r.reviewerName },
+    // itemReviewed links each review back to the Product entity unambiguously —
+    // Google requires this to associate the review text with the star rating
+    itemReviewed: { '@id': productId },
+    author: {
+      '@type': 'Person',
+      name:    r.reviewerName,
+      ...(r.reviewerCountry && {
+        address: { '@type': 'PostalAddress', addressCountry: r.reviewerCountry },
+      }),
+    },
     reviewRating: {
       '@type':     'Rating',
       ratingValue: r.rating,
@@ -491,6 +517,7 @@ export function buildMockTestProductSchema(page: {
   return {
     '@context': 'https://schema.org',
     '@type':    'Product',
+    '@id':      productId,
     name:       page.name,
     description: page.description,
     url,
@@ -505,7 +532,6 @@ export function buildMockTestProductSchema(page: {
       priceCurrency:  'INR',
       availability:   'https://schema.org/InStock',
       url,
-      // PriceSpecification required by Google for Product rich results
       priceSpecification: {
         '@type':        'UnitPriceSpecification',
         price:          0,
