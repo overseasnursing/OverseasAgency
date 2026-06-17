@@ -791,3 +791,134 @@ export function buildAggregateRatingSchema(entity: {
     },
   }
 }
+
+// ─── JobPosting ───────────────────────────────────────────────────────────────
+
+// ISO 3166-1 alpha-2 codes for every destination country in the platform
+const JOB_COUNTRY_CODE: Record<string, string> = {
+  'Germany':              'DE',
+  'United Kingdom':       'GB',
+  'UK':                   'GB',
+  'Australia':            'AU',
+  'Canada':               'CA',
+  'Dubai':                'AE',
+  'UAE':                  'AE',
+  'United Arab Emirates': 'AE',
+  'Singapore':            'SG',
+  'New Zealand':          'NZ',
+  'Ireland':              'IE',
+  'Saudi Arabia':         'SA',
+  'Bahrain':              'BH',
+  'Kuwait':               'KW',
+  'Qatar':                'QA',
+  'Oman':                 'OM',
+}
+
+// Maps the free-text job_type stored in the DB to Google's accepted enum values
+const JOB_EMPLOYMENT_TYPE: Record<string, string> = {
+  'full-time':   'FULL_TIME',
+  'full time':   'FULL_TIME',
+  'fulltime':    'FULL_TIME',
+  'part-time':   'PART_TIME',
+  'part time':   'PART_TIME',
+  'parttime':    'PART_TIME',
+  'contract':    'CONTRACTOR',
+  'contractor':  'CONTRACTOR',
+  'temporary':   'TEMPORARY',
+  'temp':        'TEMPORARY',
+  'intern':      'INTERN',
+  'internship':  'INTERN',
+}
+
+/** Strips HTML tags and decodes common entities — safe for JSON-LD description fields */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g,  '&')
+    .replace(/&lt;/g,   '<')
+    .replace(/&gt;/g,   '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g,  "'")
+    .replace(/\s+/g,    ' ')
+    .trim()
+}
+
+export function buildJobPostingSchema(job: {
+  id:               string
+  title:            string
+  slug:             string
+  description:      string          // HTML — stripped before output
+  country:          string
+  city?:            string | null
+  state?:           string | null
+  job_type?:        string | null
+  salary_amount?:   number | null
+  salary_currency?: string | null
+  apply_type?:      'direct' | 'redirect' | null
+  created_at:       string          // DB timestamp — reliable; no git lookup needed
+  expiry_date?:     string | null
+  agency_name?:     string | null
+}) {
+  const pageUrl      = `${BASE_URL}/jobs/${job.slug}`
+  const countryCode  = JOB_COUNTRY_CODE[job.country] ?? job.country
+  const employType   = JOB_EMPLOYMENT_TYPE[(job.job_type ?? '').toLowerCase()] ?? 'FULL_TIME'
+
+  // DB created_at is the authoritative posted date for jobs (equivalent role to
+  // getGitFileDate for markdown files — both give the true first-creation timestamp)
+  const datePosted   = job.created_at.split('T')[0]
+
+  // validThrough: prefer the stored expiry, otherwise 1 year from posting
+  const validThrough = job.expiry_date
+    ? job.expiry_date.split('T')[0]
+    : new Date(new Date(job.created_at).getTime() + 365 * 24 * 60 * 60 * 1000)
+        .toISOString().split('T')[0]
+
+  return {
+    '@context':      'https://schema.org',
+    '@type':         'JobPosting',
+    title:           `${job.title} – ${job.country}`,
+    description:     stripHtml(job.description),
+    datePosted:      `${datePosted}T00:00:00Z`,
+    validThrough:    `${validThrough}T23:59:59Z`,
+    url:             pageUrl,
+    employmentType:  employType,
+    // Stable identifier lets Google deduplicate across crawls
+    identifier: {
+      '@type': 'PropertyValue',
+      name:    'OverseasNursing',
+      value:   job.id,
+    },
+    // Canonical link back to the parent Organization entity via @id
+    hiringOrganization: {
+      '@type':  'Organization',
+      '@id':    `${BASE_URL}#organization`,
+      name:     'OverseasNursing',
+      sameAs:   BASE_URL,
+      logo:     `${BASE_URL}/logo.png`,
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type':          'PostalAddress',
+        ...(job.city  && { addressLocality: job.city  }),
+        ...(job.state && { addressRegion:   job.state }),
+        addressCountry:   countryCode,
+      },
+    },
+    // baseSalary only emitted when structured salary data is present
+    ...((job.salary_amount ?? 0) > 0 && {
+      baseSalary: {
+        '@type':    'MonetaryAmount',
+        currency:   job.salary_currency ?? 'INR',
+        value: {
+          '@type':    'QuantitativeValue',
+          value:      job.salary_amount,
+          unitText:   'MONTH',
+        },
+      },
+    }),
+    // directApply signals whether candidates apply on-site or are redirected
+    directApply: job.apply_type !== 'redirect',
+  }
+}

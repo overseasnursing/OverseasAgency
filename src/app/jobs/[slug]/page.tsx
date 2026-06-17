@@ -12,7 +12,7 @@ import { hasUserApplied } from '@/lib/db/job-applications'
 import { fetchAgenciesByCountry } from '@/lib/data/fetchAgencies'
 import { getMockTestLinksForCountry } from '@/lib/data/getMockTestData'
 import { getCountryGuideLinks } from '@/lib/data/countries'
-import { buildBreadcrumbSchema } from '@/lib/seo/schemas'
+import { buildBreadcrumbSchema, buildJobPostingSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { JobCard } from '../_components/JobCard'
 import { ApplySection } from './ApplySection'
@@ -122,11 +122,28 @@ export default async function JobDetailPage({ params }: PageProps) {
     getMockTestLinksForCountry(countryKey),
   ])
 
-  const breadcrumbs = buildBreadcrumbSchema([
-    { name: 'Home',             href: '/' },
-    { name: 'Jobs',             href: '/jobs' },
-    { name: job.title,          href: `/jobs/${slug}` },
+  const breadcrumbs  = buildBreadcrumbSchema([
+    { name: 'Home',    href: '/' },
+    { name: 'Jobs',    href: '/jobs' },
+    { name: job.title, href: `/jobs/${slug}` },
   ])
+
+  const jobPosting = buildJobPostingSchema({
+    id:              job.id,
+    title:           job.title,
+    slug,
+    description:     job.description,
+    country:         job.country,
+    city:            job.city,
+    state:           job.state,
+    job_type:        job.job_type,
+    salary_amount:   job.salary_amount,
+    salary_currency: job.salary_currency,
+    apply_type:      job.apply_type,
+    created_at:      job.created_at,
+    expiry_date:     job.expiry_date,
+    agency_name:     job.agency_name,
+  })
 
   const postedDate = new Date(job.created_at).toLocaleDateString('en-IN', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -134,7 +151,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <MultiJsonLd schemas={[breadcrumbs]} />
+      <MultiJsonLd schemas={[buildOrganizationSchema(), jobPosting, breadcrumbs]} />
 
       <div className="bg-[#F8FAFC] min-h-screen">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-8 md:py-10">
