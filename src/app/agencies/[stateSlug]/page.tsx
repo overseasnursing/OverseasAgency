@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { MapPin, Building2, ChevronRight, TrendingUp, IndianRupee } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
+
 import { getAllStatesFromDb, getStatePageData } from '@/lib/data/getAgencyLocationData'
 import { fetchAgenciesByState } from '@/lib/data/fetchAgencies'
-import { AgencyCard } from '@/components/agencies/AgencyCard'
 import { buildStateAgencyMetadata } from '@/lib/seo/metadata'
 import { buildBreadcrumbSchema, buildFaqSchema, buildCollectionPageSchema, buildAgencyItemListSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
+import { StateAgencySection } from './_components/StateAgencySection'
 
 export const revalidate = 86400 // 24 h ISR — fresh data, fast delivery
 
@@ -78,8 +79,6 @@ export default async function StateAgencyPage({ params }: PageProps) {
     ),
   ]
 
-  const destText = data.topDestinations.slice(0, 3).join(', ')
-
   return (
     <>
       <MultiJsonLd schemas={schemas} />
@@ -88,73 +87,35 @@ export default async function StateAgencyPage({ params }: PageProps) {
       <div className="bg-[#F8FAFC] border-b border-slate-200">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
           <Breadcrumb items={breadcrumbItems} />
-          <div className="mt-4 max-w-3xl">
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin size={15} className="text-primary" />
-              <span className="text-[13px] font-semibold text-primary">India · {data.state}</span>
-            </div>
+          <div className="mt-4">
             <h1 className="text-[32px] sm:text-[40px] font-bold text-slate-900 leading-tight mb-3">
               Overseas Nursing Agencies in {data.state}
             </h1>
-            <p className="text-[15px] text-slate-500 leading-relaxed mb-5">
+            <p className="text-[15px] text-slate-500 leading-relaxed">
               {data.agencyCount} verified{' '}
-              agenc{data.agencyCount === 1 ? 'y' : 'ies'} across {data.cities.slice(0, 4).map(c => c.city).join(', ')}
+              agenc{data.agencyCount === 1 ? 'y' : 'ies'} across{' '}
+              {data.cities.slice(0, 4).map(c => c.city).join(', ')}
               {data.cities.length > 4 ? ` and ${data.cities.length - 4} more cities` : ''}.
-              {destText ? ` Placing nurses in ${destText} and more.` : ''}
             </p>
-            {data.topDestinations.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {data.topDestinations.map((dest) => (
-                  <Link
-                    key={dest}
-                    href={`/country/${dest.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                    className="text-[12px] font-medium text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full hover:border-primary hover:text-primary transition-colors"
-                  >
-                    {dest}
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* ── Stats bar ── */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-wrap items-center gap-6 text-[13px]">
-            <div className="flex items-center gap-1.5 text-slate-600">
-              <Building2 size={14} className="text-primary" />
-              <span className="font-semibold text-slate-800">{data.agencyCount}</span> agencies
-            </div>
-            {data.feeRange.minLakhs > 0 && (
-              <div className="flex items-center gap-1.5 text-slate-600">
-                <IndianRupee size={14} className="text-primary" />
-                Fees from{' '}
-                <span className="font-semibold text-slate-800">₹{data.feeRange.minLakhs}L–₹{data.feeRange.maxLakhs}L</span>
-              </div>
-            )}
-            {data.cities.length > 0 && (
-              <div className="flex items-center gap-1.5 text-slate-600">
-                <MapPin size={14} className="text-primary" />
-                <span className="font-semibold text-slate-800">{data.cities.length}</span> cities
-              </div>
-            )}
-            {destText && (
-              <div className="flex items-center gap-1.5 text-slate-600">
-                <TrendingUp size={14} className="text-primary" />
-                Top destinations: <span className="font-semibold text-slate-800">{destText}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* ── Stats bar + destination filters (client component) ── */}
+      <StateAgencySection
+        agencies={agencies}
+        destinations={data.topDestinations}
+        agencyCount={data.agencyCount}
+        feeRange={data.feeRange}
+        cityCount={data.cities.length}
+        stateName={data.state}
+      />
 
-      <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 pb-10">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
 
           {/* ── Main column ── */}
-          <main className="flex-1 min-w-0 flex flex-col gap-12">
+          <main className="flex-1 min-w-0 flex flex-col gap-12 pt-10">
 
             {/* Cities in this state */}
             {data.cities.length > 1 && (
@@ -183,30 +144,6 @@ export default async function StateAgencyPage({ params }: PageProps) {
                 </div>
               </section>
             )}
-
-            {/* Agency listings */}
-            <section aria-labelledby="agencies-heading">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 id="agencies-heading" className="text-[20px] font-bold text-slate-800 mb-1">
-                    All agencies in {data.state}
-                  </h2>
-                  <p className="text-[13.5px] text-slate-500">
-                    Sorted by rating · includes head offices and branch locations
-                  </p>
-                </div>
-              </div>
-
-              {agencies.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {agencies.map((agency) => (
-                    <AgencyCard key={agency.id} agency={agency} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[14px] text-slate-400 py-8 text-center">No agencies found for this state.</p>
-              )}
-            </section>
 
             {/* FAQ */}
             <section aria-labelledby="faq-heading">
