@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AdminProfile, AdminProfileRow } from '@/types/admin-profile'
 
@@ -82,6 +83,7 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
  * names are empty — the settings page must show whatever is saved.
  */
 export async function getAdminProfileForSettings(): Promise<AdminProfile | null> {
+  noStore()
   try {
     const db = createAdminClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,6 +109,7 @@ export type SiteSocialLinks = {
 }
 
 export async function getSiteSocialLinks(): Promise<SiteSocialLinks> {
+  noStore()
   try {
     const db = createAdminClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,9 +219,13 @@ export async function upsertAdminProfile(
       .from('admin_profile')
       .upsert(payload, { onConflict: 'id' })
 
-    if (error) return { error: error.message }
+    if (error) {
+      console.error('[upsertAdminProfile] Supabase error:', error)
+      return { error: error.message }
+    }
     return {}
   } catch (e) {
+    console.error('[upsertAdminProfile] Exception:', e)
     return { error: String(e) }
   }
 }
