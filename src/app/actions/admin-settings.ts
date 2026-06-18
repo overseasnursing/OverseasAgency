@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { upsertAdminProfile } from '@/lib/db/admin-profile'
 import type { AdminProfile } from '@/types/admin-profile'
 
@@ -67,6 +68,9 @@ export async function saveAdminSettings(
 
   const result = await upsertAdminProfile(profile)
   if (result.error) return { success: false, error: result.error }
+  // Bust cache so settings page and footer reflect new values immediately
+  revalidatePath('/admin/settings')
+  revalidatePath('/', 'layout')
   return { success: true }
 }
 
