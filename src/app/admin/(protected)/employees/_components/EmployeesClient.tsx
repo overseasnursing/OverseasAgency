@@ -12,11 +12,15 @@ import type { AdminPermission } from '@/lib/require-admin'
 /* ── Permission definitions ─────────────────────────────────── */
 
 const ALL_PERMISSIONS: { key: AdminPermission; label: string; description: string }[] = [
-  { key: 'agencies',     label: 'Agencies',     description: 'View and manage agency listings' },
-  { key: 'reviews',      label: 'Reviews',      description: 'Moderate and manage reviews' },
-  { key: 'scam-reports', label: 'Scam Reports', description: 'View and action scam reports' },
-  { key: 'mock-tests',   label: 'Mock Tests',   description: 'Manage mock test locations and content' },
-  { key: 'settings',     label: 'Settings',     description: 'Access admin settings' },
+  { key: 'agencies',       label: 'Agencies',        description: 'View and manage agency listings' },
+  { key: 'reviews',        label: 'Reviews',          description: 'Moderate and manage reviews' },
+  { key: 'scam-reports',   label: 'Scam Reports',     description: 'View and action scam reports' },
+  { key: 'mock-tests',     label: 'Mock Tests',       description: 'Manage mock test locations and content' },
+  { key: 'jobs',           label: 'Jobs',             description: 'Manage job listings and postings' },
+  { key: 'applications',   label: 'Applications',     description: 'View and manage job applications' },
+  { key: 'claim-listings', label: 'Claim Listings',   description: 'Review and approve agency claim requests' },
+  { key: 'blogs',          label: 'Blogs',            description: 'Create and manage blog content' },
+  { key: 'settings',       label: 'Settings',         description: 'Access admin settings' },
 ]
 
 /* ── Types ──────────────────────────────────────────────────── */
