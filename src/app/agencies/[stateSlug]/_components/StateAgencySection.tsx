@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Building2, MapPin, IndianRupee, SlidersHorizontal } from 'lucide-react'
 import { AgencyCard } from '@/components/agencies/AgencyCard'
+import { Pagination } from '@/components/ui/Pagination'
 import type { Agency } from '@/types/agency'
+
+const PAGE_SIZE = 12
 
 interface Props {
   agencies: Agency[]
@@ -31,7 +34,9 @@ export function StateAgencySection({
   stateName,
 }: Props) {
   const [selectedDest, setSelectedDest] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<SortKey>('rating')
+  const [sortBy, setSortBy]             = useState<SortKey>('rating')
+  const [page, setPage]                 = useState(1)
+  const sectionRef                      = useRef<HTMLElement>(null)
 
   const filtered = useMemo(() => {
     let result = agencies
@@ -45,8 +50,23 @@ export function StateAgencySection({
     })
   }, [agencies, selectedDest, sortBy])
 
-  const toggleDest = (dest: string) =>
-    setSelectedDest((prev) => (prev === dest ? null : dest))
+  const totalPages  = Math.ceil(filtered.length / PAGE_SIZE)
+  const pageAgencies = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  function applyFilter(dest: string | null) {
+    setSelectedDest(dest)
+    setPage(1)
+  }
+
+  function applySort(key: SortKey) {
+    setSortBy(key)
+    setPage(1)
+  }
+
+  function goToPage(p: number) {
+    setPage(p)
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <>
@@ -84,7 +104,7 @@ export function StateAgencySection({
                   Filter
                 </span>
                 <button
-                  onClick={() => setSelectedDest(null)}
+                  onClick={() => applyFilter(null)}
                   className={`text-[12.5px] font-medium px-3 py-1 rounded-full border transition-colors ${
                     selectedDest === null
                       ? 'bg-primary text-white border-primary'
@@ -96,7 +116,7 @@ export function StateAgencySection({
                 {destinations.map((dest) => (
                   <button
                     key={dest}
-                    onClick={() => toggleDest(dest)}
+                    onClick={() => applyFilter(dest === selectedDest ? null : dest)}
                     className={`text-[12.5px] font-medium px-3 py-1 rounded-full border transition-colors ${
                       selectedDest === dest
                         ? 'bg-primary text-white border-primary'
@@ -113,7 +133,11 @@ export function StateAgencySection({
       </div>
 
       {/* ── Agency listings ── */}
-      <section aria-labelledby="agencies-heading" className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 pt-10">
+      <section
+        ref={sectionRef}
+        aria-labelledby="agencies-heading"
+        className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 pt-10"
+      >
         {/* Section header + sort */}
         <div className="flex items-start sm:items-center justify-between gap-4 mb-5 flex-col sm:flex-row">
           <div>
@@ -123,14 +147,14 @@ export function StateAgencySection({
             <p className="text-[13.5px] text-slate-500">
               {selectedDest
                 ? `${filtered.length} ${filtered.length === 1 ? 'agency' : 'agencies'} placing nurses in ${selectedDest}`
-                : 'Sorted by rating · includes head offices and branch locations'}
+                : `${filtered.length} ${filtered.length === 1 ? 'agency' : 'agencies'} · sorted by rating`}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[12.5px] text-slate-400 hidden sm:block">Sort:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortKey)}
+              onChange={(e) => applySort(e.target.value as SortKey)}
               className="h-9 px-3 text-[13px] text-slate-700 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
             >
               {SORT_OPTIONS.map((opt) => (
@@ -141,12 +165,19 @@ export function StateAgencySection({
         </div>
 
         {/* Cards or empty state */}
-        {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filtered.map((agency) => (
-              <AgencyCard key={agency.id} agency={agency} />
-            ))}
-          </div>
+        {pageAgencies.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              {pageAgencies.map((agency) => (
+                <AgencyCard key={agency.id} agency={agency} />
+              ))}
+            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+            />
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
@@ -157,7 +188,7 @@ export function StateAgencySection({
               No agencies in {stateName} currently place nurses in {selectedDest}.
             </p>
             <button
-              onClick={() => setSelectedDest(null)}
+              onClick={() => applyFilter(null)}
               className="px-5 py-2.5 bg-primary text-white text-[13.5px] font-semibold rounded-xl hover:bg-primary-hover transition-colors"
             >
               Show all agencies

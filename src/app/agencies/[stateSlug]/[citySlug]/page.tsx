@@ -8,7 +8,7 @@ import { buildCityAgencyMetadata } from '@/lib/seo/metadata'
 import { buildBreadcrumbSchema, buildFaqSchema, buildCollectionPageSchema, buildAgencyItemListSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
-import { AgencyCard } from '@/components/agencies/AgencyCard'
+import { CityAgencyGrid } from './_components/CityAgencyGrid'
 
 export const revalidate = 86400
 
@@ -110,26 +110,12 @@ export default async function CityAgencyPage({ params }: PageProps) {
           <p className="text-[14.5px] text-slate-600 leading-relaxed">{data.description}</p>
         </section>
 
-        {/* Agency listings */}
-        <section aria-labelledby="agencies-heading">
-          <div className="mb-5">
-            <h2 id="agencies-heading" className="text-[20px] font-bold text-slate-800 mb-1">
-              Agencies in {data.city}
-            </h2>
-            <p className="text-[13.5px] text-slate-500">
-              {data.agencyCount} {data.agencyCount === 1 ? 'agency' : 'agencies'} · sorted by rating
-            </p>
-          </div>
-          {agencies.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-              {agencies.map((agency) => (
-                <AgencyCard key={agency.id} agency={agency} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-[14px] text-slate-400 py-8 text-center">No agencies found for this city.</p>
-          )}
-        </section>
+        {/* Agency listings with pagination */}
+        <CityAgencyGrid
+          agencies={agencies}
+          cityName={data.city}
+          agencyCount={data.agencyCount}
+        />
 
         {/* ── 3 info cards ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
