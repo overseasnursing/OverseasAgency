@@ -29,18 +29,21 @@ export async function submitVote(agencyId: string, agencySlug: string, vote: boo
 
   if (error) return { success: false, error: error.message }
 
-  // Fetch updated counts
-  const { data } = await db
-    .from('agency_votes')
-    .select('vote')
-    .eq('agency_id', agencyId)
-
-  const thumbsUp   = (data ?? []).filter((r: { vote: boolean }) => r.vote === true).length
-  const thumbsDown = (data ?? []).filter((r: { vote: boolean }) => r.vote === false).length
+  // Fetch updated counts (count-only, no row payload)
+  const { thumbsUp, thumbsDown } = await getVoteCounts(db, agencyId)
 
   revalidatePath(`/agency/${agencySlug}`)
 
   return { success: true, thumbsUp, thumbsDown, userVote: vote }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getVoteCounts(db: any, agencyId: string) {
+  const [up, down] = await Promise.all([
+    db.from('agency_votes').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('vote', true),
+    db.from('agency_votes').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('vote', false),
+  ])
+  return { thumbsUp: up.count ?? 0, thumbsDown: down.count ?? 0 }
 }
 
 export async function removeVote(agencyId: string, agencySlug: string): Promise<VoteResult> {
@@ -54,9 +57,7 @@ export async function removeVote(agencyId: string, agencySlug: string): Promise<
 
   await db.from('agency_votes').delete().eq('agency_id', agencyId).eq('user_id', user.id)
 
-  const { data } = await db.from('agency_votes').select('vote').eq('agency_id', agencyId)
-  const thumbsUp   = (data ?? []).filter((r: { vote: boolean }) => r.vote === true).length
-  const thumbsDown = (data ?? []).filter((r: { vote: boolean }) => r.vote === false).length
+  const { thumbsUp, thumbsDown } = await getVoteCounts(db, agencyId)
 
   revalidatePath(`/agency/${agencySlug}`)
 

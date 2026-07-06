@@ -132,9 +132,10 @@ export default async function CategoryPage({ params }: PageProps) {
     : 0
 
   // Fetch 2 — 20 most recent full reviews: used for individual review cards + schema review[] array.
+  // Fetched once here and passed down to MockTestReviews so it doesn't re-query the same rows.
   const { data: reviewRows, error: reviewErr } = await db
     .from('mock_test_reviews')
-    .select('reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at')
+    .select('id, reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at, mock_tests(name)')
     .eq('category_id', category.id)
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
@@ -146,13 +147,13 @@ export default async function CategoryPage({ params }: PageProps) {
   if (reviewErr || !reviewRows) {
     const { data: fb } = await db
       .from('mock_test_reviews')
-      .select('reviewer_name, rating, difficulty, review_text, created_at')
+      .select('id, reviewer_name, rating, difficulty, review_text, created_at')
       .eq('category_id', category.id)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(20)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reviews = (fb ?? []).map((r: any) => ({ ...r, reviewer_country: null, review_title: null }))
+    reviews = (fb ?? []).map((r: any) => ({ ...r, reviewer_country: null, review_title: null, mock_tests: null }))
   } else {
     reviews = reviewRows
   }
@@ -347,10 +348,10 @@ export default async function CategoryPage({ params }: PageProps) {
 
         {/* Nurse reviews for this exam category */}
         <MockTestReviews
-          categoryId={category.id}
           examName={category.name}
           totalCount={trueCount}
           totalAvg={trueAvg}
+          reviews={reviews}
         />
 
         {/* Inline review form — lets users review any test without taking the exam */}

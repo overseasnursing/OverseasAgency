@@ -77,17 +77,19 @@ export default async function MockTestReviewsAdmin({ searchParams }: PageProps) 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const reviews = (rows ?? []) as any[]
 
-  // Counts for tab badges
-  const { data: countRows } = await db
-    .from('mock_test_reviews')
-    .select('status')
-    .limit(500)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const counts: Record<string, number> = { all: (countRows ?? []).length }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(countRows ?? []).forEach((r: any) => {
-    counts[r.status] = (counts[r.status] ?? 0) + 1
-  })
+  // Counts for tab badges (count-only, zero row payload)
+  const [allCount, pendingCount, approvedCount, rejectedCount] = await Promise.all([
+    db.from('mock_test_reviews').select('*', { count: 'exact', head: true }),
+    db.from('mock_test_reviews').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    db.from('mock_test_reviews').select('*', { count: 'exact', head: true }).eq('status', 'approved'),
+    db.from('mock_test_reviews').select('*', { count: 'exact', head: true }).eq('status', 'rejected'),
+  ])
+  const counts: Record<string, number> = {
+    all:      allCount.count      ?? 0,
+    pending:  pendingCount.count  ?? 0,
+    approved: approvedCount.count ?? 0,
+    rejected: rejectedCount.count ?? 0,
+  }
 
   return (
     <div className="flex flex-col gap-6">

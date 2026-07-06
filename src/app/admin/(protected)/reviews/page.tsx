@@ -1,5 +1,5 @@
 import React from 'react'
-import { getAllReviewsAdmin } from '@/lib/db/reviews'
+import { getReviewStats, getReviewAgencyOptions } from '@/lib/db/reviews'
 import { approveReview, rejectReview, holdReview, removeReview } from '@/app/actions/moderate'
 import { requirePermission } from '@/lib/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -49,15 +49,20 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
 
   const totalPages = Math.ceil((filteredCount ?? 0) / PAGE_SIZE)
 
-  // All reviews for counts + agency filter options (no pagination)
-  const allReviews = await getAllReviewsAdmin('all')
+  // Tab counts (count-only, zero row payload) + narrow-column agency dropdown options
+  const [stats, agencyRows] = await Promise.all([
+    getReviewStats(),
+    getReviewAgencyOptions(),
+  ])
   const agencyOptions = Array.from(
-    new Map(allReviews.map(r => [r.agency_slug, r.agency_name])).entries()
+    new Map(agencyRows.map(r => [r.agency_slug, r.agency_name])).entries()
   ).sort((a, b) => (a[1] ?? '').localeCompare(b[1] ?? ''))
 
-  const counts: Record<string, number> = { all: allReviews.length }
-  for (const r of allReviews) {
-    counts[r.status ?? 'pending'] = (counts[r.status ?? 'pending'] ?? 0) + 1
+  const counts: Record<string, number> = {
+    all:      stats.total,
+    pending:  stats.pending,
+    approved: stats.approved,
+    rejected: stats.rejected,
   }
 
   function buildHref(p: number) {

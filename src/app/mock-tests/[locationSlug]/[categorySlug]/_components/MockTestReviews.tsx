@@ -1,5 +1,4 @@
 import { Star, MessageSquare, MapPin, ScrollText } from 'lucide-react'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 type Review = {
   id:               string
@@ -41,47 +40,20 @@ function formatDate(iso: string): string {
   })
 }
 
-export async function MockTestReviews({
-  categoryId,
+export function MockTestReviews({
   examName,
   totalCount,
   totalAvg,
+  reviews,
 }: {
-  categoryId:  string
   examName:    string
   /** True total count from all approved reviews — passed from parent to avoid a second full-scan */
   totalCount?: number
   /** True average from all approved reviews */
   totalAvg?:   number
+  /** Pre-fetched by the parent page (same rows used for the JSON-LD review schema) */
+  reviews:     Review[]
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createAdminClient() as any
-
-  // Fully server-rendered — Google crawls all review content from HTML source
-  const { data, error } = await db
-    .from('mock_test_reviews')
-    .select('id, reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at, mock_tests(name)')
-    .eq('category_id', categoryId)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
-    .limit(20)
-
-  // If v2 migration columns are missing, fall back to base columns only
-  let reviews: Review[]
-  if (error || !data) {
-    const { data: fallback } = await db
-      .from('mock_test_reviews')
-      .select('id, reviewer_name, rating, difficulty, review_text, created_at')
-      .eq('category_id', categoryId)
-      .eq('status', 'approved')
-      .order('created_at', { ascending: false })
-      .limit(20)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reviews = (fallback ?? []).map((r: any) => ({ ...r, reviewer_country: null, review_title: null, mock_tests: null }))
-  } else {
-    reviews = data
-  }
-
   if (reviews.length === 0) return null
 
   // Prefer the true aggregate passed from the parent (computed from ALL reviews, no limit).

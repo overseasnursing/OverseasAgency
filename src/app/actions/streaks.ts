@@ -97,22 +97,30 @@ export async function checkAchievements(userId: string): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const unlocked = new Set((existing ?? []).map((r: any) => r.achievement_key))
 
-  // Load stats in parallel
-  const [{ data: attempts }, { data: streak }, { data: bookmarks }] = await Promise.all([
-    db.from('mock_test_attempts').select('id, percentage').eq('user_id', userId).eq('status', 'submitted'),
+  // Load stats in parallel — counts/max instead of pulling every attempt row,
+  // since this runs on every exam submission and attempt counts grow unbounded.
+  const [
+    { count: submittedCount },
+    { count: passCount },
+    { data: topAttempt },
+    { data: streak },
+    { data: bookmarks },
+  ] = await Promise.all([
+    db.from('mock_test_attempts').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'submitted'),
+    db.from('mock_test_attempts').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'submitted').gte('percentage', 60),
+    db.from('mock_test_attempts').select('percentage').eq('user_id', userId).eq('status', 'submitted').order('percentage', { ascending: false }).limit(1),
     db.from('user_streaks').select('current_streak').eq('user_id', userId).maybeSingle(),
     db.from('mock_test_bookmarks').select('id').eq('user_id', userId).limit(1),
   ])
 
-  const submitted  = (attempts ?? []) as { id: string; percentage: number }[]
-  const passCount  = submitted.filter(a => Number(a.percentage ?? 0) >= 60).length
-  const maxPct     = submitted.length ? Math.max(...submitted.map(a => Number(a.percentage ?? 0))) : 0
+  const submitted  = submittedCount ?? 0
+  const maxPct     = Number(topAttempt?.[0]?.percentage ?? 0)
   const cs         = streak?.current_streak ?? 0
 
   const toUnlock: string[] = []
-  if (!unlocked.has('first_test')        && submitted.length >= 1)   toUnlock.push('first_test')
-  if (!unlocked.has('five_tests')        && submitted.length >= 5)   toUnlock.push('five_tests')
-  if (!unlocked.has('ten_tests')         && submitted.length >= 10)  toUnlock.push('ten_tests')
+  if (!unlocked.has('first_test')        && submitted >= 1)   toUnlock.push('first_test')
+  if (!unlocked.has('five_tests')        && submitted >= 5)   toUnlock.push('five_tests')
+  if (!unlocked.has('ten_tests')         && submitted >= 10)  toUnlock.push('ten_tests')
   if (!unlocked.has('perfect_score')     && maxPct >= 100)           toUnlock.push('perfect_score')
   if (!unlocked.has('ninety_plus')       && maxPct >= 90)            toUnlock.push('ninety_plus')
   if (!unlocked.has('seven_day_streak')  && cs >= 7)                 toUnlock.push('seven_day_streak')
