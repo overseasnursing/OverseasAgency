@@ -2,6 +2,18 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { Agency } from '@/types/agency'
 import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
 
+// Columns actually consumed by mapRow()/listing pages below — the `agencies`
+// table has 45+ columns (description, website, services, mea_license_*,
+// social_links, video_testimonials, etc.) that listing cards never render.
+const AGENCY_LISTING_COLUMNS = `
+  id, slug, name, location, city, state, established, trust_level, rating,
+  review_count, placement_count, transparency_score, countries,
+  exams_supported, pricing_min_lakhs, pricing_max_lakhs,
+  pricing_is_approximate, hidden_charges_reported, visa_sponsorship,
+  average_timeline_months, tagline, featured, logo_url, featured_image_url,
+  google_rating, google_review_count, google_place_id
+`
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRow(a: any): Agency {
   return {
@@ -54,7 +66,7 @@ export async function fetchFeaturedAgencies(limit = 6): Promise<Agency[]> {
   const db = createAdminClient() as any
   const { data } = await db
     .from('agencies')
-    .select('*')
+    .select(AGENCY_LISTING_COLUMNS)
     .eq('is_active', true)
     .order('transparency_score', { ascending: false })
     .limit(limit)
@@ -93,7 +105,7 @@ export async function fetchAgenciesByCity(citySlug: string): Promise<Agency[]> {
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select('*').eq('is_active', true),
+    db.from('agencies').select(AGENCY_LISTING_COLUMNS).eq('is_active', true),
     db.from('branches').select('agency_id, city'),
   ])
 
@@ -132,7 +144,7 @@ export async function fetchAgenciesByState(stateSlug: string): Promise<Agency[]>
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select('*').eq('is_active', true),
+    db.from('agencies').select(AGENCY_LISTING_COLUMNS).eq('is_active', true),
     db.from('branches').select('agency_id, state'),
   ])
 
@@ -180,7 +192,7 @@ export async function fetchAgenciesByCountry(
   // "UAE (Dubai)") on that already-narrowed set, not the whole table.
   const { data } = await db
     .from('agencies')
-    .select('*')
+    .select(AGENCY_LISTING_COLUMNS)
     .eq('is_active', true)
     .overlaps('countries', countryTerms)
     .order('transparency_score', { ascending: false })

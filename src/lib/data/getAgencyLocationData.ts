@@ -1,7 +1,10 @@
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { toSlug } from '@/lib/data/getLocationData'
 import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
 import type { LocationAgencyListing } from '@/types/location'
+
+const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricing_min_lakhs, pricing_max_lakhs, trust_level'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AgencyRow = Record<string, any>
@@ -95,17 +98,19 @@ export async function getAllStatesFromDb(): Promise<StateIndex[]> {
 
 /* ── Full page data for a single state ──────────────────────────────── */
 
-export async function getStatePageData(stateSlug: string): Promise<StatePageData | null> {
+// cache() dedupes this within a single request — generateMetadata() and the
+// page component both call getStatePageData(stateSlug) for the same render.
+export const getStatePageData = cache(async (stateSlug: string): Promise<StatePageData | null> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  const { data: agencyRows, error } = await db.from('agencies').select('*').eq('is_active', true)
+  const { data: agencyRows, error } = await db.from('agencies').select(AGENCY_COLUMNS).eq('is_active', true)
   if (error || !agencyRows?.length) return null
 
   const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)
 
   const [{ data: branchRows }, { data: reviewRows }] = await Promise.all([
-    db.from('branches').select('*').in('agency_id', agencyIds),
+    db.from('branches').select('agency_id, city, state').in('agency_id', agencyIds),
     db.from('reviews').select('agency_id, overall_rating').in('agency_id', agencyIds).eq('status', 'approved'),
   ])
 
@@ -222,4 +227,4 @@ export async function getStatePageData(stateSlug: string): Promise<StatePageData
       },
     ],
   }
-}
+})

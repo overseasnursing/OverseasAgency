@@ -1,6 +1,10 @@
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { LocationAgencyListing, LocationPageData } from '@/types/location'
 import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
+
+const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricing_min_lakhs, pricing_max_lakhs, trust_level'
+const BRANCH_COLUMNS = 'agency_id, city, state, address'
 
 type CityRow    = { city: string | null; state: string | null }
 type AgencyRow  = CityRow & { id: string; slug: string; name: string; location: string | null; countries: string[] | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null; trust_level: string | null }
@@ -99,13 +103,15 @@ export async function getLocationsByState(): Promise<
 
 /* ── Full page data for a single city ───────────────────────────────── */
 
-export async function getLocationPageData(citySlug: string): Promise<LocationPageData | null> {
+// cache() dedupes this within a single request — generateMetadata() and the
+// page component both call getLocationPageData(citySlug) for the same render.
+export const getLocationPageData = cache(async (citySlug: string): Promise<LocationPageData | null> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const { data: agencyRows, error } = await db
     .from('agencies')
-    .select('*')
+    .select(AGENCY_COLUMNS)
     .eq('is_active', true)
 
   if (error || !agencyRows?.length) return null
@@ -113,7 +119,7 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
   const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)
 
   const [{ data: branchRows }, { data: reviewRows }] = await Promise.all([
-    db.from('branches').select('*').in('agency_id', agencyIds),
+    db.from('branches').select(BRANCH_COLUMNS).in('agency_id', agencyIds),
     db.from('reviews')
       .select('agency_id, overall_rating')
       .in('agency_id', agencyIds)
@@ -241,4 +247,4 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
     ],
     relatedCountrySlugs,
   }
-}
+})

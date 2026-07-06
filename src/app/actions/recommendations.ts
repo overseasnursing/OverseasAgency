@@ -1,7 +1,32 @@
 'use server'
 
+import { unstable_cache }    from 'next/cache'
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+
+// The active/published test catalog is identical for every user and changes
+// rarely (admin-added tests) — share one query across all dashboard visits
+// instead of re-running the 3-table join per request.
+const getActiveTestCatalog = unstable_cache(
+  async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = createAdminClient() as any
+    const { data } = await db
+      .from('mock_tests')
+      .select(`
+        id, name, slug, passing_percentage, is_premium,
+        mock_test_categories ( name, slug, mock_test_locations ( slug ) )
+      `)
+      .eq('is_active', true)
+      .eq('status',    'published')
+      .eq('is_premium', false)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    return data ?? []
+  },
+  ['active-test-catalog'],
+  { revalidate: 3600 },
+)
 
 export type StudyRecommendation = {
   testId:       string
@@ -39,18 +64,8 @@ export async function getStudyRecommendations(): Promise<StudyRecommendation[]> 
     if (cur === undefined || pct > cur) attemptedMap.set(a.mock_test_id, pct)
   })
 
-  // Get all active published tests
-  const { data: allTests } = await db
-    .from('mock_tests')
-    .select(`
-      id, name, slug, passing_percentage, is_premium,
-      mock_test_categories ( name, slug, mock_test_locations ( slug ) )
-    `)
-    .eq('is_active', true)
-    .eq('status',    'published')
-    .eq('is_premium', false)
-    .order('created_at', { ascending: false })
-    .limit(100)
+  // Get all active published tests (shared cache — see getActiveTestCatalog)
+  const allTests = await getActiveTestCatalog()
 
   const recs: StudyRecommendation[] = []
 

@@ -26,7 +26,13 @@ export async function getAgencies(): Promise<Agency[]> {
 
   const { data: agencyRows, error } = await db
     .from('agencies')
-    .select('*')
+    .select(`
+      id, slug, name, logo_url, featured_image_url, location, city, state,
+      established, trust_level, placement_count, transparency_score,
+      countries, exams_supported, pricing_min_lakhs, pricing_max_lakhs,
+      pricing_is_approximate, visa_sponsorship, average_timeline_months,
+      tagline, featured, google_place_id, google_rating, google_review_count
+    `)
     .eq('is_active', true)
 
   if (error || !agencyRows?.length) return []

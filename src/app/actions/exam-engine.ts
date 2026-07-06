@@ -90,7 +90,8 @@ export async function submitExam(
     const marksAwarded  = isCorrect ? marks : 0
     obtainedMarks += marksAwarded
     answerUpdates.push({
-      id:            row.id,
+      attempt_id:    attemptId,
+      question_id:   row.question_id,
       is_correct:    row.selected_answer !== null ? isCorrect : null,
       marks_awarded: marksAwarded,
     })
@@ -101,15 +102,12 @@ export async function submitExam(
   const submittedAt = new Date()
   const timeTaken   = Math.floor((submittedAt.getTime() - new Date(attempt.started_at).getTime()) / 1000)
 
-  // Update each answer row with is_correct + marks_awarded
-  await Promise.all(
-    answerUpdates.map((upd: { id: string; is_correct: boolean | null; marks_awarded: number }) =>
-      db.from('mock_test_answers').update({
-        is_correct:    upd.is_correct,
-        marks_awarded: upd.marks_awarded,
-      }).eq('id', upd.id)
-    )
-  )
+  // Update every answer row with is_correct + marks_awarded in a single round-trip
+  if (answerUpdates.length > 0) {
+    await db
+      .from('mock_test_answers')
+      .upsert(answerUpdates, { onConflict: 'attempt_id,question_id' })
+  }
 
   // Finalize attempt
   const { error } = await db

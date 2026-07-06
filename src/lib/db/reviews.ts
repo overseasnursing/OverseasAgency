@@ -100,6 +100,18 @@ export async function getReviewStats(): Promise<{
   }
 }
 
+export async function getReviewAgencyOptions(): Promise<{ agency_slug: string | null; agency_name: string | null }[]> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('reviews')
+    .select('agency_slug, agency_name')
+  if (error) {
+    console.error('[reviews] getReviewAgencyOptions:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
 export async function getRecentReviewsAdmin(limit = 5): Promise<ReviewRow[]> {
   const db = createAdminClient()
   const { data, error } = await db
