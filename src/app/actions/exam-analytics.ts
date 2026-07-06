@@ -2,6 +2,7 @@
 
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin }      from '@/lib/require-admin'
 
 const ts = () => new Date().toISOString()
 
@@ -201,6 +202,7 @@ export type TestAdminAnalytics = {
 export async function getTestAdminAnalytics(
   testId: string,
 ): Promise<TestAdminAnalytics> {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 

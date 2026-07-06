@@ -4,6 +4,8 @@ import { Navbar } from '@/components/navbar/Navbar'
 import { MobileNav } from '@/components/navbar/MobileNav'
 import { SiteFooter } from '@/components/layout/SiteFooter'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
+import { CookieConsentProvider } from '@/components/cookies/CookieConsentContext'
+import { CookieConsentBanner } from '@/components/cookies/CookieConsentBanner'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
@@ -69,37 +71,54 @@ export const metadata: Metadata = {
 }
 
 
+// "cdn.supabase.co" isn't a domain Supabase actually serves storage from —
+// the real origin is the project's own *.supabase.co URL (matches the
+// `*.supabase.co` remotePattern in next.config.js). Derive it from the env
+// var so the preconnect hint targets where agency logos/images actually load
+// from, instead of an origin the browser never connects to.
+const supabaseOrigin = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : null
+  } catch {
+    return null
+  }
+})()
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-IN" className={manrope.variable}>
       <head>
-        {/* Preconnect to analytics + CDN origins so scripts load faster */}
+        {/* Preconnect to image/analytics origins so they load faster */}
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
-        <link rel="preconnect" href="https://cdn.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://flagcdn.com" />
+        {supabaseOrigin && <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />}
       </head>
       <body suppressHydrationWarning className="font-sans bg-[#F8FAFC] text-slate-900 antialiased">
 
-        {/* Skip to content — keyboard / screen reader */}
-        <a
-          href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
-        >
-          Skip to content
-        </a>
+        <CookieConsentProvider>
+          {/* Skip to content — keyboard / screen reader */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+          >
+            Skip to content
+          </a>
 
-        <Navbar />
+          <Navbar />
 
-        <main id="main-content">
-          {children}
-        </main>
+          <main id="main-content">
+            {children}
+          </main>
 
-        <SiteFooter />
+          <SiteFooter />
 
-        <MobileNav />
-        <ScrollToTop />
-        <AnalyticsProvider />
-        <Analytics />
-        <SpeedInsights />
+          <MobileNav />
+          <ScrollToTop />
+          <AnalyticsProvider />
+          <CookieConsentBanner />
+          <Analytics />
+          <SpeedInsights />
+        </CookieConsentProvider>
 
       </body>
     </html>

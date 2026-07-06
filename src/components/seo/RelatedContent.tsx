@@ -1,25 +1,32 @@
 import React from 'react'
 import { InternalLinkCluster, type ClusterLink } from './InternalLinkCluster'
+import { getCountryBySlug } from '@/lib/data/countryList'
 
 // ─── Pre-built cluster types ──────────────────────────────────────────────────
 
-export function RelatedCountriesCluster({ countrySlugs }: { countrySlugs: string[] }) {
-  const COUNTRY_META: Record<string, { name: string; tagline: string }> = {
-    germany:   { name: 'Germany',         tagline: 'EU Blue Card + long-term PR' },
-    uk:        { name: 'United Kingdom',  tagline: 'NHS jobs, fast process' },
-    canada:    { name: 'Canada',          tagline: 'Express Entry + PR pathway' },
-    australia: { name: 'Australia',       tagline: 'High salary + skilled visa' },
-    dubai:     { name: 'Dubai / UAE',     tagline: 'Tax-free, fastest process' },
-  }
+const COUNTRY_META: Record<string, { name: string; tagline: string }> = {
+  germany:   { name: 'Germany',         tagline: 'EU Blue Card + long-term PR' },
+  uk:        { name: 'United Kingdom',  tagline: 'NHS jobs, fast process' },
+  canada:    { name: 'Canada',          tagline: 'Express Entry + PR pathway' },
+  australia: { name: 'Australia',       tagline: 'High salary + skilled visa' },
+  dubai:     { name: 'Dubai / UAE',     tagline: 'Tax-free, fastest process' },
+}
 
+export function RelatedCountriesCluster({ countrySlugs }: { countrySlugs: string[] }) {
   const links: ClusterLink[] = countrySlugs
     .map((slug) => {
+      // Falls back to the canonical country name (with no tagline) for any
+      // slug not in COUNTRY_META above, instead of silently dropping the
+      // entry — previously a destination missing from this file's own map
+      // just vanished from the cluster with no fallback, unlike the sibling
+      // pricing/salary clusters below.
       const meta = COUNTRY_META[slug]
-      if (!meta) return null
+      const name = meta?.name ?? getCountryBySlug(slug)?.name
+      if (!name) return null
       return {
         href: `/country/${slug}`,
-        label: meta.name,
-        description: meta.tagline,
+        label: name,
+        description: meta?.tagline,
       }
     })
     .filter(Boolean) as ClusterLink[]

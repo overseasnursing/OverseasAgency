@@ -4,7 +4,13 @@ import { useState, useEffect, useTransition } from 'react'
 import { Star, Globe, CheckCircle, PenLine, ChevronDown, LogIn, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { submitMockTestReview } from '@/app/actions/submitMockTestReview'
-import { CountrySelect } from '@/components/ui/LocationCascade'
+import { FormSelect } from '@/components/ui/FormSelect'
+import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
+
+// Avoids pulling in `country-state-city` (a ~2MB-gzipped world dataset) just
+// for a short destination-country dropdown — this form only ever needs the
+// site's own destination list, same one used by review/scam-report forms.
+const COUNTRY_OPTIONS = COUNTRY_FORM_OPTIONS.map((name) => ({ label: name, value: name }))
 
 type TestOption = { id: string; name: string }
 
@@ -295,7 +301,8 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
                   <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
                     Your Country <span className="text-slate-400 font-normal normal-case">(optional)</span>
                   </p>
-                  <CountrySelect
+                  <FormSelect
+                    options={COUNTRY_OPTIONS}
                     value={reviewerCountry || null}
                     onChange={(label) => setCountry(label ?? '')}
                     placeholder="Select your country…"

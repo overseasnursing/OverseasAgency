@@ -72,6 +72,9 @@ export interface FAQ {
 }
 
 export interface AgencyDetail extends Omit<Agency, 'pricing'> {
+  // Country the agency recruits nurses FROM — defaults to 'India' for every
+  // existing row (see agencies.source_country migration).
+  sourceCountry: string
   seoTitle?: string
   seoDescription?: string
   description: string

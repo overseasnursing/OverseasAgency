@@ -79,7 +79,7 @@ ${exams.map(e =>
 ## Migration Guides (${guides.length} articles)
 
 ${guides.map(g =>
-  `- [${g.title}](${BASE}/country/${g.country.toLowerCase()}/guides/${g.slug}) — ${g.category} · ${g.readingTimeMinutes} min read`
+  `- [${g.title}](${BASE}/guides/${g.slug}) — ${g.category} · ${g.readingTimeMinutes} min read`
 ).join('\n')}
 
 ## About

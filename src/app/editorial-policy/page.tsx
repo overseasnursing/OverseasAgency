@@ -118,7 +118,7 @@ export default function EditorialPolicyPage() {
               undergoes the following process before appearing on the platform:
             </p>
             <ol className="list-decimal pl-5 flex flex-col gap-2 mb-3">
-              <li><strong>Account creation with email verification.</strong> Reviewers must create an account using a valid, verified email address. Unverified accounts cannot submit reviews.</li>
+              <li><strong>Sign-in is optional, not required.</strong> Reviews can be submitted with or without a registered account — we deliberately keep this low-friction so nurses without time or ability to create an account can still warn others. Every review, signed-in or not, goes through the same manual moderation below.</li>
               <li><strong>Mandatory disclosures.</strong> Reviewers must state the agency used, destination country, approximate migration timeline, and whether they received their visa or employment offer.</li>
               <li><strong>Manual moderation.</strong> Every review is read by a member of the OverseasNursing moderation team. Automated approval is not used for any review.</li>
               <li><strong>Consistency checks.</strong> We check for: implausible timelines relative to stated destinations, costs that fall far outside observed ranges for stated services, duplicate submissions, and writing patterns inconsistent with genuine first-person accounts.</li>
@@ -215,7 +215,7 @@ export default function EditorialPolicyPage() {
           <div className="border-t border-slate-100" />
 
           {/* 6. Editorial independence */}
-          <section>
+          <section id="trust-status">
             <h2 className="text-[20px] font-bold text-slate-800 mb-4">
               6. Editorial Independence Policy
             </h2>
@@ -231,10 +231,16 @@ export default function EditorialPolicyPage() {
               <li>Agency rankings on listing pages are calculated algorithmically from user ratings, review volume, and transparency score — not from commercial agreements</li>
               <li>The editorial team operates independently of the business development team; no editorial decision requires commercial approval</li>
             </ul>
+            <p className="mb-3">
+              Agency profiles may display a trust status — Verified, Trusted, Unverified, or Scam Reported.
+              This status is assigned by the editorial team at no cost to the agency; it cannot currently be
+              purchased, and has no effect on review scores or search ranking.
+            </p>
             <p>
-              If our commercial model changes — for example, if we introduce a verified agency badge with
-              a listing fee — this will be disclosed prominently in this policy and on the relevant listing
-              pages. Any such commercial relationship will have no effect on review scores or content coverage.
+              If our commercial model changes — for example, if we introduce a paid tier on top of the
+              existing free trust status — this will be disclosed prominently in this policy and on the
+              relevant listing pages. Any such commercial relationship will have no effect on review scores
+              or content coverage.
             </p>
           </section>
 

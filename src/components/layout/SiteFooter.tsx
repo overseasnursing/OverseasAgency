@@ -1,5 +1,6 @@
 import type { JSX } from 'react'
 import { getSiteSocialLinks } from '@/lib/db/admin-profile'
+import { CookiePreferencesLink } from '@/components/cookies/CookiePreferencesLink'
 
 const FOOTER_LINKS = {
   Navigate: [
@@ -178,6 +179,7 @@ export async function SiteFooter() {
                 </a>
               )
             )}
+            <CookiePreferencesLink />
           </div>
         </div>
       </div>

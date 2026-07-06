@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Search, X, Briefcase } from 'lucide-react'
 import { JobCard } from './_components/JobCard'
 import type { ActiveJobListing } from '@/lib/db/jobs'
@@ -12,9 +12,18 @@ interface JobsClientProps {
 
 export function JobsClient({ jobs }: JobsClientProps) {
   const [search, setSearch]       = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [country, setCountry]     = useState('')
   const [experience, setExperience] = useState('')
   const [currency, setCurrency]   = useState('')
+
+  // Debounce the search text — filtering re-renders every JobCard in the
+  // (unbounded) results grid, so re-filtering on every keystroke is a real
+  // jank risk on slow Android CPUs once the job list grows.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 250)
+    return () => clearTimeout(timer)
+  }, [search])
 
   const countries = useMemo(() => {
     const all = jobs.map((j) => j.country).filter(Boolean)
@@ -27,7 +36,7 @@ export function JobsClient({ jobs }: JobsClientProps) {
   }, [jobs])
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
+    const q = debouncedSearch.toLowerCase().trim()
     const range = EXPERIENCE_FILTER_RANGES.find((r) => r.label === experience)
     return jobs.filter((j) => {
       if (q && !j.title.toLowerCase().includes(q)) return false
@@ -39,7 +48,7 @@ export function JobsClient({ jobs }: JobsClientProps) {
       }
       return true
     })
-  }, [jobs, search, country, experience, currency])
+  }, [jobs, debouncedSearch, country, experience, currency])
 
   const hasFilters = search.length > 0 || country.length > 0 || experience.length > 0 || currency.length > 0
 

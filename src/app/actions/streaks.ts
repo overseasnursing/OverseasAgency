@@ -18,6 +18,15 @@ export type Achievement = {
   unlocked_at: string
 }
 
+// Every export below takes a userId param but must only ever act on the
+// caller's own data — without this check any client could read or mutate
+// another user's streak/achievement rows by passing their id directly.
+async function assertOwnUser(userId: string): Promise<boolean> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return !!user && user.id === userId
+}
+
 const ACHIEVEMENT_DEFS: Record<string, Omit<Achievement, 'unlocked_at'>> = {
   first_test:       { key: 'first_test',       label: 'First Step',      description: 'Complete your first mock test',          icon: '🎯' },
   five_tests:       { key: 'five_tests',        label: 'Getting Serious', description: 'Complete 5 mock tests',                  icon: '📚' },
@@ -32,6 +41,7 @@ const ACHIEVEMENT_DEFS: Record<string, Omit<Achievement, 'unlocked_at'>> = {
 
 /* ── Update streak after study activity ─────────────────────────────── */
 export async function updateStreak(userId: string): Promise<void> {
+  if (!(await assertOwnUser(userId))) return
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db    = createAdminClient() as any
   const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
@@ -75,6 +85,7 @@ export async function updateStreak(userId: string): Promise<void> {
 
 /* ── Check and unlock achievements ──────────────────────────────────── */
 export async function checkAchievements(userId: string): Promise<void> {
+  if (!(await assertOwnUser(userId))) return
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -122,6 +133,9 @@ export async function checkAchievements(userId: string): Promise<void> {
 
 /* ── Read streak for dashboard ───────────────────────────────────────── */
 export async function getUserStreak(userId: string): Promise<UserStreak> {
+  if (!(await assertOwnUser(userId))) {
+    return { current_streak: 0, longest_streak: 0, last_study_date: null, total_study_days: 0 }
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data } = await db
@@ -140,6 +154,7 @@ export async function getUserStreak(userId: string): Promise<UserStreak> {
 
 /* ── Read achievements for dashboard ────────────────────────────────── */
 export async function getUserAchievements(userId: string): Promise<Achievement[]> {
+  if (!(await assertOwnUser(userId))) return []
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data } = await db

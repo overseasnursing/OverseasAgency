@@ -9,6 +9,8 @@ export const LAST_REVIEWED = {
   comparisons: 'May 2026',
   // agency data has no lastUpdated field; update this when agency profiles are reviewed.
   agencies: 'May 2026',
+  // guides.ts has no lastUpdated field; update this when guide content is reviewed.
+  guides: 'May 2026',
 } as const
 
 export type ReviewedDataset = keyof typeof LAST_REVIEWED

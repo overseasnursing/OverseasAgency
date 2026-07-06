@@ -1,6 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 
 const ts = () => new Date().toISOString()
@@ -21,6 +22,7 @@ async function resolvePublicPath(db: any, testId: string): Promise<string | null
 export async function cloneMockTest(
   testId: string,
 ): Promise<{ newTestId?: string; error?: string }> {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -97,6 +99,7 @@ export async function setTestStatus(
   testId: string,
   status: 'published' | 'draft' | 'archived',
 ): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db
@@ -119,6 +122,7 @@ export async function toggleTestPremium(
   testId:     string,
   isPremium:  boolean,
 ): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { error } = await db
@@ -134,6 +138,7 @@ export async function toggleTestPremium(
 export async function cloneCategory(
   categoryId: string,
 ): Promise<{ newCategoryId?: string; error?: string }> {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 

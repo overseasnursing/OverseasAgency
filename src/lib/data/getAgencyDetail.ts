@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AgencyDetail } from '@/types/agencyDetail'
 import type { ReviewSnippet } from '@/types/agency'
@@ -36,7 +37,10 @@ function parseCost(text: string | null): number {
 
 /* ── Main fetcher ────────────────────────────────────────────────── */
 
-export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null> {
+// cache() dedupes this within a single request — generateMetadata() and the
+// page component both call getAgencyDetail(slug) for the same render, and
+// without this they'd run the full 5-query chain twice.
+export const getAgencyDetail = cache(async (slug: string): Promise<AgencyDetail | null> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -112,6 +116,7 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
     placementCount:       a.placement_count,
     transparencyScore:    a.transparency_score ?? 0,
     countries:            a.countries        ?? [],
+    sourceCountry:        a.source_country   ?? 'India',
     examsSupported:       a.exams_supported  ?? [],
     hiddenChargesReported:computedHiddenCharges,
     visaSponsorship:      a.visa_sponsorship,
@@ -241,4 +246,4 @@ export async function getAgencyDetail(slug: string): Promise<AgencyDetail | null
       resolutionNote:s.agency_response_text ?? undefined,
     })),
   }
-}
+})

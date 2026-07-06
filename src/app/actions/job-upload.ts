@@ -2,6 +2,7 @@
 
 import { requirePermission } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
+import { matchesFileSignature } from '@/lib/validateFileSignature'
 
 const ALLOWED_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -25,6 +26,10 @@ export async function uploadJobLogo(
 
   const path   = `logos/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
+
+  if (!matchesFileSignature(buffer, file.type)) {
+    return { error: 'File content does not match its declared type.' }
+  }
 
   try {
     const url = await uploadToR2('job-assets', path, buffer, file.type)

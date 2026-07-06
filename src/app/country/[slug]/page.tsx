@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { getCountryDetail, getAllCountrySlugs } from '@/lib/data/countries'
+import { getCountryDetail, getAllCountrySlugs, COUNTRY_SOURCES } from '@/lib/data/countries'
 import { LAST_REVIEWED } from '@/lib/data/freshness'
 import { buildArticleSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { FlagIcon } from '@/components/ui/FlagIcon'
@@ -17,40 +17,7 @@ import { CountryReviews } from './components/CountryReviews'
 import { CountryFaqAccordion } from './components/CountryFaqAccordion'
 import { RelatedGuides } from './components/RelatedGuides'
 import { RelatedCountries } from './components/RelatedCountries'
-import { ContentAttribution, type AttributionSource } from '@/components/seo/ContentAttribution'
-
-const COUNTRY_SOURCES: Record<string, AttributionSource[]> = {
-  germany: [
-    { label: 'Federal Employment Agency (Bundesagentur für Arbeit), Germany' },
-    { label: 'Recognition in Germany — Make it in Germany (federal portal)' },
-    { label: 'German Nursing Act (Pflegeberufegesetz — PflBG)' },
-    { label: 'Goethe-Institut — Language Certification Standards' },
-  ],
-  uk: [
-    { label: 'Nursing and Midwifery Council (NMC), United Kingdom' },
-    { label: 'UK Home Office — Health and Care Worker Visa guidance' },
-    { label: 'NHS Employers — Agenda for Change Pay Scales' },
-    { label: 'UK Visas and Immigration (UKVI)' },
-  ],
-  canada: [
-    { label: 'Immigration, Refugees and Citizenship Canada (IRCC)' },
-    { label: 'Canadian Nurses Association (CNA)' },
-    { label: 'National Nursing Assessment Service (NNAS)' },
-    { label: 'National Council of State Boards of Nursing (NCSBN) — NCLEX' },
-  ],
-  australia: [
-    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
-    { label: 'Australian Department of Home Affairs' },
-    { label: 'Australian Nursing and Midwifery Accreditation Council (ANMAC)' },
-    { label: 'Fair Work Commission — Nursing and Midwifery Industry Award' },
-  ],
-  dubai: [
-    { label: 'Dubai Health Authority (DHA) — Health Regulation Sector' },
-    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA), Dubai' },
-    { label: 'Ministry of Human Resources & Emiratisation (MOHRE), UAE' },
-    { label: 'Department of Health Abu Dhabi (DOH)' },
-  ],
-}
+import { ContentAttribution } from '@/components/seo/ContentAttribution'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -71,10 +38,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? `${salary.localSymbol}${salary.localMin.toLocaleString()}–${salary.localMax.toLocaleString()}/month`
       : `${salary.localSymbol}${Math.round(salary.localMin / 1000)}K–${Math.round(salary.localMax / 1000)}K/year`
 
-  const title = `Nursing in ${country.name} for Indian Nurses — Salary, Visa & Migration Guide (2025)`
+  const title = `Nursing in ${country.name} for Indian Nurses — Salary, Visa & Migration Guide (${new Date().getFullYear()})`
   const description = `Complete guide for Indian nurses migrating to ${country.name}. Salary ${salaryDisplay}, visa processing ${country.visaProcessingWeeks.min}–${country.visaProcessingWeeks.max} weeks, total cost ₹${(country.totalMigrationCostMin / 100000).toFixed(1)}–${(country.totalMigrationCostMax / 100000).toFixed(1)}L. Exam requirements, top agencies, and nurse reviews.`
 
-  const ogImage = `/og/country-${slug}.png`
+  // No static /og/country-*.png files exist — render a real image on demand instead.
+  const ogImage = `/api/og?type=default&title=${encodeURIComponent(title)}`
 
   return {
     title,

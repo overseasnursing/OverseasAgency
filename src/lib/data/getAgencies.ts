@@ -35,11 +35,20 @@ export async function getAgencies(): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const agencyIds: string[] = agencyRows.map((a: any) => a.id as string)
 
-  // Fetch all branches for branch-location filtering
-  const { data: branchRows } = await db
-    .from('branches')
-    .select('agency_id, city, state')
-    .in('agency_id', agencyIds)
+  // Branches and reviews are independent lookups — fetch in parallel instead
+  // of adding two sequential round-trips to this listing page's TTFB.
+  const [{ data: branchRows }, { data: reviewRows }] = await Promise.all([
+    db
+      .from('branches')
+      .select('agency_id, city, state')
+      .in('agency_id', agencyIds),
+    db
+      .from('reviews')
+      .select('agency_id, author_name, author_from, country_placed, overall_rating, recommends, surprise_charges, review_text, actual_cost_paid, timeline_months, created_at')
+      .in('agency_id', agencyIds)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false }),
+  ])
 
   const branchMap = new Map<string, { cities: string[]; states: string[] }>()
   for (const b of (branchRows ?? []) as BranchDbRow[]) {
@@ -48,14 +57,6 @@ export async function getAgencies(): Promise<Agency[]> {
     if (b.city  && !entry.cities.includes(b.city))  entry.cities.push(b.city)
     if (b.state && !entry.states.includes(b.state)) entry.states.push(b.state)
   }
-
-  // Fetch all approved reviews for all agencies in one query
-  const { data: reviewRows } = await db
-    .from('reviews')
-    .select('agency_id, author_name, author_from, country_placed, overall_rating, recommends, surprise_charges, review_text, actual_cost_paid, timeline_months, created_at')
-    .in('agency_id', agencyIds)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false })
 
   // Build per-agency maps
   const allReviews = (reviewRows ?? []) as ReviewDbRow[]

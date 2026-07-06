@@ -9,6 +9,9 @@ import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs }   from '@/lib/data/salaries'
 import { getAllExamSlugs }     from '@/lib/data/exams'
 import { getAllGuideSlugs }    from '@/lib/data/guides'
+import { getActiveJobs }       from '@/lib/db/jobs'
+import { getAllAuthors }       from '@/lib/authors/data'
+import { getAllReviewers }     from '@/lib/reviewers/data'
 import { STATIC_SITEMAP_ENTRIES } from '@/lib/seo/sitemap'
 
 const BASE = 'https://overseasnursing.com'
@@ -62,8 +65,6 @@ async function getMockTestCategoriesFromDb(): Promise<{ locationSlug: string; ca
    Sitemap
 ══════════════════════════════════════════════════════════════════════ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const today = new Date()
-
   // Fetch all dynamic data in parallel
   const [
     agencies,
@@ -71,18 +72,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     mockCategories,
     agencyStates,
     blogPosts,
+    activeJobs,
+    authors,
+    reviewers,
   ] = await Promise.all([
     getAgenciesFromDb(),
     getMockTestLocationsFromDb(),
     getMockTestCategoriesFromDb(),
     getAllStatesFromDb(),
     getPublishedBlogPosts(),
+    getActiveJobs(),
+    getAllAuthors(),
+    getAllReviewers(),
   ])
 
   /* ── Static pages ── */
+  // No lastModified here — these are static/curated pages with no real
+  // change-tracking, and Google explicitly advises against setting lastmod
+  // to "whenever the sitemap was regenerated" (it trains crawlers to distrust
+  // the signal). Omit rather than fabricate.
   const staticPages: MetadataRoute.Sitemap = STATIC_SITEMAP_ENTRIES.map(e => ({
     url: url(e.path),
-    lastModified: today,
     changeFrequency: e.changeFrequency,
     priority: e.priority,
   }))
@@ -90,7 +100,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Country pages ── */
   const countryPages: MetadataRoute.Sitemap = getAllCountrySlugs().map(slug => ({
     url: url(`/country/${slug}`),
-    lastModified: today,
     changeFrequency: 'monthly' as const,
     priority: 0.9,
   }))
@@ -106,7 +115,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Pricing pages ── */
   const pricingPages: MetadataRoute.Sitemap = getAllPricingCountrySlugs().map(slug => ({
     url: url(`/pricing/${slug}`),
-    lastModified: today,
     changeFrequency: 'weekly' as const,
     priority: 0.9,
   }))
@@ -114,7 +122,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Agency state pages ── */
   const agencyStatePages: MetadataRoute.Sitemap = agencyStates.map((s) => ({
     url: url(`/agencies/${s.stateSlug}`),
-    lastModified: today,
     changeFrequency: 'weekly' as const,
     priority: 0.85,
   }))
@@ -123,7 +130,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const agencyCityPages: MetadataRoute.Sitemap = agencyStates.flatMap((s) =>
     s.cities.map((c) => ({
       url: url(`/agencies/${s.stateSlug}/${c.citySlug}`),
-      lastModified: today,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
     }))
@@ -132,7 +138,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Comparison pages ── */
   const comparisonPages: MetadataRoute.Sitemap = getAllComparisonSlugs().map(slug => ({
     url: url(`/compare/${slug}`),
-    lastModified: today,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
@@ -140,7 +145,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Salary pages ── */
   const salaryPages: MetadataRoute.Sitemap = getAllSalarySlugs().map(slug => ({
     url: url(`/salary/${slug}`),
-    lastModified: today,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
@@ -148,7 +152,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Exam pages ── */
   const examPages: MetadataRoute.Sitemap = getAllExamSlugs().map(slug => ({
     url: url(`/exam/${slug}`),
-    lastModified: today,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
@@ -156,7 +159,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   /* ── Guide pages ── */
   const guidePages: MetadataRoute.Sitemap = getAllGuideSlugs().map(slug => ({
     url: url(`/guides/${slug}`),
-    lastModified: today,
     changeFrequency: 'monthly' as const,
     priority: 0.8,
   }))
@@ -195,6 +197,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
+  /* ── Job posting pages — time-sensitive, needs frequent recrawl ── */
+  const jobPages: MetadataRoute.Sitemap = activeJobs.map(j => ({
+    url: url(`/jobs/${j.slug}`),
+    lastModified: new Date(j.created_at),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }))
+
+  /* ── Author / reviewer bio pages (EEAT) ── */
+  const authorPages: MetadataRoute.Sitemap = authors.map(a => ({
+    url: url(`/authors/${a.slug}`),
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }))
+  const reviewerPages: MetadataRoute.Sitemap = reviewers.map(r => ({
+    url: url(`/reviewers/${r.slug}`),
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }))
+
   return [
     ...staticPages,
     ...blogPostPages,
@@ -210,5 +232,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...scamPages,
     ...mockLocationPages,
     ...mockCategoryPages,
+    ...jobPages,
+    ...authorPages,
+    ...reviewerPages,
   ]
 }

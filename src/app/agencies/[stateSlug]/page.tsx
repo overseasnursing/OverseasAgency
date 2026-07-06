@@ -11,7 +11,10 @@ import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { StateAgencySection } from './_components/StateAgencySection'
 
-export const revalidate = 86400 // 24 h ISR — fresh data, fast delivery
+// Was 24h — this reads the same live agencies table as the parent /agencies
+// listing (revalidate=1800), so a new review/agency shouldn't take up to
+// 48x longer to surface here than there.
+export const revalidate = 1800
 
 interface PageProps {
   params: Promise<{ stateSlug: string }>

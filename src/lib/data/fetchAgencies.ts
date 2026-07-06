@@ -168,12 +168,22 @@ export async function fetchAgenciesByCountry(
 ): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
+  // Filter by country in SQL (uses the countries GIN index) before ranking/
+  // limiting — previously this fetched the top 200 agencies SITEWIDE by
+  // transparency score with no country filter at all, then filtered in JS.
+  // That silently produced empty/thin results for any destination whose
+  // agencies weren't already in the global top 200 — fine at today's small
+  // scale, but a real correctness bug once there are 50k agencies across
+  // 100+ destinations. `.overlaps` narrows to country-relevant rows first;
+  // the JS pass below just tolerates loose term variants (e.g. "UAE" vs
+  // "UAE (Dubai)") on that already-narrowed set, not the whole table.
   const { data } = await db
     .from('agencies')
     .select('*')
     .eq('is_active', true)
+    .overlaps('countries', countryTerms)
     .order('transparency_score', { ascending: false })
-    .limit(200)
+    .limit(Math.max(limit * 10, 50))
 
   if (!data?.length) return []
 

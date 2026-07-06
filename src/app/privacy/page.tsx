@@ -42,9 +42,15 @@ export default function PrivacyPage() {
             <p>Your data is stored securely using Supabase (PostgreSQL) hosted on AWS. We use industry-standard encryption in transit (HTTPS) and at rest. We do not sell your personal data to third parties.</p>
           </section>
 
-          <section>
+          <section id="cookies">
             <h2 className="text-[18px] font-bold text-slate-800 mb-3">4. Cookies & Analytics</h2>
-            <p>We use Cloudflare Zaraz to load analytics and marketing tools, plus Microsoft Clarity for session analytics. This uses cookies to track anonymous usage data. You can opt out via your browser settings or privacy extensions.</p>
+            <p>
+              We use necessary cookies for security, authentication, and core site functionality —
+              these can&apos;t be disabled. Optional analytics cookies (Microsoft Clarity) help us
+              understand how the website is used and are only loaded if you consent to them. You can
+              accept, reject, or change your analytics preference at any time via the &ldquo;Cookie
+              Preferences&rdquo; link in the footer, or your browser&apos;s own cookie settings.
+            </p>
           </section>
 
           <section>

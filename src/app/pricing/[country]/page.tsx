@@ -61,9 +61,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const data = getPricingData(country)
   if (!data) return {}
 
-  const title = `${data.countryName} Nursing Migration Cost 2025 — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L)`
-  const description = `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified 2025 data.`
-  const ogImage = `/og/pricing-${country}.png`
+  const year = new Date().getFullYear()
+  const title = `${data.countryName} Nursing Migration Cost ${year} — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L)`
+  const description = `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified ${year} data.`
+  // No static /og/pricing-*.png files exist — render a real image on demand instead.
+  const ogImage = `/api/og?type=default&title=${encodeURIComponent(title)}`
 
   return {
     title,
@@ -88,8 +90,8 @@ export default async function PricingPage({ params }: PageProps) {
   const attribution = await getAttributionProfiles()
 
   const articleSchema = buildArticleSchema({
-    title: `${data.countryName} Nursing Migration Cost 2025 — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L)`,
-    description: `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified 2025 data.`,
+    title: `${data.countryName} Nursing Migration Cost ${new Date().getFullYear()} — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L)`,
+    description: `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified ${new Date().getFullYear()} data.`,
     path: `/pricing/${country}`,
   })
 

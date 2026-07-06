@@ -4,7 +4,11 @@ import type { Author } from './types'
 
 async function fetchAuthor(): Promise<Author | null> {
   const profile = await getAdminProfile()
-  if (!profile) return null
+  // getAdminProfile() only nulls out when BOTH author and reviewer are
+  // unconfigured — if only the reviewer has been filled in, the author's own
+  // fields are still empty strings. Guard here so we never generate an
+  // empty-slug /authors/ page or a blank sitemap entry.
+  if (!profile || !profile.authorSlug || !profile.authorDisplayName) return null
   return adminProfileToAuthor(profile)
 }
 

@@ -32,6 +32,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `${report.title} — Scam Report | OverseasNursing.com`
   const description = `${report.summary} Reported by ${report.reporterName} from ${report.reporterFrom}. ₹${(report.amountLost / 100000).toFixed(1)}L lost.`
+  // No static /og/scam-reports.png file exists — render a real image on demand instead.
+  const ogImage = `/api/og?type=default&title=${encodeURIComponent(report.title)}`
 
   return {
     title,
@@ -42,9 +44,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description,
       url: `/scam-report/${slug}`,
       type: 'article',
-      images: [{ url: '/og/scam-reports.png', width: 1200, height: 630, alt: 'Scam Report — OverseasNursing.com' }],
+      images: [{ url: ogImage, width: 1200, height: 630, alt: 'Scam Report — OverseasNursing.com' }],
     },
-    twitter: { card: 'summary_large_image', title, description, images: ['/og/scam-reports.png'] },
+    twitter: { card: 'summary_large_image', title, description, images: [ogImage] },
   }
 }
 

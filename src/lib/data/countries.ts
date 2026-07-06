@@ -1,4 +1,40 @@
 import type { CountryDetail } from '@/types/countryDetail'
+import type { AttributionSource } from '@/components/seo/ContentAttribution'
+
+// Official regulatory/government sources cited on each country's migration guide —
+// keep in sync with the claims made in that country's CountryDetail entry below.
+export const COUNTRY_SOURCES: Record<string, AttributionSource[]> = {
+  germany: [
+    { label: 'Federal Employment Agency (Bundesagentur für Arbeit), Germany', url: 'https://www.arbeitsagentur.de' },
+    { label: 'Recognition in Germany — Make it in Germany (federal portal)', url: 'https://www.make-it-in-germany.com' },
+    { label: 'German Nursing Act (Pflegeberufegesetz — PflBG)', url: 'https://www.gesetze-im-internet.de/pflbg/' },
+    { label: 'Goethe-Institut — Language Certification Standards', url: 'https://www.goethe.de' },
+  ],
+  uk: [
+    { label: 'Nursing and Midwifery Council (NMC), United Kingdom', url: 'https://www.nmc.org.uk' },
+    { label: 'UK Home Office — Health and Care Worker Visa guidance', url: 'https://www.gov.uk/health-care-worker-visa' },
+    { label: 'NHS Employers — Agenda for Change Pay Scales', url: 'https://www.nhsemployers.org/topics/pay-pensions-and-reward/agenda-for-change' },
+    { label: 'UK Visas and Immigration (UKVI)', url: 'https://www.gov.uk/government/organisations/uk-visas-and-immigration' },
+  ],
+  canada: [
+    { label: 'Immigration, Refugees and Citizenship Canada (IRCC)', url: 'https://www.canada.ca/en/immigration-refugees-citizenship.html' },
+    { label: 'Canadian Nurses Association (CNA)', url: 'https://www.cna-aiic.ca' },
+    { label: 'National Nursing Assessment Service (NNAS)', url: 'https://www.nnas.ca' },
+    { label: 'National Council of State Boards of Nursing (NCSBN) — NCLEX', url: 'https://www.ncsbn.org' },
+  ],
+  australia: [
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)', url: 'https://www.ahpra.gov.au' },
+    { label: 'Australian Department of Home Affairs', url: 'https://immi.homeaffairs.gov.au' },
+    { label: 'Australian Nursing and Midwifery Accreditation Council (ANMAC)', url: 'https://www.anmac.org.au' },
+    { label: 'Fair Work Commission — Nursing and Midwifery Industry Award', url: 'https://www.fwc.gov.au' },
+  ],
+  dubai: [
+    { label: 'Dubai Health Authority (DHA) — Health Regulation Sector', url: 'https://www.dha.gov.ae' },
+    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA), Dubai', url: 'https://gdrfad.gov.ae' },
+    { label: 'Ministry of Human Resources & Emiratisation (MOHRE), UAE', url: 'https://www.mohre.gov.ae' },
+    { label: 'Department of Health Abu Dhabi (DOH)', url: 'https://www.doh.gov.ae' },
+  ],
+}
 
 const GERMANY: CountryDetail = {
   slug: 'germany',
@@ -491,7 +527,7 @@ const CANADA: CountryDetail = {
   relatedGuides: [
     { slug: 'canada-nclex-guide', title: 'NCLEX-RN Guide for Indian Nurses (2025)', description: 'Registration process, study resources, Next Generation NCLEX format, and province-specific requirements for Indian nursing graduates.', category: 'exam', readingTimeMinutes: 12 },
     { slug: 'express-entry-nurses', title: 'Express Entry for Nurses — CRS Score Strategy', description: 'How to maximize your CRS score as an internationally educated nurse for Canadian Express Entry draws.', category: 'visa', readingTimeMinutes: 9 },
-    { slug: 'canada-nurse-salary', title: 'Canada Nurse Salary by Province (2025)', description: 'Province-by-province salary breakdown, overtime rates, benefits, and cost of living comparison for Indian nurses in Canada.', category: 'salary', readingTimeMinutes: 8 },
+    { slug: 'canada-nurse-salary-guide', title: 'Canada Nurse Salary by Province (2025)', description: 'Province-by-province salary breakdown, overtime rates, benefits, and cost of living comparison for Indian nurses in Canada.', category: 'salary', readingTimeMinutes: 8 },
   ],
 
   relatedCountrySlugs: ['uk', 'australia', 'germany'],
@@ -772,7 +808,7 @@ const DUBAI: CountryDetail = {
   ],
 
   relatedGuides: [
-    { slug: 'dha-exam-guide', title: 'DHA Exam Complete Guide for Indian Nurses', description: 'Registration, syllabus, question format, preparation resources, and passing strategy for the Dubai Health Authority nursing exam.', category: 'exam', readingTimeMinutes: 7 },
+    { slug: 'dha-exam-application-guide', title: 'DHA Exam Complete Guide for Indian Nurses', description: 'Registration, syllabus, question format, preparation resources, and passing strategy for the Dubai Health Authority nursing exam.', category: 'exam', readingTimeMinutes: 7 },
     { slug: 'dubai-vs-germany-nursing', title: 'Dubai vs Germany — Which is Better for Indian Nurses?', description: 'Salary, savings rate, PR pathway, lifestyle, and long-term career comparison for Indian nurses choosing between UAE and Germany.', category: 'comparison', readingTimeMinutes: 8 },
     { slug: 'uae-nurse-salary-guide', title: 'UAE Nurse Salary Guide 2025 (Tax-Free)', description: 'DHA, MOH, and HAAD salary ranges, allowances, benefits, and actual take-home pay for Indian nurses across UAE emirates.', category: 'salary', readingTimeMinutes: 6 },
   ],

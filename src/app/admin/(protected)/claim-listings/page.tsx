@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePermission } from '@/lib/require-admin'
 import { ClaimListingsClient } from './_components/ClaimListingsClient'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +38,7 @@ export interface ClaimRow {
 }
 
 export default async function ClaimListingsPage() {
+  await requirePermission('claim-listings')
   const claims = await fetchClaims()
   const pending  = claims.filter(c => c.status === 'pending_approval')
   const resolved = claims.filter(c => c.status === 'approved' || c.status === 'rejected')

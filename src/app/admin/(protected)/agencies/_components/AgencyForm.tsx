@@ -14,7 +14,7 @@ import {
   uploadAgencyAsset, checkWebsiteExists,
   type AgencyInput, type BranchInput, type FaqInput,
 } from '@/app/actions/admin-agencies'
-import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
+import { COUNTRY_FILTER_OPTIONS, SOURCE_COUNTRY_OPTIONS } from '@/lib/data/countryList'
 import { LocationCascade } from '@/components/ui/LocationCascade'
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
@@ -36,7 +36,7 @@ const COMMON_CERTS     = ['MEA Registered', 'ISO 9001:2015', 'NASSCOM Member', '
 function empty(): AgencyInput {
   return {
     slug: '', name: '', tagline: '', description: '', seo_title: '', seo_description: '', logo_url: '', featured_image_url: '',
-    city: '', state: '', location: '', established: null,
+    city: '', state: '', location: '', established: null, source_country: 'India',
     trust_level: 'unverified', is_active: true, featured: false,
     email: '', website: '', whatsapp: '',
     transparency_score: null, placement_count: 0,
@@ -629,6 +629,12 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           </div>
           <Field label="Location Display" hint="Auto-filled from city + state. Edit if needed."><input className={inputCls} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Kochi, Kerala" /></Field>
           <Field label="Established Year"><input className={inputCls} type="number" value={num(form.established)} onChange={e => set('established', parseNum(e.target.value))} placeholder="2010" min={1980} max={2030} /></Field>
+          <Field label="Source Country" hint="Country this agency recruits nurses FROM">
+            <input className={inputCls} list="source-country-options" value={form.source_country} onChange={e => set('source_country', e.target.value)} placeholder="India" />
+            <datalist id="source-country-options">
+              {SOURCE_COUNTRY_OPTIONS.map(c => <option key={c} value={c} />)}
+            </datalist>
+          </Field>
         </div>
       </div>
 

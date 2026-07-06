@@ -115,7 +115,7 @@ function ReviewCard({ review }: { review: Review }) {
       </div>
 
       {/* Title + body */}
-      <h4 className="text-[16px] font-semibold text-slate-800 mb-2">{review.title}</h4>
+      <h3 className="text-[16px] font-semibold text-slate-800 mb-2">{review.title}</h3>
       <p className="text-[14px] text-slate-600 leading-relaxed mb-4">{review.body}</p>
 
       {/* Key facts */}

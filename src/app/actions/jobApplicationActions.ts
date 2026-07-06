@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { uploadToR2 } from '@/lib/r2'
+import { matchesFileSignature } from '@/lib/validateFileSignature'
 import { revalidatePath } from 'next/cache'
 
 const ALLOWED_CV_MIME: Record<string, string> = {
@@ -56,6 +57,10 @@ export async function submitApplication(
 
   const path   = `cvs/${user.id}/${Date.now()}-${randomUUID()}.${ext}`
   const buffer = Buffer.from(await cvFile.arrayBuffer())
+
+  if (!matchesFileSignature(buffer, cvFile.type)) {
+    return { error: 'File content does not match its declared type.' }
+  }
 
   let cv_url: string
   try {

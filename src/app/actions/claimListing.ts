@@ -135,6 +135,8 @@ export async function submitClaimRequest(
 
 // ── Verify OTP (step 2) ───────────────────────────────────────────────────────
 
+const MAX_OTP_ATTEMPTS = 5
+
 export async function verifyClaimOtp(
   claimId: string,
   otp: string,
@@ -144,7 +146,7 @@ export async function verifyClaimOtp(
 
   const { data, error } = await db
     .from('claim_requests')
-    .select('id, otp_hash, otp_expires_at, status')
+    .select('id, otp_hash, otp_expires_at, status, otp_attempts')
     .eq('id', claimId)
     .single()
 
@@ -155,7 +157,15 @@ export async function verifyClaimOtp(
     return { error: 'OTP has expired. Please request a new one.' }
   }
 
+  if ((data.otp_attempts ?? 0) >= MAX_OTP_ATTEMPTS) {
+    return { error: 'Too many incorrect attempts. Please request a new OTP.' }
+  }
+
   if (data.otp_hash !== hashOtp(otp.trim())) {
+    await db
+      .from('claim_requests')
+      .update({ otp_attempts: (data.otp_attempts ?? 0) + 1 })
+      .eq('id', claimId)
     return { error: 'Incorrect OTP. Please check your email and try again.' }
   }
 
@@ -202,7 +212,7 @@ export async function resendClaimOtp(
 
   await db
     .from('claim_requests')
-    .update({ otp_hash: hashOtp(otp), otp_expires_at: expires })
+    .update({ otp_hash: hashOtp(otp), otp_expires_at: expires, otp_attempts: 0 })
     .eq('id', claimId)
 
   try {

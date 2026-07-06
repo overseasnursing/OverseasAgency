@@ -20,12 +20,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locationSlug } = await params
   const data = await getMockTestLocationWithCategories(locationSlug)
   if (!data) return {}
-  const { location } = data
+  const { location, categories } = data
   const title = `${location.name} — Free Nursing Mock Tests | OverseasNursing`
   const desc  = location.description || `Practice ${location.name} nursing licensing exams with free timed mock tests.`
   return {
     title,
     description: desc,
+    // A location with zero active categories isn't delivering on the URL's
+    // core promise — suppress from indexing rather than 404 (categories may
+    // be added later).
+    robots: { index: categories.length > 0, follow: true },
     alternates: { canonical: `https://overseasnursing.com/mock-tests/${locationSlug}` },
     openGraph: { title, description: desc, url: `https://overseasnursing.com/mock-tests/${locationSlug}` },
   }

@@ -605,7 +605,7 @@ export function ResultClient({
 
                         {/* Image */}
                         {q.image_url && (
-                          <Image src={q.image_url} alt="Question" width={800} height={192} sizes="(max-width: 768px) 100vw, 800px" className="mb-4 rounded-xl border border-slate-200 max-h-48 object-contain w-full" unoptimized />
+                          <Image src={q.image_url} alt={`Question ${safeIdx + 1} image`} width={800} height={192} sizes="(max-width: 768px) 100vw, 800px" className="mb-4 rounded-xl border border-slate-200 max-h-48 object-contain w-full" unoptimized />
                         )}
 
                         {/* Question text */}

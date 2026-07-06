@@ -278,7 +278,7 @@ ${Object.entries(guidesByCountry)
     return `### ${countryDisplay} (${countryGuides.length} guides)
 
 ${countryGuides.map(g => {
-  const url = `${BASE}/country/${g.country.toLowerCase()}/guides/${g.slug}`
+  const url = `${BASE}/guides/${g.slug}`
   return `- [${g.title}](${url})
   Category: ${g.category} | Reading time: ${g.readingTimeMinutes} min`
 }).join('\n')}
