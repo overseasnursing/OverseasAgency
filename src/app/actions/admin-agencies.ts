@@ -5,6 +5,7 @@ import { requireAdmin, isSuperAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 import { normalizeWebsiteUrl } from '@/lib/utils/url'
 import { uploadToR2 } from '@/lib/r2'
+import { normalizeCityName } from '@/lib/data/cityNormalization'
 
 /**
  * Checks whether a website domain is already registered to another agency.
@@ -185,6 +186,7 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
   const db = createAdminClient() as any
 
   const slug = data.slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+  const city = normalizeCityName(data.city)
 
   const row = {
     slug,
@@ -195,9 +197,9 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     description:                   data.description               || null,
     logo_url:                      data.logo_url                  || null,
     featured_image_url:            data.featured_image_url        || null,
-    city:                          data.city,
+    city,
     state:                         data.state,
-    location:                      data.location                  || `${data.city}, ${data.state}`,
+    location:                      data.location                  || `${city}, ${data.state}`,
     established:                   data.established               ?? null,
     source_country:                data.source_country            || 'India',
     trust_level:                   data.trust_level,
@@ -306,6 +308,7 @@ export async function saveBranch(data: BranchInput): Promise<{ error: string | n
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { id, ...row } = data
+  if (row.city) row.city = normalizeCityName(row.city)
 
   if (id) {
     const { error } = await db.from('branches').update(row).eq('id', id)

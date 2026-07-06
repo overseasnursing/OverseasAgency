@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { uploadToR2 } from '@/lib/r2'
 import { matchesFileSignature } from '@/lib/validateFileSignature'
+import { normalizeCityName } from '@/lib/data/cityNormalization'
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 
@@ -147,6 +148,7 @@ export async function saveBranchAsOwner(
 
   const db = createAdminClient() as any
   const { id, ...row } = data
+  if (row.city) row.city = normalizeCityName(row.city)
 
   if (id) {
     const { error } = await db.from('branches').update(row).eq('id', id).eq('agency_id', agencyId)

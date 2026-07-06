@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { LocationAgencyListing, LocationPageData } from '@/types/location'
+import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
 
 type CityRow    = { city: string | null; state: string | null }
 type AgencyRow  = CityRow & { id: string; slug: string; name: string; location: string | null; countries: string[] | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null; trust_level: string | null }
@@ -25,14 +26,20 @@ export async function getAllLocationCitiesFromDb(): Promise<Array<{ city: string
   const seen = new Map<string, { city: string; state: string }>()
 
   for (const a of (agencyRows ?? []) as CityRow[]) {
-    const city  = a.city?.trim()
+    const rawCity = a.city?.trim()
     const state = a.state?.trim()
-    if (city && state) seen.set(toSlug(city), { city, state })
+    if (rawCity && state && !isExcludedCityName(rawCity)) {
+      const city = normalizeCityName(rawCity)
+      seen.set(toSlug(city), { city, state })
+    }
   }
   for (const b of (branchRows ?? []) as CityRow[]) {
-    const city  = b.city?.trim()
+    const rawCity = b.city?.trim()
     const state = b.state?.trim()
-    if (city && state) seen.set(toSlug(city), { city, state })
+    if (rawCity && state && !isExcludedCityName(rawCity)) {
+      const city = normalizeCityName(rawCity)
+      seen.set(toSlug(city), { city, state })
+    }
   }
 
   return [...seen.entries()]
@@ -60,9 +67,10 @@ export async function getLocationsByState(): Promise<
   const cityMap = new Map<string, { city: string; state: string; ids: Set<string> }>()
 
   const addToCity = (city: string | null, state: string | null, agencyId: string) => {
-    const c = city?.trim()
+    const rawCity = city?.trim()
     const s = state?.trim()
-    if (!c || !s) return
+    if (!rawCity || !s || isExcludedCityName(rawCity)) return
+    const c = normalizeCityName(rawCity)
     const slug = toSlug(c)
     if (!cityMap.has(slug)) cityMap.set(slug, { city: c, state: s, ids: new Set() })
     cityMap.get(slug)!.ids.add(agencyId)
@@ -126,13 +134,13 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
   for (const a of agencyRows as AgencyRow[]) {
     const branches = ((branchRows ?? []) as BranchRow[]).filter((b) => b.agency_id === a.id)
 
-    const hqMatches     = a.city   && toSlug(a.city) === citySlug
-    const matchingBranch = branches.find((b) => b.city && toSlug(b.city) === citySlug)
+    const hqMatches     = a.city   && !isExcludedCityName(a.city)   && toSlug(normalizeCityName(a.city))   === citySlug
+    const matchingBranch = branches.find((b) => b.city && !isExcludedCityName(b.city) && toSlug(normalizeCityName(b.city)) === citySlug)
 
     if (!hqMatches && !matchingBranch) continue
 
     if (!cityName) {
-      cityName  = hqMatches ? (a.city ?? '') : (matchingBranch?.city ?? '')
+      cityName  = hqMatches ? normalizeCityName(a.city ?? '') : normalizeCityName(matchingBranch?.city ?? '')
       stateName = hqMatches ? (a.state ?? '') : (matchingBranch?.state || a.state || '')
     }
 
@@ -180,12 +188,16 @@ export async function getLocationPageData(citySlug: string): Promise<LocationPag
   // Nearby locations: other cities in same state
   const nearbySeen = new Map<string, string>()
   for (const a of agencyRows as AgencyRow[]) {
-    if (a.state === stateName && a.city && toSlug(a.city) !== citySlug)
-      nearbySeen.set(toSlug(a.city), a.city)
+    if (a.state === stateName && a.city && !isExcludedCityName(a.city)) {
+      const city = normalizeCityName(a.city)
+      if (toSlug(city) !== citySlug) nearbySeen.set(toSlug(city), city)
+    }
   }
   for (const b of (branchRows ?? []) as BranchRow[]) {
-    if (b.state === stateName && b.city && toSlug(b.city) !== citySlug)
-      nearbySeen.set(toSlug(b.city), b.city)
+    if (b.state === stateName && b.city && !isExcludedCityName(b.city)) {
+      const city = normalizeCityName(b.city)
+      if (toSlug(city) !== citySlug) nearbySeen.set(toSlug(city), city)
+    }
   }
   const nearbyLocations = [...nearbySeen.entries()]
     .slice(0, 4)

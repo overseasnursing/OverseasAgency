@@ -1,4 +1,5 @@
 import { Country, State, City } from 'country-state-city'
+import { normalizeCityList } from './cityNormalization'
 
 export type LocationOption = {
   label: string
@@ -22,9 +23,10 @@ export function getStatesOfCountry(countryIso: string): LocationOption[] {
 }
 
 export function getCitiesOfState(countryIso: string, stateIso: string): LocationOption[] {
-  return City.getCitiesOfState(countryIso, stateIso).map((c) => ({
-    label: c.name,
-    value: c.name,
+  const rawNames = City.getCitiesOfState(countryIso, stateIso).map((c) => c.name)
+  return normalizeCityList(rawNames).map((name) => ({
+    label: name,
+    value: name,
   }))
 }
 

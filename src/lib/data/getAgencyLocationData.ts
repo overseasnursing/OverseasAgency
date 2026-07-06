@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { toSlug } from '@/lib/data/getLocationData'
+import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
 import type { LocationAgencyListing } from '@/types/location'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,13 +54,14 @@ export async function getAllStatesFromDb(): Promise<StateIndex[]> {
 
   function add(state: string | null, city: string | null, agencyId: string, destinations: string[]) {
     const s = state?.trim()
-    const c = city?.trim()
+    const rawCity = city?.trim()
     if (!s) return
     const slug = toSlug(s)
     if (!stateMap.has(slug)) stateMap.set(slug, { state: s, agencyIds: new Set(), cities: new Map(), destCount: new Map() })
     const entry = stateMap.get(slug)!
     entry.agencyIds.add(agencyId)
-    if (c) {
+    if (rawCity && !isExcludedCityName(rawCity)) {
+      const c = normalizeCityName(rawCity)
       const cs = toSlug(c)
       if (!entry.cities.has(cs)) entry.cities.set(cs, { city: c, ids: new Set() })
       entry.cities.get(cs)!.ids.add(agencyId)
@@ -129,15 +131,17 @@ export async function getStatePageData(stateSlug: string): Promise<StatePageData
     if (!stateName) stateName = hqMatch ? (a.state ?? '') : (branchMatch?.state ?? '')
 
     // Collect all cities in this state for this agency
-    if (hqMatch && a.city) {
-      const cs = toSlug(a.city)
-      if (!cityMap.has(cs)) cityMap.set(cs, { city: a.city, ids: new Set() })
+    if (hqMatch && a.city && !isExcludedCityName(a.city)) {
+      const city = normalizeCityName(a.city)
+      const cs = toSlug(city)
+      if (!cityMap.has(cs)) cityMap.set(cs, { city, ids: new Set() })
       cityMap.get(cs)!.ids.add(a.id)
     }
     for (const b of branches) {
-      if (b.state && toSlug(b.state) === stateSlug && b.city) {
-        const cs = toSlug(b.city)
-        if (!cityMap.has(cs)) cityMap.set(cs, { city: b.city, ids: new Set() })
+      if (b.state && toSlug(b.state) === stateSlug && b.city && !isExcludedCityName(b.city)) {
+        const city = normalizeCityName(b.city)
+        const cs = toSlug(city)
+        if (!cityMap.has(cs)) cityMap.set(cs, { city, ids: new Set() })
         cityMap.get(cs)!.ids.add(a.id)
       }
     }
