@@ -31,10 +31,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${job.title} - ${job.country} Nursing Job`,
     description: `Apply for ${job.title} nursing opportunities in ${job.country}.`,
     alternates: { canonical: `/jobs/${slug}` },
+    // Expired postings stay live at their URL (candidates/agencies may still
+    // reference it) but shouldn't accumulate as stale indexed content.
+    ...(job.status === 'expired' && { robots: { index: false, follow: true } }),
     openGraph: {
       title: `${job.title} - ${job.country} Nursing Job`,
       description: `Apply for ${job.title} nursing opportunities in ${job.country}.`,
       url: `https://overseasnursing.com/jobs/${slug}`,
+      images: [`/api/og?type=default&title=${encodeURIComponent(job.title)}`],
     },
   }
 }
@@ -151,7 +155,9 @@ export default async function JobDetailPage({ params }: PageProps) {
 
   return (
     <>
-      <MultiJsonLd schemas={[buildOrganizationSchema(), jobPosting, breadcrumbs]} />
+      {/* Suppress JobPosting once expired — Google requires removing structured
+          data (or the page) for postings that are no longer active. */}
+      <MultiJsonLd schemas={[buildOrganizationSchema(), ...(isExpired ? [] : [jobPosting]), breadcrumbs]} />
 
       <div className="bg-[#F8FAFC] min-h-screen">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-8 md:py-10">
@@ -187,7 +193,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                   {job.logo_url && (
                     <div className="w-14 h-14 rounded-xl border border-slate-100 overflow-hidden flex-shrink-0 bg-white">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={job.logo_url} alt="" className="w-full h-full object-contain" />
+                      <img src={job.logo_url} alt={job.agency_name || job.title} className="w-full h-full object-contain" />
                     </div>
                   )}
                   <div className="flex flex-wrap gap-2">

@@ -8,6 +8,7 @@ const GLOBAL_NURSING: AgencyDetail = {
   city: 'Kochi',
   state: 'Kerala',
   established: 2011,
+  sourceCountry: 'India',
   trustLevel: 'verified',
   rating: 4.8,
   reviewCount: 312,

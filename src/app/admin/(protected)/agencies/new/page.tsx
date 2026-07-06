@@ -1,7 +1,9 @@
 import React from 'react'
+import { requirePermission } from '@/lib/require-admin'
 import AgencyForm from '../_components/AgencyForm'
 
-export default function NewAgencyPage() {
+export default async function NewAgencyPage() {
+  await requirePermission('agencies')
   return (
     <div className="flex flex-col gap-6">
       <div>

@@ -12,7 +12,7 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
-export function JobCard({ job }: { job: ActiveJobListing }) {
+function JobCardImpl({ job }: { job: ActiveJobListing }) {
   return (
     <article className="bg-white rounded-card shadow-card hover:shadow-card-md border border-slate-100 transition-shadow flex flex-col p-4 gap-3">
 
@@ -21,7 +21,7 @@ export function JobCard({ job }: { job: ActiveJobListing }) {
         {job.logo_url && (
           <div className="w-10 h-10 rounded-lg border border-slate-100 overflow-hidden flex-shrink-0 bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={job.logo_url} alt="" className="w-full h-full object-contain" />
+            <img src={job.logo_url} alt={job.agency_name || job.title} loading="lazy" decoding="async" className="w-full h-full object-contain" />
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -89,3 +89,8 @@ export function JobCard({ job }: { job: ActiveJobListing }) {
     </article>
   )
 }
+
+// Memoized — JobsClient re-renders this card grid on every filter/search
+// change; without this every card (and its stripHtml/date-formatting work)
+// would re-run even when its own `job` prop hasn't changed.
+export const JobCard = React.memo(JobCardImpl)

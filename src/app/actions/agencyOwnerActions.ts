@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { uploadToR2 } from '@/lib/r2'
+import { matchesFileSignature } from '@/lib/validateFileSignature'
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 
@@ -11,8 +12,8 @@ async function requireAgencyAdmin(): Promise<{ userId: string; agencyId: string 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
-  const role     = user.user_metadata?.role as string | undefined
-  const agencyId = user.user_metadata?.agency_id as string | undefined
+  const role     = user.app_metadata?.role as string | undefined
+  const agencyId = user.app_metadata?.agency_id as string | undefined
   if (role !== 'agency_admin' || !agencyId) throw new Error('Not authorized')
   return { userId: user.id, agencyId }
 }
@@ -253,6 +254,10 @@ export async function uploadAgencyAssetAsOwner(
   const path   = `${type}s/${agencySlug}-${Date.now()}.${ext}`
   const bytes  = await file.arrayBuffer()
   const buffer = Buffer.from(bytes)
+
+  if (!matchesFileSignature(buffer, file.type)) {
+    return { error: 'File content does not match its declared type.' }
+  }
 
   try {
     const url = await uploadToR2('agency-assets', path, buffer, file.type)

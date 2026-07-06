@@ -1,5 +1,7 @@
-'use client'
-
+// No 'use client' — this is a pure synchronous markdown renderer with no
+// hooks/state/browser APIs, so it renders fully on the server (zero JS
+// shipped for guide-content parsing, which matters since this is the
+// long-form SEO content type this project prioritizes for speed).
 import React from 'react'
 import Markdown from 'markdown-to-jsx'
 

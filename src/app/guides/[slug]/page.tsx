@@ -2,8 +2,15 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Clock, ArrowRight, ChevronRight } from 'lucide-react'
 import { getAllGuideSlugs, getGuide } from '@/lib/data/guides'
-import { buildArticleSchema, buildFaqSchema } from '@/lib/seo/schemas'
+import { getCountryDetail, COUNTRY_SOURCES } from '@/lib/data/countries'
+import { getPricingData } from '@/lib/data/pricing'
+import { LAST_REVIEWED } from '@/lib/data/freshness'
+import { buildArticleSchema, buildFaqSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
+import { buildGuideMetadata } from '@/lib/seo/metadata'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
+import { ContentAttribution } from '@/components/seo/ContentAttribution'
+import { getAttributionProfiles } from '@/lib/admin-profile'
+import { InternalLinkCluster } from '@/components/seo/InternalLinkCluster'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -18,17 +25,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const guide = getGuide(slug)
   if (!guide) return {}
 
-  return {
+  return buildGuideMetadata({
     title: guide.title,
+    slug: guide.slug,
     description: guide.metaDescription,
-    alternates: { canonical: `/guides/${guide.slug}` },
-    openGraph: {
-      title: guide.title,
-      description: guide.metaDescription,
-      url: `https://overseasnursing.com/guides/${guide.slug}`,
-      images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
-    },
-  }
+    category: guide.category,
+  })
 }
 
 const CATEGORY_BADGE: Record<string, { label: string; className: string }> = {
@@ -46,6 +48,16 @@ export default async function GuidePage({ params }: PageProps) {
   if (!guide) notFound()
 
   const badge = CATEGORY_BADGE[guide.category] ?? { label: 'Guide', className: 'bg-slate-100 text-slate-600' }
+  const attribution = await getAttributionProfiles()
+
+  // Cross-cluster links (not just same-type "related guides") for crawl/topic-cluster depth
+  const countrySlug = guide.country.toLowerCase()
+  const countryDetail = getCountryDetail(countrySlug)
+  const pricingData   = getPricingData(countrySlug)
+  const clusterLinks = [
+    ...(countryDetail ? [{ href: `/country/${countrySlug}`, label: `${countryDetail.name} Migration Guide`, description: 'Salary, visa process, and full migration overview' }] : []),
+    ...(pricingData   ? [{ href: `/pricing/${countrySlug}`, label: `${countryDetail?.name ?? guide.country} Cost Breakdown`, description: 'Agency fees, exam costs, and total migration budget' }] : []),
+  ]
 
   const schemas = [
     buildArticleSchema({
@@ -53,6 +65,11 @@ export default async function GuidePage({ params }: PageProps) {
       description: guide.metaDescription,
       path: `/guides/${guide.slug}`,
     }),
+    buildBreadcrumbSchema([
+      { name: 'Home', href: '/' },
+      { name: 'Guides', href: '/guides' },
+      { name: guide.title, href: `/guides/${guide.slug}` },
+    ]),
     ...(guide.faqs.length > 0 ? [buildFaqSchema(guide.faqs)] : []),
   ]
 
@@ -125,6 +142,13 @@ export default async function GuidePage({ params }: PageProps) {
               </div>
             ))}
 
+            {/* Cross-cluster links — country/pricing pages for this guide's country */}
+            {clusterLinks.length > 0 && (
+              <div className="bg-white border border-slate-100 rounded-2xl p-6">
+                <InternalLinkCluster heading={`More on ${guide.country}`} links={clusterLinks} columns={2} />
+              </div>
+            )}
+
             {/* FAQs */}
             {guide.faqs.length > 0 && (
               <div className="bg-white border border-slate-100 rounded-2xl p-6">
@@ -144,6 +168,14 @@ export default async function GuidePage({ params }: PageProps) {
 
           {/* Sidebar */}
           <aside className="flex flex-col gap-4 lg:sticky lg:top-6">
+
+            <ContentAttribution
+              {...(attribution?.author && { author: attribution.author })}
+              {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={LAST_REVIEWED.guides}
+              sources={COUNTRY_SOURCES[countrySlug] ?? []}
+              sourceNote="Information reviewed against official government migration portals and regulatory body guidelines. Fees, timelines, and eligibility rules are indicative and should be verified against the issuing authority before applying."
+            />
 
             {/* Related Guides */}
             {guide.relatedSlugs.length > 0 && (

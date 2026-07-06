@@ -2,6 +2,7 @@
 
 import { createClient }      from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin }      from '@/lib/require-admin'
 
 const ts = () => new Date().toISOString()
 
@@ -251,6 +252,7 @@ export async function getAttemptCountsForTests(
   testIds: string[],
 ): Promise<Record<string, { total: number; active: number }>> {
   if (!testIds.length) return {}
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data } = await db

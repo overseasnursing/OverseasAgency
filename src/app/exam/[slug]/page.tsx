@@ -42,39 +42,39 @@ const EXAM_TYPE_LABELS: Record<string, { label: string; color: string }> = {
 
 const EXAM_EXTRA_SOURCES: Record<string, AttributionSource[]> = {
   'oet-guide': [
-    { label: 'Nursing and Midwifery Council (NMC), United Kingdom' },
-    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
+    { label: 'Nursing and Midwifery Council (NMC), United Kingdom', url: 'https://www.nmc.org.uk' },
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)', url: 'https://www.ahpra.gov.au' },
   ],
   'ielts-guide': [
-    { label: 'Nursing and Midwifery Council (NMC), United Kingdom' },
-    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
-    { label: 'German Federal Employment Agency (Bundesagentur für Arbeit)' },
+    { label: 'Nursing and Midwifery Council (NMC), United Kingdom', url: 'https://www.nmc.org.uk' },
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)', url: 'https://www.ahpra.gov.au' },
+    { label: 'German Federal Employment Agency (Bundesagentur für Arbeit)', url: 'https://www.arbeitsagentur.de' },
   ],
   'nclex-rn-guide': [
-    { label: 'National Council of State Boards of Nursing (NCSBN)' },
-    { label: 'Canadian Nurses Association (CNA)' },
-    { label: 'National Nursing Assessment Service (NNAS), Canada' },
+    { label: 'National Council of State Boards of Nursing (NCSBN)', url: 'https://www.ncsbn.org' },
+    { label: 'Canadian Nurses Association (CNA)', url: 'https://www.cna-aiic.ca' },
+    { label: 'National Nursing Assessment Service (NNAS), Canada', url: 'https://www.nnas.ca' },
   ],
   'dha-exam-guide': [
-    { label: 'Dubai Health Authority (DHA) — Health Regulation Sector' },
-    { label: 'Prometric — Authorised Testing Provider' },
+    { label: 'Dubai Health Authority (DHA) — Health Regulation Sector', url: 'https://www.dha.gov.ae' },
+    { label: 'Prometric — Authorised Testing Provider', url: 'https://www.prometric.com' },
   ],
   'ahpra-registration-guide': [
-    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)' },
-    { label: 'Australian Nursing and Midwifery Accreditation Council (ANMAC)' },
-    { label: 'Australian Department of Home Affairs' },
+    { label: 'Australian Health Practitioner Regulation Agency (AHPRA)', url: 'https://www.ahpra.gov.au' },
+    { label: 'Australian Nursing and Midwifery Accreditation Council (ANMAC)', url: 'https://www.anmac.org.au' },
+    { label: 'Australian Department of Home Affairs', url: 'https://immi.homeaffairs.gov.au' },
   ],
   'cbse-osce-guide': [
-    { label: 'Nursing and Midwifery Council (NMC) — Test of Competence' },
-    { label: 'Pearson VUE — Authorised NMC CBT Provider' },
+    { label: 'Nursing and Midwifery Council (NMC) — Test of Competence', url: 'https://www.nmc.org.uk' },
+    { label: 'Pearson VUE — Authorised NMC CBT Provider', url: 'https://home.pearsonvue.com' },
   ],
   'haad-exam-guide': [
-    { label: 'Prometric — Authorised Testing Provider' },
-    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA), Dubai' },
+    { label: 'Prometric — Authorised Testing Provider', url: 'https://www.prometric.com' },
+    { label: 'General Directorate of Residency and Foreigners Affairs (GDRFA), Dubai', url: 'https://gdrfad.gov.ae' },
   ],
   'moh-exam-guide': [
-    { label: 'Prometric — Authorised Testing Provider' },
-    { label: 'Ministry of Human Resources & Emiratisation (MOHRE), UAE' },
+    { label: 'Prometric — Authorised Testing Provider', url: 'https://www.prometric.com' },
+    { label: 'Ministry of Human Resources & Emiratisation (MOHRE), UAE', url: 'https://www.mohre.gov.ae' },
   ],
 }
 

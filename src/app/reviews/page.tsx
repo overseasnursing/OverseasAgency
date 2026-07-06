@@ -19,13 +19,13 @@ export const metadata: Metadata = {
       'Verified reviews from Indian nurses covering agency experiences, costs, and placements.',
     url: '/reviews',
     type: 'website',
-    images: [{ url: '/og/reviews.png', width: 1200, height: 630, alt: 'Nurse Reviews — OverseasNursing.com' }],
+    images: [{ url: '/api/og?type=default&title=Nurse+Reviews', width: 1200, height: 630, alt: 'Nurse Reviews — OverseasNursing.com' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Nurse Reviews of Overseas Recruitment Agencies',
     description: 'Verified reviews from Indian nurses covering agency experiences, costs, and placements.',
-    images: ['/og/reviews.png'],
+    images: ['/api/og?type=default&title=Nurse+Reviews'],
   },
 }
 

@@ -58,7 +58,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description: desc,
-    robots: { index: true, follow: true },
+    // A category with zero active tests isn't delivering on the URL's core
+    // promise — suppress from indexing rather than 404 (content may be added
+    // later, and guide/FAQ content underneath can still be worth serving).
+    robots: { index: tests.length > 0, follow: true },
     alternates: { canonical: `https://overseasnursing.com/mock-tests/${locationSlug}/${categorySlug}` },
     openGraph: {
       title,

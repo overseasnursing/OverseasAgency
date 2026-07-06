@@ -21,8 +21,8 @@ export default async function EditAgencyJobPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?next=/agency-admin/jobs')
 
-  const role     = user.user_metadata?.role as string | undefined
-  const agencyId = user.user_metadata?.agency_id as string | undefined
+  const role     = user.app_metadata?.role as string | undefined
+  const agencyId = user.app_metadata?.agency_id as string | undefined
   if (role !== 'agency_admin' || !agencyId) redirect('/?error=unauthorized')
 
   const { id } = await params

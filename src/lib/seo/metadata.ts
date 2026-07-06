@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 const BASE_URL = 'https://overseasnursing.com'
 const SITE_NAME = 'OverseasNursing.com'
-const DEFAULT_OG_IMAGE = '/og/default.png'
+const CURRENT_YEAR = new Date().getFullYear()
 
 // ─── Core builder ──────────────────────────────────────────────────────────────
 
@@ -19,12 +19,15 @@ export function buildMetadata({
   title,
   description,
   path,
-  ogImage = DEFAULT_OG_IMAGE,
+  ogImage,
   ogType = 'website',
   noIndex = false,
 }: MetadataInput): Metadata {
   const url = `${BASE_URL}${path}`
-  const img = ogImage.startsWith('http') ? ogImage : ogImage
+  // No static /og/*.png files are generated for these pages — fall back to the
+  // edge route that renders a real image on demand (same mechanism agency/[slug]
+  // and the exam OG variant already use), so share previews are never broken.
+  const img = ogImage ?? `/api/og?type=default&title=${encodeURIComponent(title)}`
 
   return {
     title,
@@ -58,21 +61,23 @@ export function buildAgencyMetadata(agency: {
   feeMin?: number
   feeMax?: number
   primaryCountry?: string
+  /** e.g. "Indian nurses", "Filipino nurses" — from agencies.source_country. Defaults to current copy. */
+  sourceCountryLabel?: string
 }): Metadata {
   const feeRange =
     agency.feeMin && agency.feeMax
       ? ` Fee range: ₹${(agency.feeMin / 100000).toFixed(1)}L–₹${(agency.feeMax / 100000).toFixed(1)}L.`
       : ''
-  const title = `${agency.name} Review 2025 — Fees, Ratings & Nurse Experiences | ${SITE_NAME}`
+  const audience = agency.sourceCountryLabel ?? 'Indian nurses'
+  const title = `${agency.name} Review ${CURRENT_YEAR} — Fees, Ratings & Nurse Experiences | ${SITE_NAME}`
   const description = agency.tagline
     ? `${agency.tagline} Verified nurse reviews, fee breakdowns, and placement records.${feeRange}`
-    : `Read ${agency.name} reviews from verified Indian nurses. See actual costs, hidden charge reports, placement success rate, and transparency scores.${feeRange}`
+    : `Read ${agency.name} reviews from verified ${audience}. See actual costs, hidden charge reports, placement success rate, and transparency scores.${feeRange}`
 
   return buildMetadata({
     title,
     description,
     path: `/agency/${agency.slug}`,
-    ogImage: `/og/agency-${agency.slug}.png`,
   })
 }
 
@@ -89,14 +94,13 @@ export function buildCountryMetadata(country: {
     country.totalMin && country.totalMax
       ? ` Total migration cost: ₹${(country.totalMin / 100000).toFixed(1)}L–₹${(country.totalMax / 100000).toFixed(1)}L.`
       : ''
-  const title = `${country.name} Nursing Migration Guide 2025 — Salary, Visa & Process for Indian Nurses | ${SITE_NAME}`
+  const title = `${country.name} Nursing Migration Guide ${CURRENT_YEAR} — Salary, Visa & Process for Indian Nurses | ${SITE_NAME}`
   const description = `Complete guide to nursing migration from India to ${country.name}. Salary ranges${country.salaryDisplay ? ` (${country.salaryDisplay})` : ''}, visa process, exam requirements, agency fees, and verified nurse reviews.${costRange}`
 
   return buildMetadata({
     title,
     description,
     path: `/country/${country.slug}`,
-    ogImage: `/og/country-${country.slug}.png`,
   })
 }
 
@@ -109,14 +113,13 @@ export function buildPricingMetadata(data: {
   totalMax: number
   totalTypical: number
 }): Metadata {
-  const title = `${data.countryName} Nursing Migration Cost 2025 — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L) | ${SITE_NAME}`
-  const description = `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified 2025 data.`
+  const title = `${data.countryName} Nursing Migration Cost ${CURRENT_YEAR} — Complete Fee Breakdown (₹${(data.totalMin / 100000).toFixed(1)}L–₹${(data.totalMax / 100000).toFixed(1)}L) | ${SITE_NAME}`
+  const description = `Full cost breakdown for Indian nurses migrating to ${data.countryName}. Agency fees, exam costs, visa fees, hidden charges, and actual nurse experiences. Typical total: ₹${(data.totalTypical / 100000).toFixed(1)}L — verified ${CURRENT_YEAR} data.`
 
   return buildMetadata({
     title,
     description,
     path: `/pricing/${data.countrySlug}`,
-    ogImage: `/og/pricing-${data.countrySlug}.png`,
   })
 }
 
@@ -134,14 +137,13 @@ export function buildStateAgencyMetadata(data: {
     ? ` Fees from ₹${data.feeRange.minLakhs}L.`
     : ''
 
-  const title = `${data.agencyCount} Overseas Nursing Agencies in ${data.state} (2025) — Verified Reviews & Fees | ${SITE_NAME}`
+  const title = `${data.agencyCount} Overseas Nursing Agencies in ${data.state} (${CURRENT_YEAR}) — Verified Reviews & Fees | ${SITE_NAME}`
   const description = `Compare ${data.agencyCount} verified overseas nursing agencies in ${data.state}.${feeNote} Real nurse reviews, transparent pricing${dest ? `, placements to ${dest}` : ''} and scam alerts — all in one place.`
 
   return buildMetadata({
     title,
     description,
     path: `/agencies/${data.stateSlug}`,
-    ogImage: `/og/agencies-${data.stateSlug}.png`,
   })
 }
 
@@ -158,13 +160,12 @@ export function buildCityAgencyMetadata(data: {
   const dest = data.topDestinations.slice(0, 3).join(', ')
 
   const title = `Overseas Nursing Agencies in ${data.city}, ${data.state} — ${data.agencyCount} Verified | ${SITE_NAME}`
-  const description = `Find ${data.agencyCount} verified overseas nursing agenc${data.agencyCount === 1 ? 'y' : 'ies'} in ${data.city}. Compare fees, read real nurse reviews${dest ? `, and explore placements to ${dest}` : ''}. Updated 2025 data.`
+  const description = `Find ${data.agencyCount} verified overseas nursing agenc${data.agencyCount === 1 ? 'y' : 'ies'} in ${data.city}. Compare fees, read real nurse reviews${dest ? `, and explore placements to ${dest}` : ''}. Updated ${CURRENT_YEAR} data.`
 
   return buildMetadata({
     title,
     description,
     path: `/agencies/${data.stateSlug}/${data.citySlug}`,
-    ogImage: `/og/agencies-${data.stateSlug}-${data.citySlug}.png`,
   })
 }
 
@@ -176,14 +177,13 @@ export function buildLocationMetadata(location: {
   state: string
   agencyCount: number
 }): Metadata {
-  const title = `Best Overseas Nursing Agencies in ${location.city}, ${location.state} — 2025 Guide | ${SITE_NAME}`
+  const title = `Best Overseas Nursing Agencies in ${location.city}, ${location.state} — ${CURRENT_YEAR} Guide | ${SITE_NAME}`
   const description = `Find verified overseas nursing consultancies in ${location.city}. Compare ${location.agencyCount}+ agencies, fees, destinations (Germany, UK, Canada, Australia), and read real nurse reviews before signing.`
 
   return buildMetadata({
     title,
     description,
     path: `/location/${location.citySlug}`,
-    ogImage: `/og/location-${location.citySlug}.png`,
   })
 }
 
@@ -195,14 +195,13 @@ export function buildComparisonMetadata(comp: {
   slug: string
   verdict?: string
 }): Metadata {
-  const title = `${comp.countryAName} vs ${comp.countryBName} Nursing Migration 2025 — Which is Better for Indian Nurses? | ${SITE_NAME}`
+  const title = `${comp.countryAName} vs ${comp.countryBName} Nursing Migration ${CURRENT_YEAR} — Which is Better for Indian Nurses? | ${SITE_NAME}`
   const description = `Side-by-side comparison of ${comp.countryAName} and ${comp.countryBName} nursing migration. Salary, cost, process time, PR pathway, language requirements, and job demand — all compared for Indian nurses.${comp.verdict ? ` ${comp.verdict}` : ''}`
 
   return buildMetadata({
     title,
     description,
     path: `/compare/${comp.slug}`,
-    ogImage: `/og/compare-${comp.slug}.png`,
     ogType: 'article',
   })
 }
@@ -215,14 +214,13 @@ export function buildSalaryMetadata(salary: {
   averageSalary: string
   inrEquivalent: string
 }): Metadata {
-  const title = `${salary.countryName} Nurse Salary 2025 — Complete Guide for Indian Nurses (${salary.averageSalary}) | ${SITE_NAME}`
-  const description = `${salary.countryName} nursing salary guide for Indian nurses. Average salary: ${salary.averageSalary} (≈ ${salary.inrEquivalent}). Breakdown by experience, specialty, and city. Updated 2025 data.`
+  const title = `${salary.countryName} Nurse Salary ${CURRENT_YEAR} — Complete Guide for Indian Nurses (${salary.averageSalary}) | ${SITE_NAME}`
+  const description = `${salary.countryName} nursing salary guide for Indian nurses. Average salary: ${salary.averageSalary} (≈ ${salary.inrEquivalent}). Breakdown by experience, specialty, and city. Updated ${CURRENT_YEAR} data.`
 
   return buildMetadata({
     title,
     description,
     path: `/salary/${salary.slug}`,
-    ogImage: `/og/salary-${salary.slug}.png`,
     ogType: 'article',
   })
 }
@@ -236,14 +234,13 @@ export function buildExamMetadata(exam: {
   prepTimeMonths: { min: number; max: number }
 }): Metadata {
   const countries = exam.applicableCountries.slice(0, 3).join(', ')
-  const title = `${exam.examName} Guide 2025 — Complete Preparation for Indian Nurses | ${SITE_NAME}`
+  const title = `${exam.examName} Guide ${CURRENT_YEAR} — Complete Preparation for Indian Nurses | ${SITE_NAME}`
   const description = `Complete ${exam.examName} preparation guide for Indian nurses migrating to ${countries}. Exam structure, passing scores, preparation tips, registration process, and study resources. Prep time: ${exam.prepTimeMonths.min}–${exam.prepTimeMonths.max} months.`
 
   return buildMetadata({
     title,
     description,
     path: `/exam/${exam.slug}`,
-    ogImage: `/og/exam-${exam.slug}.png`,
     ogType: 'article',
   })
 }
@@ -263,7 +260,6 @@ export function buildScamReportMetadata(report: {
     title: `${report.title} — Scam Report | ${SITE_NAME}`,
     description,
     path: `/scam-report/${report.slug}`,
-    ogImage: '/og/scam-reports.png',
     ogType: 'article',
   })
 }
@@ -276,7 +272,6 @@ export function buildReviewsMetadata(): Metadata {
     description:
       'Read verified reviews from Indian nurses about overseas recruitment agencies. Real experiences covering costs, timelines, hidden charges, and placements in Germany, UK, Canada, Australia, and Dubai.',
     path: '/reviews',
-    ogImage: '/og/reviews.png',
   })
 }
 
@@ -292,7 +287,6 @@ export function buildGuideMetadata(guide: {
     title: `${guide.title} | ${SITE_NAME}`,
     description: guide.description,
     path: `/guides/${guide.slug}`,
-    ogImage: `/og/guide-${guide.slug}.png`,
     ogType: 'article',
   })
 }

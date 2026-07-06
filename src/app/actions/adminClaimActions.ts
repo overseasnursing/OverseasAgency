@@ -2,7 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail, approvalEmailHtml, rejectionEmailHtml } from '@/lib/email/sendEmail'
-import { requireAdmin } from '@/lib/require-admin'
+import { requirePermission } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 
 // ── Approve a claim request ───────────────────────────────────────────────────
@@ -10,7 +10,7 @@ import { revalidatePath } from 'next/cache'
 export async function approveClaimRequest(
   claimId: string,
 ): Promise<{ success?: boolean; error?: string }> {
-  await requireAdmin()
+  await requirePermission('claim-listings')
 
   const db = createAdminClient() as any
 
@@ -38,12 +38,16 @@ export async function approveClaimRequest(
 
   if (existingUser) {
     userId = existingUser.id
-    // Update metadata to grant agency_admin role
+    // role/agency_id go in app_metadata — only the service role can write it,
+    // unlike user_metadata which the account owner can edit via the Auth API.
     await db.auth.admin.updateUserById(userId, {
-      user_metadata: {
-        ...existingUser.user_metadata,
+      app_metadata: {
+        ...existingUser.app_metadata,
         role:      'agency_admin',
         agency_id: claim.agency_id,
+      },
+      user_metadata: {
+        ...existingUser.user_metadata,
         display_name: claim.contact_name,
       },
     })
@@ -52,9 +56,11 @@ export async function approveClaimRequest(
     const { data: newUser, error: createErr } = await db.auth.admin.createUser({
       email:         claim.contact_email,
       email_confirm: true,
-      user_metadata: {
+      app_metadata: {
         role:         'agency_admin',
         agency_id:    claim.agency_id,
+      },
+      user_metadata: {
         display_name: claim.contact_name,
       },
     })
@@ -108,7 +114,7 @@ export async function rejectClaimRequest(
   claimId: string,
   reason: string,
 ): Promise<{ success?: boolean; error?: string }> {
-  await requireAdmin()
+  await requirePermission('claim-listings')
 
   const db = createAdminClient() as any
 

@@ -91,13 +91,19 @@ export function adminProfileToReviewer(profile: AdminProfile): Reviewer {
 // Lightweight utility for ContentAttribution blocks across page templates.
 // Returns null if no profile is configured — callers omit author/reviewer props gracefully.
 export async function getAttributionProfiles(): Promise<{
-  author: { name: string; slug: string }
-  reviewer: { name: string; slug: string }
+  author?: { name: string; slug: string }
+  reviewer?: { name: string; slug: string }
 } | null> {
   const profile = await getAdminProfile()
   if (!profile) return null
+  // getAdminProfile() only nulls out when BOTH are unconfigured — one side
+  // can still be empty strings here, which would render "Written by " /
+  // link to an empty-slug page. Omit whichever side isn't actually filled in.
+  const hasAuthor   = Boolean(profile.authorSlug && profile.authorDisplayName)
+  const hasReviewer = Boolean(profile.reviewerSlug && profile.reviewerDisplayName)
+  if (!hasAuthor && !hasReviewer) return null
   return {
-    author: { name: profile.authorDisplayName, slug: profile.authorSlug },
-    reviewer: { name: profile.reviewerDisplayName, slug: profile.reviewerSlug },
+    ...(hasAuthor   && { author:   { name: profile.authorDisplayName,   slug: profile.authorSlug } }),
+    ...(hasReviewer && { reviewer: { name: profile.reviewerDisplayName, slug: profile.reviewerSlug } }),
   }
 }

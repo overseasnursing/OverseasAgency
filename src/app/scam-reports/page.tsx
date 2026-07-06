@@ -18,13 +18,13 @@ export const metadata: Metadata = {
     description: 'Verified fraud reports against nursing agencies with full incident details and warning signs.',
     url: '/scam-reports',
     type: 'website',
-    images: [{ url: '/og/scam-reports.png', width: 1200, height: 630, alt: 'Scam Reports — OverseasNursing.com' }],
+    images: [{ url: '/api/og?type=default&title=Scam+Reports', width: 1200, height: 630, alt: 'Scam Reports — OverseasNursing.com' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Overseas Nursing Agency Scam Reports',
     description: 'Verified fraud reports against nursing agencies with full incident details and warning signs.',
-    images: ['/og/scam-reports.png'],
+    images: ['/api/og?type=default&title=Scam+Reports'],
   },
 }
 

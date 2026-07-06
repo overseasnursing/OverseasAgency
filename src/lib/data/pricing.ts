@@ -487,7 +487,7 @@ const CANADA: PricingPageData = {
   relatedGuides: [
     { slug: 'canada-nclex-guide', title: 'NCLEX-RN Guide for Indian Nurses', description: 'Registration, NGN format, study resources, and passing strategy.', category: 'exam', readingTimeMinutes: 12 },
     { slug: 'express-entry-nurses', title: 'Express Entry for Nurses — CRS Strategy', description: 'How to maximize your CRS score for Canadian PR as an internationally educated nurse.', category: 'visa', readingTimeMinutes: 9 },
-    { slug: 'canada-nurse-salary', title: 'Canada Nurse Salary by Province (2025)', description: 'Province-by-province salary comparison for Indian nurses.', category: 'salary', readingTimeMinutes: 8 },
+    { slug: 'canada-nurse-salary-guide', title: 'Canada Nurse Salary by Province (2025)', description: 'Province-by-province salary comparison for Indian nurses.', category: 'salary', readingTimeMinutes: 8 },
   ],
 }
 
@@ -655,7 +655,7 @@ const DUBAI: PricingPageData = {
 
   relatedCountrySlugs: ['germany', 'uk', 'canada'],
   relatedGuides: [
-    { slug: 'dha-exam-guide', title: 'DHA Exam Complete Guide', description: 'Registration, syllabus, and preparation strategy for the Dubai Health Authority exam.', category: 'exam', readingTimeMinutes: 7 },
+    { slug: 'dha-exam-application-guide', title: 'DHA Exam Complete Guide', description: 'Registration, syllabus, and preparation strategy for the Dubai Health Authority exam.', category: 'exam', readingTimeMinutes: 7 },
     { slug: 'dubai-vs-germany-nursing', title: 'Dubai vs Germany — Financial Comparison', description: 'Salary, savings rate, migration cost, and long-term career value compared.', category: 'comparison', readingTimeMinutes: 8 },
     { slug: 'uae-nurse-salary-guide', title: 'UAE Nurse Salary Guide 2025', description: 'DHA, MOH, and HAAD salary ranges and actual take-home pay.', category: 'salary', readingTimeMinutes: 6 },
   ],

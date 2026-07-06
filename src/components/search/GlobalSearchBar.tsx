@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, X, ArrowRight, Building2, Globe, BookOpen } from 'lucide-react'
 
@@ -28,24 +28,24 @@ export function GlobalSearchBar({ agencies, countries, exams }: GlobalSearchBarP
   const hasQuery  = q.length >= 2
   const isOpen    = hasQuery && !closed
 
-  // Matched results per group
-  const matchedAgencies  = hasQuery
-    ? agencies.filter(a => a.name.toLowerCase().includes(q) || a.location.toLowerCase().includes(q)).slice(0, MAX)
-    : []
-  const matchedCountries = hasQuery
-    ? countries.filter(c => c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q)).slice(0, MAX)
-    : []
-  const matchedExams     = hasQuery
-    ? exams.filter(e => e.examName.toLowerCase().includes(q) || e.examFullName.toLowerCase().includes(q)).slice(0, MAX)
-    : []
+  // Matched results per group — memoized so keyboard navigation (which only
+  // changes activeIdx, not the query) doesn't re-run all three filters.
+  const { matchedAgencies, matchedCountries, matchedExams } = useMemo(() => {
+    if (!hasQuery) return { matchedAgencies: [], matchedCountries: [], matchedExams: [] }
+    return {
+      matchedAgencies:  agencies.filter(a => a.name.toLowerCase().includes(q) || a.location.toLowerCase().includes(q)).slice(0, MAX),
+      matchedCountries: countries.filter(c => c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q)).slice(0, MAX),
+      matchedExams:     exams.filter(e => e.examName.toLowerCase().includes(q) || e.examFullName.toLowerCase().includes(q)).slice(0, MAX),
+    }
+  }, [hasQuery, q, agencies, countries, exams])
 
   // Flat list for keyboard navigation
   type Row = { href: string; type: 'agency' | 'country' | 'exam'; title: string; subtitle: string }
-  const rows: Row[] = [
+  const rows: Row[] = useMemo(() => [
     ...matchedAgencies.map(a  => ({ href: `/agency/${a.slug}`,  type: 'agency'  as const, title: a.name,     subtitle: a.location       })),
     ...matchedCountries.map(c => ({ href: `/country/${c.slug}`, type: 'country' as const, title: c.name,     subtitle: 'Destination guide' })),
     ...matchedExams.map(e     => ({ href: `/exam/${e.slug}`,    type: 'exam'    as const, title: e.examName, subtitle: e.examFullName    })),
-  ]
+  ], [matchedAgencies, matchedCountries, matchedExams])
   const hasResults = rows.length > 0
 
   // Close on outside click (capture phase so it fires before React synthetic events)

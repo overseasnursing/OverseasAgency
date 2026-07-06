@@ -1,11 +1,13 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePermission } from '@/lib/require-admin'
 import AgencyForm, { type AgencyFullData } from '../_components/AgencyForm'
 
 export const dynamic = 'force-dynamic'
 
 export default async function EditAgencyPage({ params }: { params: Promise<{ slug: string }> }) {
+  await requirePermission('agencies')
   const { slug } = await params
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
@@ -32,6 +34,7 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
     state:                         agency.state,
     location:                      agency.location,
     established:                   agency.established                ?? null,
+    source_country:                agency.source_country              ?? 'India',
     trust_level:                   agency.trust_level,
     is_active:                     agency.is_active,
     featured:                      agency.featured,

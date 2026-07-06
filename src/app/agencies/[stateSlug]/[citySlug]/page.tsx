@@ -10,7 +10,10 @@ import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
 import { CityAgencyGrid } from './_components/CityAgencyGrid'
 
-export const revalidate = 86400
+// Was 24h — this reads the same live agencies table as the parent /agencies
+// listing (revalidate=1800), so a new review/agency shouldn't take up to
+// 48x longer to surface here than there.
+export const revalidate = 1800
 
 interface PageProps {
   params: Promise<{ stateSlug: string; citySlug: string }>

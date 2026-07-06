@@ -1,6 +1,8 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient }      from '@/lib/supabase/server'
+import { requireAdmin }      from '@/lib/require-admin'
 
 export type NotificationType =
   | 'exam_complete'
@@ -14,6 +16,12 @@ export async function queueNotification(
   type:    NotificationType,
   payload: Record<string, unknown>,
 ): Promise<void> {
+  // Only the notification's own owner (or an admin) may queue it — prevents
+  // spamming/poisoning another user's notification queue via a client-supplied id.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.id !== userId) return
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   await db.from('notification_queue').insert({
@@ -26,6 +34,7 @@ export async function queueNotification(
 
 /* ── Mark a notification as sent (called by future email job) ──────── */
 export async function markNotificationSent(notificationId: string): Promise<void> {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   await db.from('notification_queue')
@@ -35,6 +44,7 @@ export async function markNotificationSent(notificationId: string): Promise<void
 
 /* ── Get unsent notifications (called by future cron job) ─────────── */
 export async function getPendingNotifications(limit = 50) {
+  await requireAdmin()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
   const { data } = await db

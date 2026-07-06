@@ -71,12 +71,17 @@ const GUIDES: GuideData[] = [
       { question: 'Which Canadian province is best for Indian nurses?', answer: 'Ontario (CNO) is the most popular due to high nurse demand, good salaries, and a large Indian community. British Columbia and Alberta are also highly sought after.' },
       { question: 'Do I need IELTS/OET for Canadian nursing?', answer: 'Most Canadian provinces require proof of English proficiency. IELTS Academic (minimum 6.5–7.0 in each band) is most commonly accepted. Some provinces accept OET Grade B.' },
     ],
-    relatedSlugs: ['canada-nurse-salary', 'express-entry-nurses'],
+    relatedSlugs: ['canada-nurse-salary-guide', 'express-entry-nurses'],
   },
 
   {
-    slug: 'canada-nurse-salary',
-    title: 'Canada Nurse Salary 2025 — Complete Guide for Indian Nurses',
+    slug: 'canada-nurse-salary-guide',
+    // Distinct from the dedicated /salary/canada-nurse-salary page's title —
+    // both existed with the identical slug and near-identical title, which
+    // is a duplicate-content risk (two indexable URLs competing for the same
+    // keyword). This guide covers province-by-province breakdown; the salary
+    // page is the canonical quick-reference.
+    title: 'Canada Nurse Salary by Province — In-Depth Guide for Indian Nurses',
     metaDescription: 'How much do nurses earn in Canada in 2025? Province-wise RN salary data, shift differentials, overtime, and take-home pay for Indian nurses.',
     category: 'salary',
     country: 'Canada',
@@ -251,7 +256,7 @@ const GUIDES: GuideData[] = [
       { question: 'Do I need a job offer for Express Entry as a nurse?', answer: 'A job offer is not mandatory for Express Entry but adds 50–200 points to your CRS score depending on the NOC level. For nurses (NOC 31301 — TEER 1), a valid job offer adds 200 points.' },
       { question: 'Which provinces are easiest for nurses to get PR in Canada?', answer: 'Nova Scotia has the most nurse-friendly PNP stream with no CRS minimum. Alberta and British Columbia also have strong healthcare pathways. Ontario has the highest volume of nurse immigrants overall.' },
     ],
-    relatedSlugs: ['canada-nclex-guide', 'canada-nurse-salary'],
+    relatedSlugs: ['canada-nclex-guide', 'canada-nurse-salary-guide'],
   },
 
   {
@@ -396,8 +401,12 @@ const GUIDES: GuideData[] = [
   },
 
   {
-    slug: 'dha-exam-guide',
-    title: 'DHA Exam Guide for Indian Nurses — Dubai Health Authority 2025',
+    // Distinct from the dedicated /exam/dha-exam-guide page's slug/title —
+    // both existed identically, a duplicate-content risk (two indexable
+    // URLs competing for the same keyword). This guide is the narrative
+    // walkthrough; the exam page is the canonical structured reference.
+    slug: 'dha-exam-application-guide',
+    title: 'How to Apply for the DHA Exam — Step-by-Step Guide for Indian Nurses',
     metaDescription: 'Complete DHA exam guide for Indian nurses. Eligibility, syllabus, registration process, fees, and tips to pass DHA nursing exam for Dubai.',
     category: 'exam',
     country: 'UAE (Dubai)',
@@ -526,7 +535,7 @@ const GUIDES: GuideData[] = [
       { question: 'Is UAE a good long-term option for Indian nurses?', answer: 'UAE is excellent for a 2–5 year financial goal. Long-term settlement is not available for nurses (no permanent residency pathway). Many Indian nurses use UAE to save money and then migrate to Europe, Canada, or Australia for long-term settlement.' },
       { question: 'What is the visa process for nurses in UAE?', answer: 'Your UAE employer sponsors your employment visa. Once you pass DHA/MOH/DOH exam and receive your professional license, the employer processes your work and residence visa. The entire process typically takes 4–8 weeks after job offer.' },
     ],
-    relatedSlugs: ['dha-exam-guide', 'dubai-vs-germany-nursing'],
+    relatedSlugs: ['dha-exam-application-guide', 'dubai-vs-germany-nursing'],
   },
 
   {
@@ -805,7 +814,7 @@ const GUIDES: GuideData[] = [
       { question: 'Can I use OET for both Australia and Canada?', answer: 'OET is accepted by AHPRA (Australia) but not by all Canadian provinces for NCLEX eligibility or nursing registration. Most Canadian provinces accept IELTS. Check specific provincial requirements for Canada.' },
       { question: 'Do both Australia and Canada allow family immigration?', answer: 'Yes. Both countries have well-established family immigration pathways. Canada\'s family reunification process is considered slightly faster. Both allow dependent spouses to work with an open work permit.' },
     ],
-    relatedSlugs: ['ahpra-registration-india', 'australia-nurse-salary-2025', 'canada-nclex-guide', 'canada-nurse-salary'],
+    relatedSlugs: ['ahpra-registration-india', 'australia-nurse-salary-2025', 'canada-nclex-guide', 'canada-nurse-salary-guide'],
   },
 ]
 

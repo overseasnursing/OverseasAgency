@@ -59,3 +59,30 @@ export function getCountryBySlug(slug: string): DestinationCountry | undefined {
 export function getCountryByDbValue(dbValue: string): DestinationCountry | undefined {
   return DESTINATION_COUNTRIES.find(c => c.dbValue === dbValue)
 }
+
+/**
+ * Countries nurses migrate FROM (agencies.source_country) — separate from
+ * DESTINATION_COUNTRIES, which is where they migrate TO. India stays first
+ * since every existing agency defaults to it.
+ */
+export type SourceCountry = {
+  name:     string
+  isoCode:  string   // ISO 3166-1 alpha-2 uppercase, for schema.org addressCountry
+  flagCode: string   // ISO 3166-1 alpha-2 lowercase, for flagcdn.com
+}
+
+export const SOURCE_COUNTRIES: SourceCountry[] = [
+  { name: 'India',        isoCode: 'IN', flagCode: 'in' },
+  { name: 'Philippines',  isoCode: 'PH', flagCode: 'ph' },
+  { name: 'Nepal',        isoCode: 'NP', flagCode: 'np' },
+  { name: 'Nigeria',      isoCode: 'NG', flagCode: 'ng' },
+  { name: 'Kenya',        isoCode: 'KE', flagCode: 'ke' },
+  { name: 'South Africa', isoCode: 'ZA', flagCode: 'za' },
+]
+
+/** For the admin agency form's source-country field (name only, "Other" allowed via free text). */
+export const SOURCE_COUNTRY_OPTIONS: string[] = SOURCE_COUNTRIES.map(c => c.name)
+
+export function getSourceCountryByName(name: string): SourceCountry | undefined {
+  return SOURCE_COUNTRIES.find(c => c.name === name)
+}

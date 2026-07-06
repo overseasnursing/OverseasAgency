@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { upsertAdminProfile } from '@/lib/db/admin-profile'
+import { requirePermission } from '@/lib/require-admin'
 import type { AdminProfile } from '@/types/admin-profile'
 
 function slugify(name: string): string {
@@ -16,6 +17,8 @@ export async function saveAdminSettings(
   _prevState: { success: boolean; error?: string } | null,
   formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
+  await requirePermission('settings')
+
   const authorDisplayName = (formData.get('authorDisplayName') as string | null)?.trim() ?? ''
   const reviewerDisplayName = (formData.get('reviewerDisplayName') as string | null)?.trim() ?? ''
 

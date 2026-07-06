@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Briefcase, ClipboardList, LayoutDashboard, Settings, LogOut } from 'lucide-react'
+
+// Authenticated agency-owner pages — must never be indexed. robots.txt alone
+// doesn't stop indexing of a URL that's already linked/known elsewhere.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function AgencyAdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -9,8 +16,10 @@ export default async function AgencyAdminLayout({ children }: { children: React.
 
   if (!user) redirect('/auth/login?next=/agency-admin')
 
-  const role     = user.user_metadata?.role as string | undefined
-  const agencyId = user.user_metadata?.agency_id as string | undefined
+  // role/agency_id live in app_metadata (service-role-only writes) — user_metadata
+  // is self-editable by the account owner and must never be trusted for authorization.
+  const role     = user.app_metadata?.role as string | undefined
+  const agencyId = user.app_metadata?.agency_id as string | undefined
 
   if (role !== 'agency_admin' || !agencyId) {
     redirect('/?error=unauthorized')

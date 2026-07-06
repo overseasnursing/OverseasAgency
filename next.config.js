@@ -2,6 +2,17 @@
 
 const isDev = process.env.NODE_ENV !== 'production'
 
+// "cdn.supabase.co" isn't a real domain Supabase serves storage from — derive
+// the actual project origin so this preconnect hint targets where images
+// actually load from (matches the `*.supabase.co` remotePattern below).
+const supabaseOrigin = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_SUPABASE_URL ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin : null
+  } catch {
+    return null
+  }
+})()
+
 // Content-Security-Policy
 // - script-src needs 'unsafe-inline': Next.js embeds inline JSON/hydration scripts.
 // - style-src needs 'unsafe-inline': Tailwind uses inline style attributes.
@@ -28,14 +39,10 @@ const nextConfig = {
   poweredByHeader: false,
 
   experimental: {
+    // Only list packages that are actually installed and imported — entries
+    // for uninstalled packages are harmless no-ops but misleading config.
     optimizePackageImports: [
       'lucide-react',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-select',
-      '@radix-ui/react-tabs',
-      '@radix-ui/react-tooltip',
-      'framer-motion',
     ],
   },
 
@@ -83,8 +90,8 @@ const nextConfig = {
           { key: 'Cross-Origin-Opener-Policy',        value: 'same-origin-allow-popups' },
           // HSTS — 1 year, include subdomains, eligible for preload list
           { key: 'Strict-Transport-Security',         value: 'max-age=31536000; includeSubDomains; preload' },
-          // Supabase CDN preconnect hint
-          { key: 'Link',                              value: '<https://cdn.supabase.co>; rel=preconnect' },
+          // Supabase storage origin preconnect hint (where agency images actually load from)
+          ...(supabaseOrigin ? [{ key: 'Link', value: `<${supabaseOrigin}>; rel=preconnect` }] : []),
         ],
       },
     ]

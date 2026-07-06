@@ -25,9 +25,49 @@ export interface AgencySubmissionInput {
   designation:      string
 }
 
+// Strip HTML tags to prevent stored XSS
+function sanitize(str: string): string {
+  return str.replace(/<[^>]*>/g, '').trim()
+}
+
+// Validate a string is within length range
+function strRange(val: string | undefined, min: number, max: number): boolean {
+  if (!val) return min === 0
+  return val.length >= min && val.length <= max
+}
+
 export async function submitAgency(
   input: AgencySubmissionInput,
 ): Promise<{ error: string | null }> {
+  if (!strRange(input.agency_name, 2, 150)) return { error: 'Agency name must be 2–150 characters.' }
+  if (!strRange(input.city, 1, 100)) return { error: 'City must be under 100 characters.' }
+  if (!strRange(input.state, 1, 100)) return { error: 'State must be under 100 characters.' }
+  if (!strRange(input.website, 0, 300)) return { error: 'Website URL must be under 300 characters.' }
+  if (!strRange(input.email, 3, 200)) return { error: 'Agency email must be 3–200 characters.' }
+  if (!strRange(input.phone, 0, 30)) return { error: 'Phone must be under 30 characters.' }
+  if (!strRange(input.whatsapp, 0, 30)) return { error: 'WhatsApp must be under 30 characters.' }
+  if (!strRange(input.description, 0, 3000)) return { error: 'Description must be under 3,000 characters.' }
+  if (!strRange(input.contact_name, 2, 100)) return { error: 'Your name must be 2–100 characters.' }
+  if (!strRange(input.contact_email, 3, 200)) return { error: 'Your email must be 3–200 characters.' }
+  if (!strRange(input.contact_phone, 0, 30)) return { error: 'Your phone must be under 30 characters.' }
+  if (!strRange(input.designation, 1, 100)) return { error: 'Designation must be under 100 characters.' }
+
+  input = {
+    ...input,
+    agency_name:   sanitize(input.agency_name),
+    city:          sanitize(input.city),
+    state:         sanitize(input.state),
+    website:       input.website ? sanitize(input.website) : input.website,
+    email:         sanitize(input.email),
+    phone:         input.phone ? sanitize(input.phone) : input.phone,
+    whatsapp:      input.whatsapp ? sanitize(input.whatsapp) : input.whatsapp,
+    description:   input.description ? sanitize(input.description) : input.description,
+    contact_name:  sanitize(input.contact_name),
+    contact_email: sanitize(input.contact_email),
+    contact_phone: input.contact_phone ? sanitize(input.contact_phone) : input.contact_phone,
+    designation:   sanitize(input.designation),
+  }
+
   const db = createAdminClient() as any
 
   // Prevent duplicate pending submissions from same email
@@ -87,6 +127,7 @@ export async function approveAgencySubmission(
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
 
   // Make slug unique by appending city if clash exists
   const { data: existing } = await db.from('agencies').select('id').eq('slug', slug).maybeSingle()
@@ -127,13 +168,16 @@ export async function approveAgencySubmission(
   if (existingUser?.user) {
     userId = existingUser.user.id
     await supabaseAdmin.auth.admin.updateUserById(userId, {
-      user_metadata: { role: 'agency_admin', agency_id: agency.id },
+      // role/agency_id go in app_metadata — only the service role can write it,
+      // unlike user_metadata which the account owner can edit via the Auth API.
+      app_metadata: { role: 'agency_admin', agency_id: agency.id },
     })
   } else {
     const { data: newUser, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: sub.contact_email,
       email_confirm: true,
-      user_metadata: { role: 'agency_admin', agency_id: agency.id, display_name: sub.contact_name },
+      app_metadata: { role: 'agency_admin', agency_id: agency.id },
+      user_metadata: { display_name: sub.contact_name },
     })
     if (userError) return { error: userError.message }
     userId = newUser.user.id

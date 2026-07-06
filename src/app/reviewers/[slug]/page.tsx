@@ -30,6 +30,10 @@ export async function generateMetadata({
       description: reviewer.shortBio,
       url: `https://overseasnursing.com/reviewers/${reviewer.slug}`,
       type: 'profile',
+      images: [
+        reviewer.profileImage ??
+          `/api/og?type=default&title=${encodeURIComponent(reviewer.displayName)}`,
+      ],
     },
   }
 }

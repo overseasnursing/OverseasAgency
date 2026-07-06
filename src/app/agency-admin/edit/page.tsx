@@ -10,7 +10,7 @@ export default async function AgencyOwnerEditPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?next=/agency-admin/edit')
 
-  const agencyId = user.user_metadata?.agency_id as string | undefined
+  const agencyId = user.app_metadata?.agency_id as string | undefined
   if (!agencyId) redirect('/agency-admin')
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

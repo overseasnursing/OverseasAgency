@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from 'next/cache'
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AdminProfile, AdminProfileRow } from '@/types/admin-profile'
 
@@ -55,7 +56,11 @@ function rowToProfile(row: AdminProfileRow): AdminProfile {
   }
 }
 
-export async function getAdminProfile(): Promise<AdminProfile | null> {
+// cache() dedupes this across a single request — getAttributionProfiles()
+// (and getSiteSocialLinks-adjacent callers) are invoked from many nested
+// Server Components (layout + page + sidebar widgets) that would otherwise
+// each trigger their own round-trip for the same nearly-static row.
+export const getAdminProfile = cache(async (): Promise<AdminProfile | null> => {
   try {
     const db = createAdminClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -75,7 +80,7 @@ export async function getAdminProfile(): Promise<AdminProfile | null> {
   } catch {
     return null
   }
-}
+})
 
 /**
  * Fetches the full admin profile for the settings page.
@@ -109,7 +114,12 @@ export type SiteSocialLinks = {
 }
 
 export async function getSiteSocialLinks(): Promise<SiteSocialLinks> {
-  noStore()
+  // No noStore() here deliberately — this is rendered by SiteFooter on every
+  // page via the root layout, so forcing it dynamic would force the ENTIRE
+  // site out of static/ISR rendering on every request. Social links rarely
+  // change, and saveAdminSettings() already calls
+  // revalidatePath('/', 'layout') on save, so visitors get the update
+  // on-demand instead of paying a dynamic-render cost on every page view.
   try {
     const db = createAdminClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

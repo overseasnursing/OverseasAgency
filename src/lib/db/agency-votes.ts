@@ -8,45 +8,36 @@ export type VoteCounts = {
   isLoggedIn: boolean
 }
 
-export async function getVoteCounts(agencyId: string): Promise<VoteCounts> {
+// Counts are computed by Postgres (count: 'exact', head: true — no row data
+// transferred) instead of fetching every vote row and counting in JS, which
+// scaled worst on exactly the most-voted (= most-viewed) agencies.
+async function countVotes(agencyId: string): Promise<{ thumbsUp: number; thumbsDown: number }> {
   const db = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (db as any)
-    .from('agency_votes')
-    .select('vote')
-    .eq('agency_id', agencyId)
+  const [{ count: thumbsUp }, { count: thumbsDown }] = await Promise.all([
+    (db as any).from('agency_votes').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('vote', true),
+    (db as any).from('agency_votes').select('*', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('vote', false),
+  ])
+  return { thumbsUp: thumbsUp ?? 0, thumbsDown: thumbsDown ?? 0 }
+}
 
-  if (error || !data) return { thumbsUp: 0, thumbsDown: 0, userVote: null, isLoggedIn: false }
-
-  const thumbsUp   = data.filter((r: { vote: boolean }) => r.vote === true).length
-  const thumbsDown = data.filter((r: { vote: boolean }) => r.vote === false).length
+export async function getVoteCounts(agencyId: string): Promise<VoteCounts> {
+  const { thumbsUp, thumbsDown } = await countVotes(agencyId)
   return { thumbsUp, thumbsDown, userVote: null, isLoggedIn: false }
 }
 
 export async function getVoteCountsWithUserVote(agencyId: string): Promise<VoteCounts> {
-  const [db, supabase] = await Promise.all([
-    Promise.resolve(createAdminClient()),
-    createClient(),
-  ])
-
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (db as any)
-    .from('agency_votes')
-    .select('vote, user_id')
-    .eq('agency_id', agencyId)
+  const db = createAdminClient()
+  const [{ thumbsUp, thumbsDown }, mine] = await Promise.all([
+    countVotes(agencyId),
+    user
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? (db as any).from('agency_votes').select('vote').eq('agency_id', agencyId).eq('user_id', user.id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
 
-  if (error || !data) return { thumbsUp: 0, thumbsDown: 0, userVote: null, isLoggedIn: !!user }
-
-  const thumbsUp   = data.filter((r: { vote: boolean }) => r.vote === true).length
-  const thumbsDown = data.filter((r: { vote: boolean }) => r.vote === false).length
-
-  let userVote: boolean | null = null
-  if (user) {
-    const mine = data.find((r: { vote: boolean; user_id: string }) => r.user_id === user.id)
-    if (mine) userVote = mine.vote
-  }
-
-  return { thumbsUp, thumbsDown, userVote, isLoggedIn: !!user }
+  return { thumbsUp, thumbsDown, userVote: mine?.data?.vote ?? null, isLoggedIn: !!user }
 }

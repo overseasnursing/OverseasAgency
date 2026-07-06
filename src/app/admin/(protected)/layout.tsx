@@ -1,8 +1,15 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
 import { getAdminUser, isSuperAdmin } from '@/lib/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminSidebar } from './_components/AdminSidebar'
+
+// Also disallowed in robots.txt — this is defense-in-depth in case an admin
+// URL is ever linked from a public page and discovered despite the disallow.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 async function fetchPendingCounts() {
   try {

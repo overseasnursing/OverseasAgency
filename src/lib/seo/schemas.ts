@@ -72,6 +72,11 @@ const ORGANIZATION_ENTITY = {
     email:             'hello@overseasnursing.com',
     availableLanguage: ['English'],
   },
+  // Keep in sync with the admin-configured site_*_url fields rendered in
+  // SiteFooter (src/lib/db/admin-profile.ts getSiteSocialLinks()) — this
+  // schema is intentionally synchronous so it can't read the DB directly at
+  // every call site; if the footer's real social links ever diverge from
+  // these handles, Google sees a schema/visible-content mismatch.
   sameAs: ['https://twitter.com/overseasnursing', 'https://instagram.com/overseasnursing'],
   knowsAbout: [
     'Overseas nursing migration',
@@ -614,6 +619,8 @@ export function buildAgencySchema(agency: {
   meaLicenseNo?: string
   meaLicenseExpiry?: string
   countries?: string[]
+  /** ISO 3166-1 alpha-2 of the agency's source country. Defaults to 'IN' — every existing agency is India-based. */
+  addressCountryIso?: string
 }) {
   const priceRange = (() => {
     if (agency.pricingIsFree) return 'Free'
@@ -644,7 +651,7 @@ export function buildAgencySchema(agency: {
         ...(agency.city && { addressLocality: agency.city }),
         ...(agency.state && { addressRegion: agency.state }),
         ...(agency.postalCode && { postalCode: agency.postalCode }),
-        addressCountry: 'IN',
+        addressCountry: agency.addressCountryIso ?? 'IN',
       },
     }),
     ...((agency.rating ?? 0) > 0 && (agency.reviewCount ?? 0) > 0
@@ -699,6 +706,10 @@ export function buildCollectionPageSchema(page: {
   locationName: string
   locationRegion?: string
   agencyCount: number
+  /** ISO 3166-1 alpha-2 of the location's country. Defaults to 'IN' — today every location page is an Indian state/city. */
+  addressCountryIso?: string
+  /** BCP 47 language tag. Defaults to 'en-IN'. */
+  language?: string
 }) {
   return {
     '@context': 'https://schema.org',
@@ -712,10 +723,10 @@ export function buildCollectionPageSchema(page: {
       '@type': 'Place',
       name: page.locationName,
       ...(page.locationRegion && { containedInPlace: { '@type': 'State', name: page.locationRegion } }),
-      address: { '@type': 'PostalAddress', addressCountry: 'IN' },
+      address: { '@type': 'PostalAddress', addressCountry: page.addressCountryIso ?? 'IN' },
     },
     numberOfItems: page.agencyCount,
-    inLanguage: 'en-IN',
+    inLanguage: page.language ?? 'en-IN',
   }
 }
 
@@ -728,6 +739,8 @@ export function buildAgencyItemListSchema(agencies: Array<{
   reviewCount: number
   city: string
   state: string
+  /** ISO 3166-1 alpha-2 of the agency's source country. Defaults to 'IN'. */
+  addressCountryIso?: string
 }>, listName: string) {
   return {
     '@context': 'https://schema.org',
@@ -745,7 +758,7 @@ export function buildAgencyItemListSchema(agencies: Array<{
           '@type': 'PostalAddress',
           addressLocality: a.city,
           addressRegion: a.state,
-          addressCountry: 'IN',
+          addressCountry: a.addressCountryIso ?? 'IN',
         },
         ...((a.rating > 0 && a.reviewCount > 0) && {
           aggregateRating: {
@@ -862,7 +875,9 @@ export function buildJobPostingSchema(job: {
 }) {
   const pageUrl      = `${BASE_URL}/jobs/${job.slug}`
   const countryCode  = JOB_COUNTRY_CODE[job.country] ?? job.country
-  const employType   = JOB_EMPLOYMENT_TYPE[(job.job_type ?? '').toLowerCase()] ?? 'FULL_TIME'
+  // Omit employmentType rather than guessing FULL_TIME for unmapped values
+  // (e.g. "locum", "per-diem") — a wrong enum value misrepresents the posting.
+  const employType   = JOB_EMPLOYMENT_TYPE[(job.job_type ?? '').toLowerCase()]
 
   // DB created_at is the authoritative posted date for jobs (equivalent role to
   // getGitFileDate for markdown files — both give the true first-creation timestamp)
@@ -882,7 +897,7 @@ export function buildJobPostingSchema(job: {
     datePosted:      `${datePosted}T00:00:00Z`,
     validThrough:    `${validThrough}T23:59:59Z`,
     url:             pageUrl,
-    employmentType:  employType,
+    ...(employType && { employmentType: employType }),
     // Stable identifier lets Google deduplicate across crawls
     identifier: {
       '@type': 'PropertyValue',

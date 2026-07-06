@@ -83,7 +83,10 @@ function guessContentType(path: string): string {
   const map: Record<string, string> = {
     jpg: 'image/jpeg', jpeg: 'image/jpeg',
     png: 'image/png', webp: 'image/webp',
-    gif: 'image/gif', svg: 'image/svg+xml',
+    gif: 'image/gif',
+    // svg intentionally omitted — served with image/svg+xml a browser will
+    // execute embedded <script>, so any legacy .svg falls back to
+    // application/octet-stream (forces download) instead of copying as-is.
     pdf: 'application/pdf',
   }
   return map[ext ?? ''] ?? 'application/octet-stream'

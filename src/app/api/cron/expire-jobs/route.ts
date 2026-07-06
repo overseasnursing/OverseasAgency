@@ -1,11 +1,20 @@
+import { timingSafeEqual } from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { expireOverdueJobs } from '@/lib/db/jobs'
 
 export const dynamic = 'force-dynamic'
 
+function isValidCronSecret(authHeader: string | null): boolean {
+  const secret = process.env.CRON_SECRET
+  if (!secret || !authHeader) return false
+  const expected = Buffer.from(`Bearer ${secret}`)
+  const actual   = Buffer.from(authHeader)
+  if (expected.length !== actual.length) return false
+  return timingSafeEqual(expected, actual)
+}
+
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization')
-  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isValidCronSecret(req.headers.get('authorization'))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

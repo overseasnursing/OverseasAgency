@@ -24,6 +24,7 @@ import { ContentAttribution } from '@/components/seo/ContentAttribution'
 import { getAttributionProfiles } from '@/lib/admin-profile'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildBreadcrumbSchema, buildReviewSchema, buildAgencySchema, buildFaqSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
+import { getSourceCountryByName } from '@/lib/data/countryList'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
@@ -88,9 +89,12 @@ export default async function AgencyDetailPage({ params }: PageProps) {
   const agency = await getAgencyDetail(slug)
   if (!agency) notFound()
 
-  const attribution = await getAttributionProfiles()
-
-  const votes = await getVoteCountsWithUserVote(agency.id)
+  // Independent queries — run in parallel instead of adding two sequential
+  // round-trips to TTFB on this high-traffic page type.
+  const [attribution, votes] = await Promise.all([
+    getAttributionProfiles(),
+    getVoteCountsWithUserVote(agency.id),
+  ])
   const voteTotal = votes.thumbsUp + votes.thumbsDown
   const liveRecommendPercent = voteTotal === 0 ? 100 : Math.round((votes.thumbsUp / voteTotal) * 100)
 
@@ -117,6 +121,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
       meaLicenseNo: agency.meaLicenseNo,
       meaLicenseExpiry: agency.meaLicenseExpiry,
       countries: agency.countries,
+      addressCountryIso: getSourceCountryByName(agency.sourceCountry)?.isoCode,
     }),
     buildBreadcrumbSchema([
       { name: 'Home', href: '/' },

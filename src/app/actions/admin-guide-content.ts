@@ -81,6 +81,7 @@ export async function saveGuideContent(
 export async function loadGuideContent(
   categoryId: string,
 ): Promise<GuideInput | null> {
+  await requireAdmin()
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = createAdminClient() as any

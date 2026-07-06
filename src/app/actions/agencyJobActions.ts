@@ -10,8 +10,8 @@ async function requireAgencyAdmin(): Promise<{ userId: string; agencyId: string 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
-  const role     = user.user_metadata?.role as string | undefined
-  const agencyId = user.user_metadata?.agency_id as string | undefined
+  const role     = user.app_metadata?.role as string | undefined
+  const agencyId = user.app_metadata?.agency_id as string | undefined
   if (role !== 'agency_admin' || !agencyId) throw new Error('Not authorized')
   return { userId: user.id, agencyId }
 }

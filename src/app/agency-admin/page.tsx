@@ -9,7 +9,7 @@ export default async function AgencyAdminDashboard() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login?next=/agency-admin')
 
-  const agencyId = user.user_metadata?.agency_id as string
+  const agencyId = user.app_metadata?.agency_id as string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 

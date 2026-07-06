@@ -73,7 +73,7 @@ function LoginTab() {
       if (signInError) { setError(signInError.message); return }
 
       // Redirect agency admins to their panel, others to homepage
-      const role = data.user?.user_metadata?.role
+      const role = data.user?.app_metadata?.role
       window.location.href = role === 'agency_admin' ? '/agency-admin' : '/'
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in. Please try again.')

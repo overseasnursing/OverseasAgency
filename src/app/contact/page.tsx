@@ -82,7 +82,7 @@ export default function ContactPage() {
             <a href="/scam-reports/submit" className="text-primary font-semibold hover:underline">
               scam report form
             </a>{' '}
-            which is reviewed daily.
+            which is reviewed within 24–72 hours.
           </p>
         </div>
 

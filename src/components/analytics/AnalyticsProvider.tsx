@@ -1,12 +1,17 @@
+'use client'
+
 import Script from 'next/script'
+import { useCookieConsent } from '@/components/cookies/CookieConsentContext'
 
 const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID
 
 export function AnalyticsProvider() {
+  const { analyticsAllowed } = useCookieConsent()
+
   return (
     <>
-      {/* Microsoft Clarity */}
-      {CLARITY_ID && (
+      {/* Microsoft Clarity — only loads once the visitor has granted analytics consent */}
+      {CLARITY_ID && analyticsAllowed && (
         <Script id="clarity-init" strategy="lazyOnload">
           {`
             (function(c,l,a,r,i,t,y){

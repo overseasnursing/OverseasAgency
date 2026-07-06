@@ -1,8 +1,15 @@
 import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { LayoutDashboard, BookOpen, Briefcase, LogOut } from 'lucide-react'
+
+// Authenticated, per-user pages — must never be indexed. robots.txt alone
+// doesn't stop indexing of a URL that's already linked/known elsewhere.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()

@@ -12,7 +12,10 @@ export default function LoginClient() {
 
   function getSafeNextPath() {
     const rawNext = new URLSearchParams(window.location.search).get('next')
-    return rawNext && rawNext.startsWith('/') ? rawNext : '/dashboard'
+    // Must be a same-site path — reject protocol-relative ("//evil.com") and
+    // backslash variants, which browsers/URL parsers treat as a different host.
+    const isSafe = !!rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.startsWith('/\\')
+    return isSafe ? rawNext : '/dashboard'
   }
 
   async function handleSignIn(e: React.FormEvent) {

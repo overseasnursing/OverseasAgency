@@ -4,6 +4,8 @@ import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getBlogPostBySlug, getPublishedBlogPosts, getPublishedBlogSlugs } from '@/lib/db/blogs'
 import { Calendar, User, ArrowLeft, Tag, Clock } from 'lucide-react'
+import { ContentAttribution } from '@/components/seo/ContentAttribution'
+import { getAttributionProfiles } from '@/lib/admin-profile'
 
 export const revalidate = 3600
 
@@ -78,6 +80,8 @@ export default async function BlogPostPage({ params }: Props) {
   const related    = allPosts
     .filter(p => p.slug !== slug && p.tags?.some(t => post.tags?.includes(t)))
     .slice(0, 3)
+
+  const attribution = await getAttributionProfiles()
 
   const articleSchema = {
     '@context': 'https://schema.org',
@@ -224,6 +228,18 @@ export default async function BlogPostPage({ params }: Props) {
           />
         ) : (
           <p className="text-slate-400 italic">No content yet.</p>
+        )}
+
+        {/* Attribution — EEAT trust signal, links to author/reviewer profiles */}
+        {attribution && (
+          <div className="mt-10">
+            <ContentAttribution
+              {...(attribution.author && { author: attribution.author })}
+              {...(attribution.reviewer && { reviewer: attribution.reviewer })}
+              lastReviewed={new Date(post.updated_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+              sourceNote="This article is reviewed by our editorial team for accuracy before publishing."
+            />
+          </div>
         )}
 
         {/* FAQs */}

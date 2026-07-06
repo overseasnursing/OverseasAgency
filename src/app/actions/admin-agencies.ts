@@ -51,8 +51,15 @@ export type AgencyInput = {
   state: string
   location: string
   established: number | null
+  // Country this agency recruits nurses FROM (agencies.source_country). Defaults to 'India'.
+  source_country: string
   trust_level: 'verified' | 'trusted' | 'unverified' | 'scam-reported'
   is_active: boolean
+  // NOTE: not currently read by any public sort/ranking query (see
+  // src/lib/data/fetchAgencies.ts, getAgencies.ts) — toggling this has no
+  // visible effect today. If it's ever wired into public ranking, update
+  // the editorial-independence claims in src/app/editorial-policy/page.tsx
+  // Section 6 ("rankings ... not from commercial agreements") to match.
   featured: boolean
   email: string
   website: string
@@ -192,6 +199,7 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     state:                         data.state,
     location:                      data.location                  || `${data.city}, ${data.state}`,
     established:                   data.established               ?? null,
+    source_country:                data.source_country            || 'India',
     trust_level:                   data.trust_level,
     is_active:                     data.is_active,
     featured:                      data.featured,
@@ -250,6 +258,17 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     const dupCheck = await checkWebsiteExists(data.website, data.id)
     if (dupCheck.exists && dupCheck.agency) {
       return { error: `Website already registered to "${dupCheck.agency.name}". Each agency must have a unique website.` }
+    }
+  }
+
+  // Duplicate name guard — two agencies with an identical name would render
+  // identical <title> tags on two different /agency/[slug] URLs.
+  {
+    let nameQuery = db.from('agencies').select('id').ilike('name', data.name.trim())
+    if (data.id) nameQuery = nameQuery.neq('id', data.id)
+    const { data: nameDup } = await nameQuery.maybeSingle()
+    if (nameDup) {
+      return { error: `An agency named "${data.name}" already exists. Agency names must be unique.` }
     }
   }
 

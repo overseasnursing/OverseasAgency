@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertTriangle, AlertCircle } from 'lucide-react'
 import { submitScamReport } from '@/app/actions/submitScamReport'
 import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
-import { LocationCascade } from '@/components/ui/LocationCascade'
+import { IndiaStateCitySelect } from '@/components/ui/IndiaStateCitySelect'
 
 type Step = 'agency' | 'incident' | 'details' | 'submit'
 
@@ -356,8 +356,7 @@ export function ScamReportForm() {
             </div>
             <div>
               <FieldLabel required>Your home location</FieldLabel>
-              <LocationCascade
-                mode="state-city"
+              <IndiaStateCitySelect
                 state={form.reporterState}
                 city={form.reporterCity}
                 onStateChange={(v) => {

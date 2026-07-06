@@ -12,24 +12,39 @@ import {
 } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
 
+// Links to the explanation of what each trust status means and how it's
+// assigned (src/app/editorial-policy/page.tsx#trust-status) — a badge with
+// no accessible explanation of its criteria is a trust gap in itself.
 function TrustBadge({ level }: { level: AgencyDetail['trustLevel'] }) {
   if (level === 'verified')
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#DCFCE7] text-[#166534] text-[12.5px] font-semibold rounded-full">
+      <a
+        href="/editorial-policy#trust-status"
+        title="What does 'Verified' mean? See our editorial independence policy."
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#DCFCE7] text-[#166534] text-[12.5px] font-semibold rounded-full hover:opacity-80 transition-opacity"
+      >
         <CheckCircle size={13} strokeWidth={2.5} /> Verified Agency
-      </span>
+      </a>
     )
   if (level === 'trusted')
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#DBEAFE] text-[#1D4ED8] text-[12.5px] font-semibold rounded-full">
+      <a
+        href="/editorial-policy#trust-status"
+        title="What does 'Trusted' mean? See our editorial independence policy."
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#DBEAFE] text-[#1D4ED8] text-[12.5px] font-semibold rounded-full hover:opacity-80 transition-opacity"
+      >
         <CheckCircle size={13} strokeWidth={2.5} /> Trusted
-      </span>
+      </a>
     )
   if (level === 'scam-reported')
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEE2E2] text-[#B91C1C] text-[12.5px] font-semibold rounded-full">
+      <a
+        href="/editorial-policy#trust-status"
+        title="What does 'Scam Reported' mean? See our editorial independence policy."
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEE2E2] text-[#B91C1C] text-[12.5px] font-semibold rounded-full hover:opacity-80 transition-opacity"
+      >
         <ShieldAlert size={13} strokeWidth={2.5} /> Scam Reported
-      </span>
+      </a>
     )
   return null
 }
@@ -102,6 +117,7 @@ export function AgencyHero({ agency, recommendationPercent }: AgencyHeroProps) {
                     width={72}
                     height={72}
                     sizes="72px"
+                    priority
                     className="w-full h-full object-contain"
                   />
                 </div>
