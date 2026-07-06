@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Agency } from '@/types/agency'
+import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
@@ -54,7 +55,10 @@ export async function getAgencies(): Promise<Agency[]> {
   for (const b of (branchRows ?? []) as BranchDbRow[]) {
     if (!branchMap.has(b.agency_id)) branchMap.set(b.agency_id, { cities: [], states: [] })
     const entry = branchMap.get(b.agency_id)!
-    if (b.city  && !entry.cities.includes(b.city))  entry.cities.push(b.city)
+    if (b.city && !isExcludedCityName(b.city)) {
+      const city = normalizeCityName(b.city)
+      if (!entry.cities.includes(city)) entry.cities.push(city)
+    }
     if (b.state && !entry.states.includes(b.state)) entry.states.push(b.state)
   }
 
@@ -88,7 +92,8 @@ export async function getAgencies(): Promise<Agency[]> {
 
     // Parse city/state from location string when DB columns are empty
     const locationParts = (a.location ?? '').split(',').map((s: string) => s.trim())
-    const city  = (a.city  && a.city.trim())  ? a.city.trim()  : (locationParts[0] ?? '')
+    const rawCity = (a.city && a.city.trim()) ? a.city.trim() : (locationParts[0] ?? '')
+    const city  = rawCity ? normalizeCityName(rawCity) : rawCity
     const state = (a.state && a.state.trim()) ? a.state.trim() : (locationParts[1] ?? '')
 
     const reviewSnippet = r

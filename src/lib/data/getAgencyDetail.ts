@@ -2,6 +2,7 @@ import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { AgencyDetail } from '@/types/agencyDetail'
 import type { ReviewSnippet } from '@/types/agency'
+import { normalizeCityName } from '@/lib/data/cityNormalization'
 
 /* ── Helpers ─────────────────────────────────────────────────────── */
 
@@ -107,7 +108,7 @@ export const getAgencyDetail = cache(async (slug: string): Promise<AgencyDetail 
     name:                 a.name,
     logo:                 a.logo_url        ?? undefined,
     location:             a.location,
-    city:                 a.city,
+    city:                 a.city ? normalizeCityName(a.city) : a.city,
     state:                a.state,
     established:          a.established     ?? 0,
     trustLevel:           a.trust_level,
@@ -172,7 +173,7 @@ export const getAgencyDetail = cache(async (slug: string): Promise<AgencyDetail 
       id:           b.id,
       name:         b.name,
       address:      b.address,
-      city:         b.city,
+      city:         b.city ? normalizeCityName(b.city) : b.city,
       state:        b.state,
       country:      b.country,
       phone:        b.phone       ?? '',

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 import { sendEmail, approvalEmailHtml, rejectionEmailHtml } from '@/lib/email/sendEmail'
+import { normalizeCityName } from '@/lib/data/cityNormalization'
 
 // ── Public: submit a new agency ───────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export async function submitAgency(
   input = {
     ...input,
     agency_name:   sanitize(input.agency_name),
-    city:          sanitize(input.city),
+    city:          normalizeCityName(sanitize(input.city)),
     state:         sanitize(input.state),
     website:       input.website ? sanitize(input.website) : input.website,
     email:         sanitize(input.email),
@@ -120,6 +121,10 @@ export async function approveAgencySubmission(
 
   if (!sub) return { error: 'Submission not found' }
 
+  // Re-normalize in case this submission predates the normalization added at
+  // the submitAgency() write path.
+  const city = normalizeCityName(sub.city)
+
   // 1. Create the agency
   const slug = sub.agency_name
     .toLowerCase()
@@ -132,7 +137,7 @@ export async function approveAgencySubmission(
   // Make slug unique by appending city if clash exists
   const { data: existing } = await db.from('agencies').select('id').eq('slug', slug).maybeSingle()
   const finalSlug = existing
-    ? `${slug}-${sub.city.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+    ? `${slug}-${city.toLowerCase().replace(/[^a-z0-9]/g, '')}`
     : slug
 
   const { data: agency, error: agencyError } = await db
@@ -140,9 +145,9 @@ export async function approveAgencySubmission(
     .insert({
       name:        sub.agency_name,
       slug:        finalSlug,
-      city:        sub.city,
+      city,
       state:       sub.state,
-      location:    `${sub.city}, ${sub.state}`,
+      location:    `${city}, ${sub.state}`,
       email:       sub.email,
       website:     sub.website ?? null,
       whatsapp:    sub.whatsapp ?? null,

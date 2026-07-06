@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Agency } from '@/types/agency'
+import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapRow(a: any): Agency {
@@ -8,7 +9,7 @@ function mapRow(a: any): Agency {
     slug:                  String(a.slug),
     name:                  String(a.name),
     location:              String(a.location ?? ''),
-    city:                  String(a.city ?? ''),
+    city:                  normalizeCityName(String(a.city ?? '')),
     state:                 String(a.state ?? ''),
     established:           Number(a.established ?? 0),
     trustLevel:            a.trust_level ?? 'unverified',
@@ -104,13 +105,13 @@ export async function fetchAgenciesByCity(citySlug: string): Promise<Agency[]> {
   const branchAgencyIds = new Set<string>(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ((branchRows ?? []) as any[])
-      .filter((b: { city: string | null; agency_id: string }) => b.city && toSlug(b.city) === citySlug)
+      .filter((b: { city: string | null; agency_id: string }) => b.city && !isExcludedCityName(b.city) && toSlug(normalizeCityName(b.city)) === citySlug)
       .map((b: { agency_id: string }) => b.agency_id),
   )
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const matched = (agencyRows as any[]).filter(
-    (a) => (a.city && toSlug(a.city) === citySlug) || branchAgencyIds.has(a.id),
+    (a) => (a.city && !isExcludedCityName(a.city) && toSlug(normalizeCityName(a.city)) === citySlug) || branchAgencyIds.has(a.id),
   )
 
   matched.sort(
