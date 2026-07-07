@@ -12,6 +12,8 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import type { Agency } from '@/types/agency'
+import { FlagIcon } from '@/components/ui/FlagIcon'
+import { getSourceCountryByName } from '@/lib/data/countryList'
 
 function GoogleGLogo({ size = 16 }: { size?: number }) {
   return (
@@ -132,6 +134,10 @@ export function AgencyCard({ agency }: AgencyCardProps) {
               <span>{agency.location}</span>
               <span>·</span>
               <span>Est. {agency.established}</span>
+              {(() => {
+                const src = getSourceCountryByName(agency.sourceCountry)
+                return src ? <FlagIcon iso={src.isoCode.toLowerCase()} size={11} className="ml-0.5 opacity-70" /> : null
+              })()}
             </div>
             {/* Rating */}
             {agency.reviewCount > 0 ? (

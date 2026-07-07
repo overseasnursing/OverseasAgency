@@ -42,4 +42,9 @@ export interface SalaryPageData {
   faqs: { question: string; answer: string }[]
   relatedSlugs: string[]
   relatedCountrySlugs: string[]
+  // Content Recommendation Foundation — which SOURCE country this salary
+  // guide was written for. Undefined means global (every visitor, always
+  // the fallback). No existing salary page is tagged yet — type-level
+  // foundation only, see src/lib/recommendations/rank.ts.
+  sourceCountry?: string
 }

@@ -105,4 +105,10 @@ export interface CountryDetail {
   relatedGuides: CountryRelatedGuide[]
   relatedCountrySlugs: string[]
   featuredAgencySlugs: string[]
+  // Content Recommendation Foundation — reserved for a future per-source-
+  // country variant of this destination's related content. Country pages
+  // are keyed by destination (one page per country, e.g. Germany), not by
+  // source country, so this is registry-level foundation only — no widget
+  // consumes it yet. See src/lib/recommendations/rank.ts.
+  sourceCountry?: string
 }

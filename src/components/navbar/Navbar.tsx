@@ -1,6 +1,7 @@
 import React from 'react'
 import { Container } from '@/components/layout/Container'
 import { NavbarClient } from './NavbarClient'
+import { CountrySwitcher } from './CountrySwitcher'
 
 const NAV_LINKS = [
   { href: '/',             label: 'Home' },
@@ -41,8 +42,15 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Client island — owns all auth state */}
-          <NavbarClient />
+          <div className="flex items-center gap-2">
+            {/* Desktop-only — mobile gets its own instance inside NavbarClient's menu panel */}
+            <div className="hidden lg:block">
+              <CountrySwitcher />
+            </div>
+
+            {/* Client island — owns all auth state */}
+            <NavbarClient />
+          </div>
         </div>
       </Container>
     </nav>

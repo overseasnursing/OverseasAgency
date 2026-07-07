@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache'
 import { normalizeWebsiteUrl } from '@/lib/utils/url'
 import { uploadToR2 } from '@/lib/r2'
 import { normalizeCityName } from '@/lib/data/cityNormalization'
+import { resolveSourceCountry } from '@/lib/country/resolve'
 
 /**
  * Checks whether a website domain is already registered to another agency.
@@ -187,6 +188,10 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
 
   const slug = data.slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
   const city = normalizeCityName(data.city)
+  // Resolves + validates the source country and derives its currency —
+  // falls back to India if the value is empty, unregistered, or disabled,
+  // so an agency can never be saved with an inconsistent country/currency pair.
+  const resolvedCountry = await resolveSourceCountry(data.source_country)
 
   const row = {
     slug,
@@ -201,7 +206,8 @@ export async function saveAgency(data: AgencyInput): Promise<{ error: string | n
     state:                         data.state,
     location:                      data.location                  || `${city}, ${data.state}`,
     established:                   data.established               ?? null,
-    source_country:                data.source_country            || 'India',
+    source_country:                resolvedCountry.name,
+    pricing_currency:              resolvedCountry.currencyCode,
     trust_level:                   data.trust_level,
     is_active:                     data.is_active,
     featured:                      data.featured,

@@ -3,8 +3,10 @@
 import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertTriangle, AlertCircle } from 'lucide-react'
 import { submitScamReport } from '@/app/actions/submitScamReport'
-import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
-import { IndiaStateCitySelect } from '@/components/ui/IndiaStateCitySelect'
+import { COUNTRY_FORM_OPTIONS, getSourceCountryByName } from '@/lib/data/countryList'
+import { LocationCascade } from '@/components/ui/LocationCascade'
+import { INDIA_ISO } from '@/lib/data/locationPicker'
+import { useSourceCountry } from '@/lib/country/context'
 
 type Step = 'agency' | 'incident' | 'details' | 'submit'
 
@@ -120,6 +122,8 @@ function Select({ className = '', children, ...props }: React.SelectHTMLAttribut
 }
 
 export function ScamReportForm() {
+  const { country } = useSourceCountry()
+  const reporterCountryIso = getSourceCountryByName(country.name)?.isoCode ?? INDIA_ISO
   const [step, setStep] = useState<Step>('agency')
   const [form, setForm] = useState(initialForm)
   const [submitted, setSubmitted] = useState(false)
@@ -356,7 +360,10 @@ export function ScamReportForm() {
             </div>
             <div>
               <FieldLabel required>Your home location</FieldLabel>
-              <IndiaStateCitySelect
+              <LocationCascade
+                mode="state-city"
+                country={country.name}
+                countryIsoOverride={reporterCountryIso}
                 state={form.reporterState}
                 city={form.reporterCity}
                 onStateChange={(v) => {

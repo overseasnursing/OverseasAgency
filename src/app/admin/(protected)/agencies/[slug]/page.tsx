@@ -2,6 +2,7 @@ import React from 'react'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requirePermission } from '@/lib/require-admin'
+import { getEnabledSourceCountries } from '@/lib/db/country-settings'
 import AgencyForm, { type AgencyFullData } from '../_components/AgencyForm'
 
 export const dynamic = 'force-dynamic'
@@ -15,9 +16,10 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
   const { data: agency, error } = await db.from('agencies').select('*').eq('slug', slug).single()
   if (error || !agency) notFound()
 
-  const [{ data: branches }, { data: faqs }] = await Promise.all([
+  const [{ data: branches }, { data: faqs }, enabledSourceCountries] = await Promise.all([
     db.from('branches').select('*').eq('agency_id', agency.id).order('is_head_office', { ascending: false }),
     db.from('agency_faqs').select('*').eq('agency_id', agency.id).order('sort_order'),
+    getEnabledSourceCountries(),
   ])
 
   const fullData: AgencyFullData = {
@@ -104,7 +106,7 @@ export default async function EditAgencyPage({ params }: { params: Promise<{ slu
         </p>
       </div>
 
-      <AgencyForm initialData={fullData} />
+      <AgencyForm initialData={fullData} enabledSourceCountries={enabledSourceCountries} />
     </div>
   )
 }

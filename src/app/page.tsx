@@ -13,11 +13,15 @@ import type { ExamPageData } from '@/types/exam'
 import {
   CheckCircle, ShieldAlert, Star, ArrowRight,
   Clock, Banknote, Users, BookOpen, AlertTriangle,
-  Shield, Eye, MessageSquare, ChevronRight, Award,
+  Shield, Eye, MessageSquare, ChevronRight, Award, Briefcase,
 } from 'lucide-react'
 import { HeroVisual } from '@/components/visuals/HeroVisual'
 import { GlobalSearchBar, type SearchAgency, type SearchCountry, type SearchExam } from '@/components/search/GlobalSearchBar'
-import { AgencyCard } from '@/components/agencies/AgencyCard'
+import { FeaturedAgenciesSection } from '@/components/home/FeaturedAgenciesSection'
+import { FeaturedJobsSection } from '@/components/home/FeaturedJobsSection'
+import { HeroCopy } from '@/components/home/HeroCopy'
+import { RecommendedExams } from '@/components/home/RecommendedExams'
+import { getActiveJobsAdmin } from '@/lib/db/jobs'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildWebPageSchema, buildBreadcrumbSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 
@@ -313,60 +317,16 @@ function CountryCard({ country }: { country: CountryDetail }) {
   )
 }
 
-function ExamGuideCard({ exam }: { exam: ExamPageData }) {
-  const typeLabel: Record<string, string> = {
-    language:     'Language Exam',
-    professional: 'Professional Exam',
-    clinical:     'Clinical Assessment',
-  }
-  const typeColor: Record<string, string> = {
-    language:     'bg-[#DBEAFE] text-[#1D4ED8]',
-    professional: 'bg-[#DCFCE7] text-[#166534]',
-    clinical:     'bg-[#FEF3C7] text-[#92400E]',
-  }
-
-  return (
-    <a
-      href={`/exam/${exam.slug}`}
-      className="bg-white rounded-card shadow-card hover:shadow-card-md transition-shadow border border-slate-100 flex flex-col p-5 group flex-shrink-0 w-[260px] sm:w-[280px]"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
-          <BookOpen size={18} className="text-primary" />
-        </div>
-        <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full ${typeColor[exam.examType] ?? 'bg-slate-100 text-slate-500'}`}>
-          {typeLabel[exam.examType] ?? 'Guide'}
-        </span>
-      </div>
-
-      <h3 className="text-[15px] font-bold text-slate-800 mb-1">{exam.examName}</h3>
-      <p className="text-[12px] text-slate-400 mb-3">{exam.examFullName}</p>
-
-      <p className="text-[12.5px] text-slate-500 leading-relaxed flex-1 mb-4 line-clamp-2">
-        {exam.tagline}
-      </p>
-
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-        <span className="text-[12px] text-slate-400">
-          {exam.prepTimeMonths.min}–{exam.prepTimeMonths.max} months prep
-        </span>
-        <span className="text-[12px] font-semibold text-primary flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
-          Read guide <ChevronRight size={12} />
-        </span>
-      </div>
-    </a>
-  )
-}
-
 /* ── Page ────────────────────────────────────────────────────────── */
 
 export default async function HomePage() {
   const countries = getAllCountries()
   const exams     = getAllExams()
 
-  const [featuredAgencies, searchAgenciesRaw] = await Promise.all([
+  const [featuredAgencies, searchAgenciesRaw, featuredJobs] = await Promise.all([
     fetchFeaturedAgencies(6),
     fetchAgenciesForSearch(100),
+    getActiveJobsAdmin().then(jobs => jobs.slice(0, 6)),
   ])
 
   const featuredReviews  = PLATFORM_REVIEWS.filter((r) => r.featured).slice(0, 6)
@@ -405,16 +365,9 @@ export default async function HomePage() {
                 </p>
               </div>
 
-              {/* H1 */}
-              <h1 className="mb-5 text-balance">
-                Find overseas nursing agencies that nurses actually trust.
-              </h1>
-
-              {/* Sub */}
-              <p className="text-[17px] text-slate-500 leading-[1.78] mb-8 max-w-[520px]">
-                Compare verified reviews, real migration costs, and scam reports —
-                from nurses who have already made the move to Germany, UK, Canada, and beyond.
-              </p>
+              {/* H1 + Sub — server-renders global copy (canonical, unchanged);
+                  swaps in place client-side once Market Context resolves */}
+              <HeroCopy />
 
               {/* Search */}
               <GlobalSearchBar agencies={searchAgencies} countries={searchCountries} exams={searchExams} />
@@ -557,11 +510,7 @@ export default async function HomePage() {
             </a>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-            {featuredAgencies.map((agency) => (
-              <AgencyCard key={agency.id} agency={agency} />
-            ))}
-          </div>
+          <FeaturedAgenciesSection initialAgencies={featuredAgencies} />
 
           {/* Trust note */}
           <div className="flex items-start gap-2.5 p-4 bg-white border border-slate-100 rounded-2xl">
@@ -583,6 +532,47 @@ export default async function HomePage() {
           </div>
         </Container>
       </SectionWrapper>
+
+      {/* ══════════════════════════════════════════════════════════
+          §3.5 — FEATURED JOBS
+      ══════════════════════════════════════════════════════════ */}
+      {featuredJobs.length > 0 && (
+        <SectionWrapper spacing="md" background="section" divided>
+          <Container>
+            <div className="flex items-end justify-between gap-4 mb-8">
+              <div>
+                <SectionLabel variant="green">
+                  <Briefcase size={11} />
+                  Open positions
+                </SectionLabel>
+                <h2 className="text-balance">
+                  Nursing jobs abroad, open now.
+                </h2>
+                <p className="text-[15px] text-slate-500 mt-2 max-w-[480px]">
+                  Posted directly by approved healthcare recruiters and agencies.
+                </p>
+              </div>
+              <a
+                href="/jobs"
+                className="hidden sm:flex items-center gap-1.5 text-[13.5px] font-semibold text-primary hover:text-primary-hover transition-colors flex-shrink-0"
+              >
+                All jobs <ArrowRight size={14} />
+              </a>
+            </div>
+
+            <FeaturedJobsSection initialJobs={featuredJobs} />
+
+            <div className="mt-5 sm:hidden">
+              <a
+                href="/jobs"
+                className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary"
+              >
+                All jobs <ArrowRight size={14} />
+              </a>
+            </div>
+          </Container>
+        </SectionWrapper>
+      )}
 
       {/* ══════════════════════════════════════════════════════════
           §4 — COUNTRY EXPLORATION
@@ -854,14 +844,7 @@ export default async function HomePage() {
             </a>
           </div>
 
-          {/* Horizontal scroll */}
-          <div className="-mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8 overflow-x-auto pb-4">
-            <div className="flex gap-4" style={{ width: 'max-content' }}>
-              {exams.map((exam) => (
-                <ExamGuideCard key={exam.slug} exam={exam} />
-              ))}
-            </div>
-          </div>
+          <RecommendedExams exams={exams} />
 
           <div className="mt-6 sm:hidden">
             <a href="/exam" className="flex items-center gap-1.5 text-[13.5px] font-semibold text-primary">

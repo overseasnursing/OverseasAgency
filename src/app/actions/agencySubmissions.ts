@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePath } from 'next/cache'
 import { sendEmail, approvalEmailHtml, rejectionEmailHtml } from '@/lib/email/sendEmail'
 import { normalizeCityName } from '@/lib/data/cityNormalization'
+import { resolveSourceCountry } from '@/lib/country/resolve'
 
 // ── Public: submit a new agency ───────────────────────────────────────────────
 
@@ -24,6 +25,10 @@ export interface AgencySubmissionInput {
   contact_email:    string
   contact_phone?:   string
   designation:      string
+  // Which country this agency recruits nurses FROM — defaulted client-side
+  // from the visitor's resolved Market Context (src/lib/country), validated
+  // and normalized server-side here.
+  source_country?:  string
 }
 
 // Strip HTML tags to prevent stored XSS
@@ -83,6 +88,10 @@ export async function submitAgency(
     return { error: 'A submission from this email is already under review. We will contact you once it is processed.' }
   }
 
+  // Validated/normalized the same way saveAgency() handles it — falls back
+  // to India if unset, unregistered, or disabled rather than storing garbage.
+  const resolvedCountry = await resolveSourceCountry(input.source_country)
+
   const { error } = await db.from('agency_submissions').insert({
     agency_name:      input.agency_name.trim(),
     city:             input.city.trim(),
@@ -99,6 +108,7 @@ export async function submitAgency(
     contact_email:    input.contact_email.toLowerCase().trim(),
     contact_phone:    input.contact_phone?.trim() || null,
     designation:      input.designation,
+    source_country:   resolvedCountry.name,
   })
 
   if (error) return { error: error.message }
@@ -124,6 +134,9 @@ export async function approveAgencySubmission(
   // Re-normalize in case this submission predates the normalization added at
   // the submitAgency() write path.
   const city = normalizeCityName(sub.city)
+  // Re-validate in case the submission predates source_country existing, or
+  // the country was since disabled — mirrors saveAgency()'s Phase 1 pattern.
+  const resolvedCountry = await resolveSourceCountry(sub.source_country)
 
   // 1. Create the agency
   const slug = sub.agency_name
@@ -158,6 +171,8 @@ export async function approveAgencySubmission(
       trust_level: 'unverified',
       is_active:   true,
       is_claimed:  true,
+      source_country:   resolvedCountry.name,
+      pricing_currency: resolvedCountry.currencyCode,
     })
     .select('id, slug')
     .single()

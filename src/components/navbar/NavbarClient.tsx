@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Menu, X, User, LayoutDashboard, LogOut } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { CountrySwitcher } from './CountrySwitcher'
 
 const NAV_LINKS = [
   { href: '/',             label: 'Home' },
@@ -173,6 +174,11 @@ export function NavbarClient() {
                 {label}
               </a>
             ))}
+
+            <div className="flex items-center justify-between gap-2 py-3 border-b border-slate-50">
+              <span className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Country</span>
+              <CountrySwitcher />
+            </div>
 
             <div className="pt-4 pb-3 flex flex-col gap-2">
               {isSignedIn ? (

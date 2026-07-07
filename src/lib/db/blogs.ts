@@ -18,6 +18,11 @@ export type BlogPost = {
   faqs:            BlogFaq[]
   created_at:      string
   updated_at:      string
+  // Which source country this post was written for — null/undefined means
+  // global (applies to every visitor; always the fallback). Optional so
+  // existing admin create/update calls (BlogPostInput) don't need to change
+  // to keep compiling. See src/lib/recommendations/rank.ts.
+  source_country?: string | null
 }
 
 export type BlogPostInput = Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>

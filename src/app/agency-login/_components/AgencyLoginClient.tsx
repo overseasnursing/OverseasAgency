@@ -7,7 +7,11 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { submitAgency, type AgencySubmissionInput } from '@/app/actions/agencySubmissions'
-import { COUNTRY_FILTER_OPTIONS } from '@/lib/data/countryList'
+import { COUNTRY_FILTER_OPTIONS, getSourceCountryByName } from '@/lib/data/countryList'
+import { LocationCascade } from '@/components/ui/LocationCascade'
+import { INDIA_ISO } from '@/lib/data/locationPicker'
+import { useSourceCountry } from '@/lib/country/context'
+import { usePhoneDefault } from '@/lib/country/usePhoneDefault'
 
 /* ─── Shared styles ─────────────────────────────────────────────────────────── */
 
@@ -135,6 +139,7 @@ function SubmitTab() {
   const [isPending, start] = useTransition()
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const { country } = useSourceCountry()
 
   const [form, setForm] = useState({
     agency_name: '', city: '', state: '', website: '', email: '', phone: '', whatsapp: '',
@@ -147,6 +152,13 @@ function SubmitTab() {
   function set(key: string, value: unknown) {
     setForm(f => ({ ...f, [key]: value }))
   }
+
+  // Empty-only defaults — never overwrites something the agency already typed.
+  usePhoneDefault(form.phone, v => set('phone', v))
+  usePhoneDefault(form.whatsapp, v => set('whatsapp', v))
+  usePhoneDefault(form.contact_phone, v => set('contact_phone', v))
+
+  const locationCountryIso = getSourceCountryByName(country.name)?.isoCode ?? INDIA_ISO
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -176,6 +188,7 @@ function SubmitTab() {
         contact_email:    form.contact_email,
         contact_phone:    form.contact_phone || undefined,
         designation:      form.designation,
+        source_country:   country.name,
       }
       const result = await submitAgency(input)
       if (result.error) { setError(result.error); return }
@@ -225,14 +238,16 @@ function SubmitTab() {
           <Field label="Agency Name *">
             <input value={form.agency_name} onChange={e => set('agency_name', e.target.value)} className={inputCls} placeholder="e.g. Global Nursing Solutions" />
           </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="City *">
-              <input value={form.city} onChange={e => set('city', e.target.value)} className={inputCls} placeholder="e.g. Kochi" />
-            </Field>
-            <Field label="State *">
-              <input value={form.state} onChange={e => set('state', e.target.value)} className={inputCls} placeholder="e.g. Kerala" />
-            </Field>
-          </div>
+          <LocationCascade
+            mode="state-city"
+            country={country.name}
+            countryIsoOverride={locationCountryIso}
+            state={form.state || null}
+            city={form.city || null}
+            onStateChange={(v) => set('state', v ?? '')}
+            onCityChange={(v) => set('city', v ?? '')}
+            className="grid grid-cols-2 gap-3"
+          />
           <div className="grid grid-cols-2 gap-3">
             <Field label="Agency Email *">
               <input type="email" value={form.email} onChange={e => set('email', e.target.value)} className={inputCls} placeholder="info@agency.com" />
@@ -243,10 +258,10 @@ function SubmitTab() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Phone">
-              <input value={form.phone} onChange={e => set('phone', e.target.value)} className={inputCls} placeholder="+91 98..." />
+              <input value={form.phone} onChange={e => set('phone', e.target.value)} className={inputCls} placeholder={`${country.phoneCode || '+91'} 98...`} />
             </Field>
             <Field label="WhatsApp">
-              <input value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} className={inputCls} placeholder="+91 98..." />
+              <input value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} className={inputCls} placeholder={`${country.phoneCode || '+91'} 98...`} />
             </Field>
           </div>
           <Field label="Website">
@@ -301,7 +316,7 @@ function SubmitTab() {
               <input type="email" value={form.contact_email} onChange={e => set('contact_email', e.target.value)} className={inputCls} placeholder="you@agency.com" />
             </Field>
             <Field label="Your Phone">
-              <input value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} className={inputCls} placeholder="+91 98..." />
+              <input value={form.contact_phone} onChange={e => set('contact_phone', e.target.value)} className={inputCls} placeholder={`${country.phoneCode || '+91'} 98...`} />
             </Field>
           </div>
         </div>

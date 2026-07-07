@@ -11,6 +11,7 @@ import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { ContentAttribution } from '@/components/seo/ContentAttribution'
 import { getAttributionProfiles } from '@/lib/admin-profile'
 import { InternalLinkCluster } from '@/components/seo/InternalLinkCluster'
+import { RecommendedGuides } from './RecommendedGuides'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -177,30 +178,18 @@ export default async function GuidePage({ params }: PageProps) {
               sourceNote="Information reviewed against official government migration portals and regulatory body guidelines. Fees, timelines, and eligibility rules are indicative and should be verified against the issuing authority before applying."
             />
 
-            {/* Related Guides */}
-            {guide.relatedSlugs.length > 0 && (
-              <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                <h3 className="text-[13px] font-bold text-slate-700 uppercase tracking-wide mb-3">Related Guides</h3>
-                <div className="flex flex-col gap-2">
-                  {guide.relatedSlugs.map((relSlug) => {
-                    const rel = getGuide(relSlug)
-                    if (!rel) return null
-                    return (
-                      <a
-                        key={relSlug}
-                        href={`/guides/${rel.slug}`}
-                        className="flex items-center justify-between gap-2 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-                      >
-                        <span className="text-[13px] text-slate-700 group-hover:text-primary transition-colors leading-snug">
-                          {rel.title.split(' — ')[0]}
-                        </span>
-                        <ArrowRight size={12} className="text-slate-300 group-hover:text-primary flex-shrink-0 transition-colors" />
-                      </a>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+            {/* Related Guides — server-computed default order (editorial
+                relatedSlugs, identical for every visitor/crawler); the
+                widget itself may re-rank client-side toward the visitor's
+                Market Context once resolved. See RecommendedGuides.tsx. */}
+            <RecommendedGuides
+              guides={guide.relatedSlugs
+                .map((relSlug) => {
+                  const rel = getGuide(relSlug)
+                  return rel ? { slug: rel.slug, title: rel.title, sourceCountry: rel.sourceCountry } : null
+                })
+                .filter((g): g is NonNullable<typeof g> => g !== null)}
+            />
 
             {/* CTA */}
             <div className="bg-primary rounded-2xl p-5 text-white">

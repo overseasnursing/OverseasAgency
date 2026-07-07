@@ -112,4 +112,8 @@ export interface PricingPageData {
   faqs: PricingFAQ[]
   relatedCountrySlugs: string[]
   relatedGuides: PricingRelatedGuide[]
+  // Content Recommendation Foundation — same reasoning as CountryDetail:
+  // pricing pages are keyed by destination, not source country, so this is
+  // registry-level foundation only. See src/lib/recommendations/rank.ts.
+  sourceCountry?: string
 }

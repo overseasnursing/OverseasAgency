@@ -3,9 +3,10 @@
 import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertCircle, Building2 } from 'lucide-react'
 import { submitReview } from '@/app/actions/submitReview'
-import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
+import { COUNTRY_FORM_OPTIONS, getSourceCountryByName } from '@/lib/data/countryList'
 import { LocationCascade } from '@/components/ui/LocationCascade'
-import { findCountryIso } from '@/lib/data/locationPicker'
+import { findCountryIso, INDIA_ISO } from '@/lib/data/locationPicker'
+import { useSourceCountry } from '@/lib/country/context'
 
 type Step = 'agency' | 'financial' | 'ratings' | 'written' | 'verify'
 
@@ -146,6 +147,8 @@ interface ReviewSubmitFormProps {
 }
 
 export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewSubmitFormProps) {
+  const { country } = useSourceCountry()
+  const authorCountryIso = getSourceCountryByName(country.name)?.isoCode ?? INDIA_ISO
   const [step, setStep] = useState<Step>('agency')
   const [form, setForm] = useState({ ...initialForm, agencyName: lockedAgencyName ?? '' })
   const [submitted, setSubmitted] = useState(false)
@@ -456,6 +459,8 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               <FieldLabel required>Your home location</FieldLabel>
               <LocationCascade
                 mode="state-city"
+                country={country.name}
+                countryIsoOverride={authorCountryIso}
                 state={form.authorState}
                 city={form.authorCity}
                 onStateChange={(v) => {

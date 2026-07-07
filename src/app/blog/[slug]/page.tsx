@@ -6,6 +6,7 @@ import { getBlogPostBySlug, getPublishedBlogPosts, getPublishedBlogSlugs } from 
 import { Calendar, User, ArrowLeft, Tag, Clock } from 'lucide-react'
 import { ContentAttribution } from '@/components/seo/ContentAttribution'
 import { getAttributionProfiles } from '@/lib/admin-profile'
+import { RelatedArticles } from './RelatedArticles'
 
 export const revalidate = 3600
 
@@ -262,35 +263,11 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
         )}
 
-        {/* Related posts */}
-        {related.length > 0 && (
-          <div className="mt-12 pt-8 border-t border-slate-100">
-            <h2 className="text-[18px] font-bold text-slate-900 mb-4">Related Articles</h2>
-            <div className="flex flex-col gap-3">
-              {related.map(p => (
-                <a
-                  key={p.slug}
-                  href={`/blog/${p.slug}`}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary/30 hover:bg-slate-50 transition-all group"
-                >
-                  {p.cover_image_url && (
-                    <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image src={p.cover_image_url} alt={p.title} fill className="object-cover" sizes="64px" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13.5px] font-semibold text-slate-800 group-hover:text-primary transition-colors line-clamp-2 leading-snug">{p.title}</p>
-                    {p.published_at && (
-                      <p className="text-[11.5px] text-slate-400 mt-0.5">
-                        {new Date(p.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
-                    )}
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Related posts — server-computed default (tag overlap, global,
+            identical for every visitor/crawler); the widget itself may
+            re-rank client-side toward the visitor's Market Context once
+            resolved. See RelatedArticles.tsx. */}
+        <RelatedArticles initialPosts={related} excludeSlug={slug} tags={post.tags ?? []} />
 
         {/* Footer nav */}
         <div className="mt-10 pt-6 border-t border-slate-100">

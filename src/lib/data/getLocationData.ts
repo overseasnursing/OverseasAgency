@@ -22,9 +22,11 @@ export async function getAllLocationCitiesFromDb(): Promise<Array<{ city: string
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select('city, state').eq('is_active', true),
-    db.from('branches').select('city, state'),
+    db.from('agencies').select('id, city, state').eq('is_active', true).eq('source_country', 'India'),
+    db.from('branches').select('agency_id, city, state'),
   ])
+
+  const indiaAgencyIds = new Set((agencyRows ?? []).map((a: { id: string }) => a.id))
 
   // slug -> { city, state }
   const seen = new Map<string, { city: string; state: string }>()
@@ -37,7 +39,10 @@ export async function getAllLocationCitiesFromDb(): Promise<Array<{ city: string
       seen.set(toSlug(city), { city, state })
     }
   }
-  for (const b of (branchRows ?? []) as CityRow[]) {
+  // Only branches belonging to an India-sourced agency — a branch row alone
+  // carries no source_country of its own.
+  for (const b of (branchRows ?? []) as (CityRow & { agency_id: string })[]) {
+    if (!indiaAgencyIds.has(b.agency_id)) continue
     const rawCity = b.city?.trim()
     const state = b.state?.trim()
     if (rawCity && state && !isExcludedCityName(rawCity)) {
@@ -60,7 +65,7 @@ export async function getLocationsByState(): Promise<
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select('id, city, state').eq('is_active', true),
+    db.from('agencies').select('id, city, state').eq('is_active', true).eq('source_country', 'India'),
     db.from('branches').select('agency_id, city, state'),
   ])
 
@@ -113,6 +118,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
     .from('agencies')
     .select(AGENCY_COLUMNS)
     .eq('is_active', true)
+    .eq('source_country', 'India')
 
   if (error || !agencyRows?.length) return null
 

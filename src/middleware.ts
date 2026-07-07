@@ -1,5 +1,39 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getSourceCountryByIso } from '@/lib/data/countryList'
+import { PREF_COUNTRY_COOKIE, SUGGESTED_COUNTRY_COOKIE } from '@/lib/cookies/sourceCountry'
+
+const SUGGESTED_COUNTRY_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
+
+/**
+ * Lightweight, first-visit-only source-country detection. No redirects, no
+ * URL changes, no HTML personalization — this only ever sets a cookie that
+ * resolveSourceCountry() reads as its lowest-priority signal (see
+ * src/lib/country/resolve.ts). Silently does nothing if the deployment
+ * infra doesn't expose a geo header, or the detected country isn't
+ * registered — resolveSourceCountry() already falls back to India either way.
+ */
+function applySuggestedCountry(request: NextRequest, response: NextResponse): void {
+  // Never overwrite an existing suggestion or an explicit choice.
+  if (request.cookies.get(PREF_COUNTRY_COOKIE) || request.cookies.get(SUGGESTED_COUNTRY_COOKIE)) return
+
+  // Vercel populates x-vercel-ip-country natively; cf-ipcountry is Cloudflare's
+  // equivalent when it terminates the request in front of origin. Whichever
+  // is actually present in this deployment is used — neither is assumed.
+  const detectedIso =
+    request.headers.get('x-vercel-ip-country') ??
+    request.headers.get('cf-ipcountry')
+  if (!detectedIso) return
+
+  const entry = getSourceCountryByIso(detectedIso)
+  if (!entry) return
+
+  response.cookies.set(SUGGESTED_COUNTRY_COOKIE, entry.name, {
+    maxAge:   SUGGESTED_COUNTRY_MAX_AGE,
+    path:     '/',
+    sameSite: 'lax',
+  })
+}
 
 function isRefreshTokenNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false
@@ -56,6 +90,8 @@ export async function middleware(request: NextRequest) {
       })
     }
   }
+
+  applySuggestedCountry(request, supabaseResponse)
 
   return supabaseResponse
 }

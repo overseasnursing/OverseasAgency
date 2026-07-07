@@ -31,4 +31,9 @@ export interface ExamPageData {
   relatedExamSlugs: string[]
   relatedCountrySlugs: string[]
   lastUpdated: string
+  // Content Recommendation Foundation (Phase 5) — which SOURCE country this
+  // exam guide was written for. Undefined/omitted means global (applies to
+  // every visitor; always the fallback). No existing exam guide is tagged
+  // yet — type-level foundation only, see src/lib/recommendations/rank.ts.
+  sourceCountry?: string
 }
