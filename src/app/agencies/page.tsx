@@ -6,6 +6,7 @@ export const revalidate = 1800
 
 import { AgencyListingClient } from './AgencyListingClient'
 import { getAgencies } from '@/lib/data/getAgencies'
+import { resolveSourceCountry } from '@/lib/country/resolve'
 
 export const metadata: Metadata = {
   title: 'Find Overseas Nursing Agencies — Compare Reviews & Pricing',
@@ -34,7 +35,16 @@ const AGENCIES_SCHEMAS = [
 ]
 
 export default async function AgenciesPage({ searchParams }: { searchParams: Promise<{ country?: string }> }) {
-  const [agencies, { country }] = await Promise.all([getAgencies(), searchParams])
+  // Already a dynamic route (searchParams), so resolving here adds no new
+  // caching cost — see src/lib/country/resolve.ts for why this must never
+  // be called from a statically-generated page.
+  const [resolved, { country }] = await Promise.all([resolveSourceCountry(), searchParams])
+
+  let agencies = await getAgencies(resolved.name)
+  // Graceful fallback while a market has no listed agencies yet, per Phase 3.
+  if (agencies.length === 0 && resolved.name !== 'India') {
+    agencies = await getAgencies('India')
+  }
 
   return (
     <>

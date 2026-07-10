@@ -43,7 +43,7 @@ export async function getAllStatesFromDb(): Promise<StateIndex[]> {
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select('id, city, state, countries').eq('is_active', true),
+    db.from('agencies').select('id, city, state, countries').eq('is_active', true).eq('source_country', 'India'),
     db.from('branches').select('agency_id, city, state'),
   ])
 
@@ -104,7 +104,7 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  const { data: agencyRows, error } = await db.from('agencies').select(AGENCY_COLUMNS).eq('is_active', true)
+  const { data: agencyRows, error } = await db.from('agencies').select(AGENCY_COLUMNS).eq('is_active', true).eq('source_country', 'India')
   if (error || !agencyRows?.length) return null
 
   const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)

@@ -28,9 +28,14 @@ interface RelatedAgenciesProps {
   currentId: string
   city: string
   state: string
+  /** The agency being viewed's own source_country — related/nearby agencies
+   *  must match it, not the visitor's Market Context, so this component
+   *  stays a pure function of the agency page's own data (no personalization
+   *  of /agency/[slug]'s server-rendered HTML). */
+  sourceCountry: string
 }
 
-export async function RelatedAgencies({ currentId, city, state }: RelatedAgenciesProps) {
+export async function RelatedAgencies({ currentId, city, state, sourceCountry }: RelatedAgenciesProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
@@ -44,6 +49,7 @@ export async function RelatedAgencies({ currentId, city, state }: RelatedAgencie
     .select(SELECT)
     .eq('city', city)
     .eq('is_active', true)
+    .eq('source_country', sourceCountry)
     .neq('id', currentId)
     .order('rating', { ascending: false })
     .limit(3)
@@ -62,6 +68,7 @@ export async function RelatedAgencies({ currentId, city, state }: RelatedAgencie
       .select(SELECT)
       .eq('state', state)
       .eq('is_active', true)
+      .eq('source_country', sourceCountry)
       .not('id', 'in', `(${excludeIds.join(',')})`)
       .order('rating', { ascending: false })
       .limit(needed)

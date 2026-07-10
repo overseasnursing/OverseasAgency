@@ -23,6 +23,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '8–12',
     tagline: 'Over 1,400 nurses placed in Germany and UK. No hidden fees — every cost published upfront.',
     featured: true,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Priya K.',
       authorFrom: 'Ernakulam, Kerala',
@@ -55,6 +56,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '9–14',
     tagline: 'Specialised in UK NHS placements. OSCE preparation included for all UK-bound nurses.',
     featured: true,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Anitha R.',
       authorFrom: 'Coimbatore, Tamil Nadu',
@@ -87,6 +89,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '7–11',
     tagline: 'Germany specialists since 2009. German language training included. 94/100 transparency score.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Sreekumar M.',
       authorFrom: 'Thrissur, Kerala',
@@ -119,6 +122,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '12–18',
     tagline: 'Best placement record for Canada. NCLEX pass rate above 89% for agency-coached nurses.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Divya S.',
       authorFrom: 'Palakkad, Kerala',
@@ -151,6 +155,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '10–16',
     tagline: 'Strong presence in Germany and UAE. Works with 60+ hospitals across Europe and the Gulf.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Reshma N.',
       authorFrom: 'Pune, Maharashtra',
@@ -183,6 +188,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '6–10',
     tagline: 'Fastest UK and Gulf placements. Good for nurses who want short-timeline, lower upfront cost.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Jisha T.',
       authorFrom: 'Delhi, Delhi',
@@ -215,6 +221,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '9–13',
     tagline: 'Boutique agency — personal support from start to visa. Smaller batch sizes, more attention.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Nisha V.',
       authorFrom: 'Kozhikode, Kerala',
@@ -247,6 +254,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '5–9',
     tagline: 'Gulf specialist. Lower initial cost but multiple hidden charges reported. Proceed with caution.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Sunitha B.',
       authorFrom: 'Hyderabad, Telangana',
@@ -279,6 +287,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: 'Unknown',
     tagline: 'CAUTION: Multiple scam reports filed. 8 nurses have reported advance payment fraud.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Meena L.',
       authorFrom: 'Mysore, Karnataka',
@@ -311,6 +320,7 @@ export const MOCK_AGENCIES: Agency[] = [
     averageTimelineMonths: '4–7',
     tagline: 'UAE-focused nursing migration support with DHA/DOH/MOH exam guidance and direct hospital tie-ups.',
     featured: false,
+    sourceCountry: 'India',
     reviewSnippet: {
       authorName: 'Aisha P.',
       authorFrom: 'Kochi, Kerala',

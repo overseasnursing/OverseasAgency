@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { Send, CheckCircle } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
 import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
+import { useSourceCountry } from '@/lib/country/context'
+import { usePhoneDefault } from '@/lib/country/usePhoneDefault'
 
 const COUNTRIES = COUNTRY_FORM_OPTIONS
 
@@ -12,6 +14,7 @@ interface InquiryFormProps {
 }
 
 export function InquiryForm({ agency }: InquiryFormProps) {
+  const { country: sourceCountry } = useSourceCountry()
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
@@ -24,6 +27,9 @@ export function InquiryForm({ agency }: InquiryFormProps) {
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
+
+  // Empty-only default — never overwrites a number the visitor already typed.
+  usePhoneDefault(form.phone, v => setForm(prev => ({ ...prev, phone: v })))
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -95,7 +101,7 @@ export function InquiryForm({ agency }: InquiryFormProps) {
               type="tel"
               required
               autoComplete="tel"
-              placeholder="+91 98765 43210"
+              placeholder={`${sourceCountry.phoneCode || '+91'} 98765 43210`}
               value={form.phone}
               onChange={handleChange}
               className="w-full h-11 px-4 bg-[#F8FAFC] border border-slate-200 rounded-xl text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-colors"

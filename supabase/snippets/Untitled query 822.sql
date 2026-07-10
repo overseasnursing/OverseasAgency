@@ -1,38 +1,32 @@
-CREATE TABLE blog_posts (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug            TEXT NOT NULL UNIQUE,
-  title           TEXT NOT NULL,
-  excerpt         TEXT,
-  content         TEXT,
-  cover_image_url TEXT,
-  author_name     TEXT DEFAULT 'OverseasNursing Team',
-  status          TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
-  published_at    TIMESTAMPTZ,
-  seo_title       TEXT,
-  seo_description TEXT,
-  tags            TEXT[] DEFAULT '{}',
-  created_at      TIMESTAMPTZ DEFAULT now() NOT NULL,
-  updated_at      TIMESTAMPTZ DEFAULT now() NOT NULL
-);
-
-CREATE INDEX blog_posts_status_published_at_idx ON blog_posts (status, published_at DESC);
-CREATE INDEX blog_posts_slug_idx ON blog_posts (slug);
-
-CREATE OR REPLACE FUNCTION set_blog_updated_at()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DO $$
+DECLARE
+  target_email    text := 'shubin@gmail.com';   -- new admin email
+  target_password text := 'AKshubin1!';       -- new admin password
+  target_id       uuid;
 BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
+  SELECT id INTO target_id FROM public.users WHERE role = 'admin' LIMIT 1;
 
-CREATE TRIGGER blog_posts_updated_at
-  BEFORE UPDATE ON blog_posts
-  FOR EACH ROW EXECUTE FUNCTION set_blog_updated_at();
+  IF target_id IS NULL THEN
+    RAISE EXCEPTION 'No admin user found (public.users.role = ''admin''). Promote a user to admin first.';
+  END IF;
 
-ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
+  UPDATE auth.users
+  SET email               = target_email,
+      encrypted_password  = crypt(target_password, gen_salt('bf')),
+      email_confirmed_at  = now(),
+      updated_at          = now()
+  WHERE id = target_id;
 
-CREATE POLICY "public can read published blog posts"
-  ON blog_posts FOR SELECT
-  USING (status = 'published');
+  UPDATE public.users
+  SET email      = target_email,
+      updated_at = now()
+  WHERE id = target_id;
 
+  -- No-op if this admin has no auth.identities row.
+  UPDATE auth.identities
+  SET identity_data = identity_data || jsonb_build_object('email', target_email, 'sub', target_id::text),
+      updated_at    = now()
+  WHERE user_id = target_id AND provider = 'email';
+
+  RAISE NOTICE 'Admin % reset: email=%', target_id, target_email;
+END $$;

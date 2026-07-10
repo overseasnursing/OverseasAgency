@@ -3,6 +3,7 @@ import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildWebPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { getActiveJobs } from '@/lib/db/jobs'
 import { JobsClient } from './JobsClient'
+import { resolveSourceCountry } from '@/lib/country/resolve'
 
 export const revalidate = 1800
 
@@ -33,7 +34,15 @@ const JOBS_SCHEMAS = [
 ]
 
 export default async function JobsPage() {
-  const jobs = await getActiveJobs()
+  // getActiveJobs() already reads cookies via the RLS-aware Supabase client,
+  // so this route is already dynamically rendered — resolving here adds no
+  // new caching cost (see src/lib/country/resolve.ts for why that matters).
+  const resolved = await resolveSourceCountry()
+  let jobs = await getActiveJobs(resolved.name)
+  // Graceful fallback while a market has no listed jobs yet, per Phase 5.
+  if (jobs.length === 0 && resolved.name !== 'India') {
+    jobs = await getActiveJobs('India')
+  }
 
   return (
     <>

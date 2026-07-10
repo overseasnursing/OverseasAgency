@@ -11,7 +11,7 @@ const AGENCY_LISTING_COLUMNS = `
   exams_supported, pricing_min_lakhs, pricing_max_lakhs,
   pricing_is_approximate, hidden_charges_reported, visa_sponsorship,
   average_timeline_months, tagline, featured, logo_url, featured_image_url,
-  google_rating, google_review_count, google_place_id
+  google_rating, google_review_count, google_place_id, source_country
 `
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,6 +41,7 @@ function mapRow(a: any): Agency {
     averageTimelineMonths: String(a.average_timeline_months ?? ''),
     tagline:               String(a.tagline ?? ''),
     featured:              Boolean(a.featured ?? false),
+    sourceCountry:         String(a.source_country ?? 'India'),
     logo:                  a.logo_url          ? String(a.logo_url)           : undefined,
     featuredImage:         a.featured_image_url ? String(a.featured_image_url) : undefined,
     googleRating:          a.google_rating       != null ? Number(a.google_rating)        : undefined,
@@ -60,16 +61,23 @@ function mapRow(a: any): Agency {
   }
 }
 
-/** Top agencies by transparency score — for homepage cards and general listing. */
-export async function fetchFeaturedAgencies(limit = 6): Promise<Agency[]> {
+/**
+ * Top agencies by transparency score — for homepage cards and general listing.
+ * Pass `sourceCountry` to scope to one market; omitted callers (eligibility,
+ * pricing) are unaffected and keep seeing agencies from every source country.
+ */
+export async function fetchFeaturedAgencies(limit = 6, sourceCountry?: string): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
-  const { data } = await db
+  let query = db
     .from('agencies')
     .select(AGENCY_LISTING_COLUMNS)
     .eq('is_active', true)
     .order('transparency_score', { ascending: false })
     .limit(limit)
+  if (sourceCountry) query = query.eq('source_country', sourceCountry)
+
+  const { data } = await query
 
   if (!data?.length) return []
   return data.map(mapRow)
@@ -98,14 +106,17 @@ export async function fetchAgenciesForSearch(
 
 /**
  * Agencies that have their HQ or a branch in the given city slug.
- * Used on /agencies/[stateSlug]/[citySlug] pages.
+ * Used on /agencies/[stateSlug]/[citySlug] pages — that URL's geography is
+ * unambiguously India's, so the source-country scope here is the fixed fact
+ * of the route, not the visitor's resolved Market Context (which would
+ * force this SSG page into dynamic rendering for no benefit).
  */
 export async function fetchAgenciesByCity(citySlug: string): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select(AGENCY_LISTING_COLUMNS).eq('is_active', true),
+    db.from('agencies').select(AGENCY_LISTING_COLUMNS).eq('is_active', true).eq('source_country', 'India'),
     db.from('branches').select('agency_id, city'),
   ])
 
@@ -137,14 +148,15 @@ export async function fetchAgenciesByCity(citySlug: string): Promise<Agency[]> {
 
 /**
  * Agencies that have their HQ or a branch in the given state slug.
- * Used on /agencies/[stateSlug] pages.
+ * Used on /agencies/[stateSlug] pages — same India-geography reasoning as
+ * fetchAgenciesByCity above.
  */
 export async function fetchAgenciesByState(stateSlug: string): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select(AGENCY_LISTING_COLUMNS).eq('is_active', true),
+    db.from('agencies').select(AGENCY_LISTING_COLUMNS).eq('is_active', true).eq('source_country', 'India'),
     db.from('branches').select('agency_id, state'),
   ])
 

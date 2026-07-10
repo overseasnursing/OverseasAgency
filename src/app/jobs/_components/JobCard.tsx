@@ -2,6 +2,8 @@ import React from 'react'
 import Link from 'next/link'
 import { MapPin, Building2, Calendar, ChevronRight } from 'lucide-react'
 import type { ActiveJobListing } from '@/lib/db/jobs'
+import { FlagIcon } from '@/components/ui/FlagIcon'
+import { getSourceCountryByName } from '@/lib/data/countryList'
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text
@@ -31,6 +33,10 @@ function JobCardImpl({ job }: { job: ActiveJobListing }) {
           <div className="flex items-center gap-1 text-[12px] text-slate-500">
             <MapPin size={11} className="flex-shrink-0" />
             <span>{[job.city, job.state, job.country].filter(Boolean).join(' · ')}</span>
+            {(() => {
+              const src = job.agency_source_country ? getSourceCountryByName(job.agency_source_country) : undefined
+              return src ? <FlagIcon iso={src.isoCode.toLowerCase()} size={11} className="ml-0.5 opacity-70" /> : null
+            })()}
           </div>
         </div>
       </div>

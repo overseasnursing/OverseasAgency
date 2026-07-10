@@ -14,8 +14,9 @@ import {
   uploadAgencyAsset, checkWebsiteExists,
   type AgencyInput, type BranchInput, type FaqInput,
 } from '@/app/actions/admin-agencies'
-import { COUNTRY_FILTER_OPTIONS, SOURCE_COUNTRY_OPTIONS } from '@/lib/data/countryList'
+import { COUNTRY_FILTER_OPTIONS, getSourceCountryByName } from '@/lib/data/countryList'
 import { LocationCascade } from '@/components/ui/LocationCascade'
+import { INDIA_ISO } from '@/lib/data/locationPicker'
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
 
@@ -470,7 +471,14 @@ function FaqEditor({ agencyId, initialFaqs }: { agencyId: string; initialFaqs: A
 
 type WebsiteStatus = 'idle' | 'checking' | 'ok' | 'taken' | 'invalid'
 
-export default function AgencyForm({ initialData }: { initialData: AgencyFullData | null }) {
+export default function AgencyForm({
+  initialData,
+  enabledSourceCountries,
+}: {
+  initialData: AgencyFullData | null
+  /** Which source countries are selectable — see country_settings / Phase 1 foundation */
+  enabledSourceCountries: string[]
+}) {
   const isEdit = !!initialData
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -511,6 +519,8 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
   function set<K extends keyof AgencyInput>(k: K, v: AgencyInput[K]) {
     setForm(prev => ({ ...prev, [k]: v }))
   }
+
+  const whatsappPlaceholder = `${getSourceCountryByName(form.source_country)?.phoneCode ?? '+91'} 98765 43210`
 
   function handleCityOrState(k: 'city' | 'state', v: string) {
     setForm(prev => {
@@ -620,6 +630,8 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           <div className="col-span-2">
             <LocationCascade
               mode="state-city"
+              country={form.source_country}
+              countryIsoOverride={getSourceCountryByName(form.source_country)?.isoCode ?? INDIA_ISO}
               state={form.state}
               city={form.city}
               onStateChange={(v) => handleCityOrState('state', v ?? '')}
@@ -630,10 +642,9 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           <Field label="Location Display" hint="Auto-filled from city + state. Edit if needed."><input className={inputCls} value={form.location} onChange={e => set('location', e.target.value)} placeholder="Kochi, Kerala" /></Field>
           <Field label="Established Year"><input className={inputCls} type="number" value={num(form.established)} onChange={e => set('established', parseNum(e.target.value))} placeholder="2010" min={1980} max={2030} /></Field>
           <Field label="Source Country" hint="Country this agency recruits nurses FROM">
-            <input className={inputCls} list="source-country-options" value={form.source_country} onChange={e => set('source_country', e.target.value)} placeholder="India" />
-            <datalist id="source-country-options">
-              {SOURCE_COUNTRY_OPTIONS.map(c => <option key={c} value={c} />)}
-            </datalist>
+            <select className={inputCls} value={form.source_country} onChange={e => set('source_country', e.target.value)}>
+              {enabledSourceCountries.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </Field>
         </div>
       </div>
@@ -692,8 +703,8 @@ export default function AgencyForm({ initialData }: { initialData: AgencyFullDat
           <Field label="Email">
             <div className="relative"><Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" /><input className={`${inputCls} pl-8`} type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="contact@agency.com" /></div>
           </Field>
-          <Field label="WhatsApp Number" hint="Include country code e.g. +91 98765 43210">
-            <div className="relative"><MessageCircle size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" /><input className={`${inputCls} pl-8`} value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder="+91 98765 43210" /></div>
+          <Field label="WhatsApp Number" hint={`Include country code e.g. ${whatsappPlaceholder}`}>
+            <div className="relative"><MessageCircle size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" /><input className={`${inputCls} pl-8`} value={form.whatsapp} onChange={e => set('whatsapp', e.target.value)} placeholder={whatsappPlaceholder} /></div>
           </Field>
           <Field label="Website URL" hint="Used as a unique identifier — one website per agency">
             <div className="relative">

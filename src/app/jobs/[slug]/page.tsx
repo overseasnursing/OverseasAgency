@@ -121,7 +121,10 @@ export default async function JobDetailPage({ params }: PageProps) {
   const guides      = getCountryGuideLinks(countryKey)
 
   const [similarJobs, countryAgencies, mockTests] = await Promise.all([
-    getSimilarJobs(job.country, job.id, 3),
+    // Scoped to the same source country as THIS job's own posting agency —
+    // not the visitor's — so this canonical page never depends on Market
+    // Context to render (see JobDetailRow.agency_source_country).
+    getSimilarJobs(job.country, job.id, 3, job.agency_source_country),
     fetchAgenciesByCountry([job.country], 3),
     getMockTestLinksForCountry(countryKey),
   ])

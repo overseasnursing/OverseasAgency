@@ -1,9 +1,11 @@
 import React from 'react'
 import { requirePermission } from '@/lib/require-admin'
+import { getEnabledSourceCountries } from '@/lib/db/country-settings'
 import AgencyForm from '../_components/AgencyForm'
 
 export default async function NewAgencyPage() {
   await requirePermission('agencies')
+  const enabledSourceCountries = await getEnabledSourceCountries()
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -15,7 +17,7 @@ export default async function NewAgencyPage() {
         <p className="text-[13px] text-slate-500 mt-0.5">Fill in the details below. Branches and FAQs can be added after the agency is created.</p>
       </div>
 
-      <AgencyForm initialData={null} />
+      <AgencyForm initialData={null} enabledSourceCountries={enabledSourceCountries} />
     </div>
   )
 }

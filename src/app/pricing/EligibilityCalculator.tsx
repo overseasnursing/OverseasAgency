@@ -5,6 +5,8 @@ import { ArrowRight, ArrowLeft, CheckCircle, Clock, Banknote, Globe, TrendingUp,
 import { FlagIcon } from '@/components/ui/FlagIcon'
 import { AgencyCard } from '@/components/agencies/AgencyCard'
 import type { Agency } from '@/types/agency'
+import { useSourceCountry } from '@/lib/country/context'
+import { getSourceCountryByName } from '@/lib/data/countryList'
 
 /* ── Types ────────────────────────────────────────────────────────── */
 
@@ -368,6 +370,11 @@ function getAgenciesForCountry(slug: CountrySlug, allAgencies: Agency[]): Agency
 /* ── Main component ───────────────────────────────────────────────── */
 
 export function EligibilityCalculator({ agencies }: { agencies: Agency[] }) {
+  // Source Country default — intro copy only; the quiz questions, scoring,
+  // and country matching below are entirely unchanged (Phase 7 scope).
+  const { country, ready } = useSourceCountry()
+  const demonym = ready ? getSourceCountryByName(country.name)?.demonym : undefined
+
   const [step, setStep]       = useState<number>(0) // 0 = intro, 1–8 = questions, 9 = results
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<string | null>(null)
@@ -436,7 +443,7 @@ export function EligibilityCalculator({ agencies }: { agencies: Agency[] }) {
           </h1>
           <p className="text-[16px] text-slate-500 leading-relaxed mb-8">
             Answer 8 simple questions about your qualifications, goals and budget.
-            We&rsquo;ll rank all 5 countries and show exactly what you need to do next.
+            We&rsquo;ll rank all 5 countries and show exactly what you need to do next{demonym ? ` as a ${demonym} nurse` : ''}.
           </p>
 
           <div className="flex flex-wrap justify-center gap-3 mb-10">

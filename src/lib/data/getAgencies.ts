@@ -20,20 +20,24 @@ function formatCostText(raw: string | null): string {
 type BranchDbRow = { agency_id: string; city: string | null; state: string | null }
 type ReviewDbRow = { agency_id: string; author_name: string; author_from: string | null; country_placed: string | null; overall_rating: number; recommends: boolean; surprise_charges: boolean; review_text: string; actual_cost_paid: string | null; timeline_months: number | null; created_at: string }
 
-export async function getAgencies(): Promise<Agency[]> {
+export async function getAgencies(sourceCountry?: string): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  const { data: agencyRows, error } = await db
+  let query = db
     .from('agencies')
     .select(`
       id, slug, name, logo_url, featured_image_url, location, city, state,
       established, trust_level, placement_count, transparency_score,
       countries, exams_supported, pricing_min_lakhs, pricing_max_lakhs,
       pricing_is_approximate, visa_sponsorship, average_timeline_months,
-      tagline, featured, google_place_id, google_rating, google_review_count
+      tagline, featured, google_place_id, google_rating, google_review_count,
+      source_country
     `)
     .eq('is_active', true)
+  if (sourceCountry) query = query.eq('source_country', sourceCountry)
+
+  const { data: agencyRows, error } = await query
 
   if (error || !agencyRows?.length) return []
 
@@ -153,6 +157,7 @@ export async function getAgencies(): Promise<Agency[]> {
       averageTimelineMonths: a.average_timeline_months ?? '',
       tagline:               a.tagline ?? '',
       featured:              a.featured ?? false,
+      sourceCountry:         a.source_country ?? 'India',
       reviewSnippet,
       googlePlaceId:         a.google_place_id      ?? undefined,
       googleRating:          a.google_rating        ?? undefined,

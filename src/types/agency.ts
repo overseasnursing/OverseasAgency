@@ -41,6 +41,7 @@ export interface Agency {
   tagline: string          // short emotional trust summary
   reviewSnippet: ReviewSnippet
   featured: boolean
+  sourceCountry: string    // agencies.source_country — which country this agency recruits nurses FROM
   // Google review fallback (shown only when reviewCount === 0)
   googlePlaceId?: string
   googleRating?: number

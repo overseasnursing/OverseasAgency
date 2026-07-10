@@ -69,11 +69,23 @@ export type SourceCountry = {
   name:     string
   isoCode:  string   // ISO 3166-1 alpha-2 uppercase, for schema.org addressCountry
   flagCode: string   // ISO 3166-1 alpha-2 lowercase, for flagcdn.com
+  // Registry facts below are optional and only populated for source countries
+  // actually enabled for agency management (see country_settings). Add a
+  // country's phone/currency facts when it's actually being onboarded, not
+  // preemptively for every entry in this list.
+  phoneCode?:      string   // default international dial code, e.g. "+63"
+  currencyCode?:   string   // ISO 4217, e.g. "PHP"
+  currencySymbol?: string
+  // Adjectival demonym for homepage copy personalization (Phase 6) — e.g.
+  // "Filipino nurses", not "Philippines nurses". Optional, same reasoning as
+  // phoneCode/currencyCode above: only populated for countries actually
+  // being onboarded, not preemptively.
+  demonym?:        string
 }
 
 export const SOURCE_COUNTRIES: SourceCountry[] = [
-  { name: 'India',        isoCode: 'IN', flagCode: 'in' },
-  { name: 'Philippines',  isoCode: 'PH', flagCode: 'ph' },
+  { name: 'India',        isoCode: 'IN', flagCode: 'in', phoneCode: '+91', currencyCode: 'INR', currencySymbol: '₹', demonym: 'Indian' },
+  { name: 'Philippines',  isoCode: 'PH', flagCode: 'ph', phoneCode: '+63', currencyCode: 'PHP', currencySymbol: '₱', demonym: 'Filipino' },
   { name: 'Nepal',        isoCode: 'NP', flagCode: 'np' },
   { name: 'Nigeria',      isoCode: 'NG', flagCode: 'ng' },
   { name: 'Kenya',        isoCode: 'KE', flagCode: 'ke' },
@@ -85,4 +97,10 @@ export const SOURCE_COUNTRY_OPTIONS: string[] = SOURCE_COUNTRIES.map(c => c.name
 
 export function getSourceCountryByName(name: string): SourceCountry | undefined {
   return SOURCE_COUNTRIES.find(c => c.name === name)
+}
+
+/** Reverse lookup for geo-detection — ISO 3166-1 alpha-2, case-insensitive. */
+export function getSourceCountryByIso(isoCode: string): SourceCountry | undefined {
+  const upper = isoCode.toUpperCase()
+  return SOURCE_COUNTRIES.find(c => c.isoCode === upper)
 }

@@ -410,7 +410,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
             <div id="reviews"><ReviewsSection agency={agency} /></div>
 
             {/* ── 11. Compare Similar Agencies ─────────────────────────── */}
-            <RelatedAgencies currentId={agency.id} city={agency.city} state={agency.state} />
+            <RelatedAgencies currentId={agency.id} city={agency.city} state={agency.state} sourceCountry={agency.sourceCountry} />
 
             <ContentAttribution
               {...(attribution?.author && { author: attribution.author })}

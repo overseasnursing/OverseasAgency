@@ -9,6 +9,8 @@ import {
   resendClaimOtp,
   type AgencySearchResult,
 } from '@/app/actions/claimListing'
+import { useSourceCountry } from '@/lib/country/context'
+import { usePhoneDefault } from '@/lib/country/usePhoneDefault'
 
 // ── Step types ────────────────────────────────────────────────────────────────
 
@@ -154,7 +156,12 @@ function ClaimForm({
 }) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
+  const [phone, setPhone] = useState('')
+  const { country } = useSourceCountry()
   const formRef = useRef<HTMLFormElement>(null)
+
+  // Empty-only default — never overwrites a number the agency already typed.
+  usePhoneDefault(phone, setPhone)
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -166,7 +173,7 @@ function ClaimForm({
         contactName: fd.get('contactName') as string,
         designation: fd.get('designation') as string,
         email:       fd.get('email') as string,
-        phone:       fd.get('phone') as string,
+        phone,
         message:     fd.get('message') as string,
       })
       if (res.error) { setError(res.error); return }
@@ -241,7 +248,9 @@ function ClaimForm({
             <input
               name="phone"
               type="tel"
-              placeholder="+91 98765 43210"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder={`${country.phoneCode || '+91'} 98765 43210`}
               className="h-10 px-3 text-[13.5px] border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
             />
           </div>

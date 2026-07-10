@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/layout/SiteFooter'
 import { AnalyticsProvider } from '@/components/analytics/AnalyticsProvider'
 import { CookieConsentProvider } from '@/components/cookies/CookieConsentContext'
 import { CookieConsentBanner } from '@/components/cookies/CookieConsentBanner'
+import { SourceCountryProvider } from '@/lib/country/context'
 import { ScrollToTop } from '@/components/ScrollToTop'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/next'
@@ -96,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning className="font-sans bg-[#F8FAFC] text-slate-900 antialiased">
 
         <CookieConsentProvider>
+        <SourceCountryProvider>
           {/* Skip to content — keyboard / screen reader */}
           <a
             href="#main-content"
@@ -118,6 +120,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CookieConsentBanner />
           <Analytics />
           <SpeedInsights />
+        </SourceCountryProvider>
         </CookieConsentProvider>
 
       </body>

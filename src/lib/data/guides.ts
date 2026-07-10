@@ -20,6 +20,12 @@ export type GuideData = {
   sections: GuideSection[]
   faqs: GuideFaq[]
   relatedSlugs: string[]
+  // Content Recommendation Foundation (Phase 5) — which SOURCE country this
+  // guide was written for. Undefined/omitted means global (applies to every
+  // visitor; always the fallback). No existing guide is tagged yet — this
+  // is the type-level foundation for src/lib/recommendations/rank.ts, not a
+  // content change.
+  sourceCountry?: string
 }
 
 const GUIDES: GuideData[] = [
