@@ -24,7 +24,7 @@ import { ContentAttribution } from '@/components/seo/ContentAttribution'
 import { getAttributionProfiles } from '@/lib/admin-profile'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildBreadcrumbSchema, buildReviewSchema, buildAgencySchema, buildFaqSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
-import { getSourceCountryByName } from '@/lib/data/countryList'
+import { getSourceCountryByName, getAgencyAttribution } from '@/lib/data/countryList'
 import { StickyMobileCTA } from './components/StickyMobileCTA'
 import { InquiryForm } from './components/InquiryForm'
 import { LocationMap } from './components/LocationMap'
@@ -97,6 +97,7 @@ export default async function AgencyDetailPage({ params }: PageProps) {
   ])
   const voteTotal = votes.thumbsUp + votes.thumbsDown
   const liveRecommendPercent = voteTotal === 0 ? 100 : Math.round((votes.thumbsUp / voteTotal) * 100)
+  const agencyAttribution = getAgencyAttribution(agency.sourceCountry)
 
   const headOffice = agency.branches.find(b => b.isHeadOffice) ?? agency.branches[0]
 
@@ -416,13 +417,8 @@ export default async function AgencyDetailPage({ params }: PageProps) {
               {...(attribution?.author && { author: attribution.author })}
               {...(attribution?.reviewer && { reviewer: attribution.reviewer })}
               lastReviewed={LAST_REVIEWED.agencies}
-              sources={[
-                { label: 'Ministry of External Affairs (MEA), India — ePOE Overseas Recruiter Register' },
-                { label: 'State Nursing Council Registration Databases' },
-                { label: 'Protector General of Emigrants (PGE), India — Recruitment Agent Licensing' },
-                { label: 'Nurse-submitted reviews and direct agency verification' },
-              ]}
-              sourceNote="Agency information compiled from public business records, official licensing databases, MEA filings, and nurse-submitted reviews. Pricing and timelines are self-reported and independently verified where possible."
+              sources={agencyAttribution.sources}
+              sourceNote={agencyAttribution.note}
             />
           </main>
 

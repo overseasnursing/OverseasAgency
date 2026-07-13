@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import type { Agency } from '@/types/agency'
 import { FlagIcon } from '@/components/ui/FlagIcon'
-import { getSourceCountryByName } from '@/lib/data/countryList'
+import { getSourceCountryByName, getCurrencySymbol } from '@/lib/data/countryList'
 
 function GoogleGLogo({ size = 16 }: { size?: number }) {
   return (
@@ -197,7 +197,7 @@ export function AgencyCard({ agency }: AgencyCardProps) {
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-[#F8FAFC] rounded-xl p-2.5 text-center">
             <Banknote size={13} className="text-slate-400 mx-auto mb-1" />
-            <p className="text-[12.5px] font-bold text-slate-800 leading-tight">₹{agency.pricing.minLakhs}–{agency.pricing.maxLakhs}L</p>
+            <p className="text-[12.5px] font-bold text-slate-800 leading-tight">{getCurrencySymbol(agency.sourceCountry)}{agency.pricing.minLakhs}–{agency.pricing.maxLakhs}L</p>
             <p className="text-[10.5px] text-slate-400 mt-0.5">{agency.pricing.isApproximate ? 'approx.' : 'fixed fee'}</p>
           </div>
           <div className="bg-[#F8FAFC] rounded-xl p-2.5 text-center">

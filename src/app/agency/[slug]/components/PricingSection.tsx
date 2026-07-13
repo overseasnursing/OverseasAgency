@@ -1,10 +1,11 @@
 import React from 'react'
 import { CheckCircle, XCircle, AlertTriangle, Info, CreditCard } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { getCurrencySymbol } from '@/lib/data/countryList'
 
-function formatLakhs(rupees: number) {
-  const lakhs = rupees / 100000
-  return `₹${lakhs % 1 === 0 ? lakhs.toFixed(0) : lakhs.toFixed(1)}L`
+function formatLakhs(amount: number, currencySymbol: string) {
+  const lakhs = amount / 100000
+  return `${currencySymbol}${lakhs % 1 === 0 ? lakhs.toFixed(0) : lakhs.toFixed(1)}L`
 }
 
 interface PricingSectionProps {
@@ -14,6 +15,7 @@ interface PricingSectionProps {
 export function PricingSection({ agency }: PricingSectionProps) {
   const { pricing } = agency
   const hasHiddenChargeWarning = agency.hiddenChargesReported > 0
+  const currencySymbol = getCurrencySymbol(agency.sourceCountry)
 
   return (
     <section id="pricing" aria-labelledby="pricing-heading">
@@ -48,10 +50,10 @@ export function PricingSection({ agency }: PricingSectionProps) {
               <>
                 <div className="flex items-baseline gap-2">
                   <span className="text-[40px] font-bold text-slate-800 leading-none">
-                    {formatLakhs(pricing.minCost)}
+                    {formatLakhs(pricing.minCost, currencySymbol)}
                   </span>
                   <span className="text-[24px] font-bold text-slate-400">
-                    — {formatLakhs(pricing.maxCost)}
+                    — {formatLakhs(pricing.maxCost, currencySymbol)}
                   </span>
                 </div>
                 {pricing.isApproximate && (

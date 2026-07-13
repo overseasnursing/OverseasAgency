@@ -1,12 +1,14 @@
 import React from 'react'
 import { ShieldAlert, CheckCircle, AlertTriangle } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { getCurrencySymbol } from '@/lib/data/countryList'
 
 interface ScamAlertSectionProps {
   agency: AgencyDetail
 }
 
 export function ScamAlertSection({ agency }: ScamAlertSectionProps) {
+  const currencySymbol = getCurrencySymbol(agency.sourceCountry)
   if (agency.scamReports.length === 0) {
     return (
       <section aria-labelledby="trust-heading">
@@ -82,7 +84,7 @@ export function ScamAlertSection({ agency }: ScamAlertSectionProps) {
               <div>
                 <span className="text-slate-400">Amount lost: </span>
                 <span className="font-semibold text-[#B91C1C]">
-                  ₹{report.amountLost.toLocaleString()}
+                  {currencySymbol}{report.amountLost.toLocaleString()}
                 </span>
               </div>
               <div>

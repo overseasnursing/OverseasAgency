@@ -11,6 +11,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { getSourceCountryByName } from '@/lib/data/countryList'
 
 // Links to the explanation of what each trust status means and how it's
 // assigned (src/app/editorial-policy/page.tsx#trust-status) — a badge with
@@ -87,6 +88,7 @@ interface AgencyHeroProps {
 
 export function AgencyHero({ agency, recommendationPercent }: AgencyHeroProps) {
   const initials = agency.name.split(' ').slice(0, 2).map((w) => w[0]).join('')
+  const sourceCountry = getSourceCountryByName(agency.sourceCountry)
 
   return (
     <div className="bg-white border-b border-slate-100">
@@ -140,7 +142,10 @@ export function AgencyHero({ agency, recommendationPercent }: AgencyHeroProps) {
                 </h1>
                 <div className="flex items-center gap-1.5 text-[14px] text-slate-400">
                   <MapPin size={13} />
-                  <span>{agency.location}</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    {agency.location}{sourceCountry ? `, ${sourceCountry.name}` : ''}
+                    {sourceCountry && <span className={`fi fi-${sourceCountry.flagCode} rounded-sm`} style={{ fontSize: '13px' }} />}
+                  </span>
                   <span className="text-slate-200">·</span>
                   <CalendarDays size={13} />
                   <span>Est. {agency.established}</span>
