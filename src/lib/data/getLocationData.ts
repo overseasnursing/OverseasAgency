@@ -2,12 +2,13 @@ import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { LocationAgencyListing, LocationPageData } from '@/types/location'
 import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
+import { getCurrencySymbol, getAgencyAttribution } from '@/lib/data/countryList'
 
-const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricing_min_lakhs, pricing_max_lakhs, trust_level'
+const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricing_min_lakhs, pricing_max_lakhs, trust_level, source_country'
 const BRANCH_COLUMNS = 'agency_id, city, state, address'
 
 type CityRow    = { city: string | null; state: string | null }
-type AgencyRow  = CityRow & { id: string; slug: string; name: string; location: string | null; countries: string[] | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null; trust_level: string | null }
+type AgencyRow  = CityRow & { id: string; slug: string; name: string; location: string | null; countries: string[] | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null; trust_level: string | null; source_country: string }
 type BranchRow  = CityRow & { agency_id: string; address: string | null }
 type ReviewRow  = { agency_id: string; overall_rating: number }
 
@@ -114,11 +115,13 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
+  // No source_country filter: citySlug alone is the lookup key here (city
+  // names don't collide across source countries in practice), so this page
+  // works regardless of which country's /locations filter linked here.
   const { data: agencyRows, error } = await db
     .from('agencies')
     .select(AGENCY_COLUMNS)
     .eq('is_active', true)
-    .eq('source_country', 'India')
 
   if (error || !agencyRows?.length) return null
 
@@ -141,6 +144,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
 
   let cityName = ''
   let stateName = ''
+  let citySourceCountry = ''
   const matchingAgencies: LocationAgencyListing[] = []
 
   for (const a of agencyRows as AgencyRow[]) {
@@ -154,6 +158,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
     if (!cityName) {
       cityName  = hqMatches ? normalizeCityName(a.city ?? '') : normalizeCityName(matchingBranch?.city ?? '')
       stateName = hqMatches ? (a.state ?? '') : (matchingBranch?.state || a.state || '')
+      citySourceCountry = a.source_country
     }
 
     const ratings     = statsMap.get(a.id) ?? []
@@ -165,9 +170,10 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
     const address = matchingBranch?.address || a.location || `${a.city}, ${a.state}`
     const feeMin  = a.pricing_min_lakhs
     const feeMax  = a.pricing_max_lakhs
+    const agencyCurrencySymbol = getCurrencySymbol(a.source_country)
     const feeRangeDisplay = feeMin && feeMax
-      ? `₹${feeMin}L–₹${feeMax}L`
-      : feeMin ? `From ₹${feeMin}L` : '—'
+      ? `${agencyCurrencySymbol}${feeMin}L–${agencyCurrencySymbol}${feeMax}L`
+      : feeMin ? `From ${agencyCurrencySymbol}${feeMin}L` : '—'
 
     const trustLevel = a.trust_level === 'scam-reported' ? 'unverified' : a.trust_level as 'verified' | 'trusted' | 'unverified'
 
@@ -221,6 +227,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
 
   const destText = popularDestinations.slice(0, 3).join(', ')
   const count    = matchingAgencies.length
+  const verifyBody = getAgencyAttribution(citySourceCountry).sources[0]?.label ?? 'the relevant recruitment licensing authority'
 
   return {
     city:       cityName,
@@ -233,7 +240,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
     popularDestinations,
     agencyCount: count,
     agencies:    matchingAgencies,
-    localInsights: `Always verify an agency's MEA licence number and read independent nurse reviews before paying any fees. OverseasNursing.com lists all ${count} agenc${count === 1 ? 'y' : 'ies'} in ${cityName} with verified ratings and transparent fee data.`,
+    localInsights: `Always verify an agency's licensing with ${verifyBody} and read independent nurse reviews before paying any fees. OverseasNursing.com lists all ${count} agenc${count === 1 ? 'y' : 'ies'} in ${cityName} with verified ratings and transparent fee data.`,
     nearbyLocations,
     faqs: [
       {
@@ -248,7 +255,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
       },
       {
         question: `How do I verify an agency in ${cityName} is legitimate?`,
-        answer:   `Check the agency's trust rating on OverseasNursing.com, read verified nurse reviews, and confirm their MEA licence. Never pay more than a registration fee before receiving a written agreement.`,
+        answer:   `Check the agency's trust rating on OverseasNursing.com, read verified nurse reviews, and confirm their licensing with ${verifyBody}. Never pay more than a registration fee before receiving a written agreement.`,
       },
     ],
     relatedCountrySlugs,
