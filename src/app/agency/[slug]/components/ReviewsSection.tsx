@@ -2,6 +2,7 @@ import React from 'react'
 import { Star, CheckCircle, ThumbsUp, AlertTriangle, PenLine } from 'lucide-react'
 import type { Review } from '@/types/agencyDetail'
 import type { AgencyDetail } from '@/types/agencyDetail'
+import { getCurrencySymbol } from '@/lib/data/countryList'
 
 function StarRating({ value, size = 14 }: { value: number; size?: number }) {
   return (
@@ -79,9 +80,9 @@ function RatingSummary({ reviews, overallRating }: { reviews: Review[]; overallR
   )
 }
 
-function ReviewCard({ review }: { review: Review }) {
-  const formatCost = (rupees: number) =>
-    `₹${(rupees / 100000).toFixed(1).replace('.0', '')}L`
+function ReviewCard({ review, currencySymbol }: { review: Review; currencySymbol: string }) {
+  const formatCost = (amount: number) =>
+    `${currencySymbol}${(amount / 100000).toFixed(1).replace('.0', '')}L`
 
   return (
     <article className="bg-white border border-slate-200 rounded-2xl p-6">
@@ -163,7 +164,7 @@ function ReviewCard({ review }: { review: Review }) {
         <div className="flex items-center gap-2 px-3 py-2 bg-[#FEF3C7] rounded-xl mb-4">
           <AlertTriangle size={13} className="text-[#92400E] flex-shrink-0" />
           <span className="text-[12.5px] text-[#92400E] font-medium">
-            Hidden charge of ₹{review.hiddenChargesAmount.toLocaleString()} experienced
+            Hidden charge of {currencySymbol}{review.hiddenChargesAmount.toLocaleString()} experienced
           </span>
         </div>
       )}
@@ -192,6 +193,7 @@ interface ReviewsSectionProps {
 
 export function ReviewsSection({ agency }: ReviewsSectionProps) {
   const writeReviewUrl = `/reviews/submit?agency=${agency.slug}&name=${encodeURIComponent(agency.name)}`
+  const currencySymbol = getCurrencySymbol(agency.sourceCountry)
 
   return (
     <section id="reviews" aria-labelledby="reviews-heading">
@@ -243,7 +245,7 @@ export function ReviewsSection({ agency }: ReviewsSectionProps) {
           <RatingSummary reviews={agency.reviews} overallRating={agency.rating} />
           <div className="flex flex-col gap-4">
             {agency.reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} />
+              <ReviewCard key={review.id} review={review} currencySymbol={currencySymbol} />
             ))}
           </div>
           <div className="mt-6 text-center">
