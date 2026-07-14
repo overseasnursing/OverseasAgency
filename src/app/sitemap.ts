@@ -4,7 +4,7 @@ import { getPublishedBlogPosts } from '@/lib/db/blogs'
 import { getAllCountrySlugs }  from '@/lib/data/countries'
 import { getAllPricingCountrySlugs } from '@/lib/data/pricing'
 import { getApprovedScamReports } from '@/lib/db/scam-reports'
-import { getAllStatesFromDb } from '@/lib/data/getAgencyLocationData'
+import { getAllStatesAcrossEnabledCountries } from '@/lib/data/getAgencyLocationData'
 import { getAllComparisonSlugs } from '@/lib/data/comparisons'
 import { getAllSalarySlugs }   from '@/lib/data/salaries'
 import { getAllExamSlugs }     from '@/lib/data/exams'
@@ -79,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAgenciesFromDb(),
     getMockTestLocationsFromDb(),
     getMockTestCategoriesFromDb(),
-    getAllStatesFromDb(),
+    getAllStatesAcrossEnabledCountries(),
     getPublishedBlogPosts(),
     getActiveJobs(),
     getAllAuthors(),

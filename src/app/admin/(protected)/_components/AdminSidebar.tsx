@@ -126,7 +126,7 @@ export function AdminSidebar({ email, name, isSuperAdmin, permissions, badges }:
         <div className="flex items-center gap-2.5 px-3 mb-3">
           <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center flex-shrink-0">
             <span className="text-[10px] font-bold text-primary">
-              {(name ?? email).charAt(0).toUpperCase()}
+              {(name ?? email ?? '?').charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="min-w-0">

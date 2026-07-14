@@ -47,7 +47,7 @@ export default async function AgencyAdminDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${trustColour[agency.trust_level] ?? trustColour.unverified}`}>
                 {agency.trust_level === 'verified' && <CheckCircle2 size={10} />}
-                {agency.trust_level.charAt(0).toUpperCase() + agency.trust_level.slice(1)}
+                {(agency.trust_level ?? 'unverified').charAt(0).toUpperCase() + (agency.trust_level ?? 'unverified').slice(1)}
               </span>
             </div>
             <h1 className="text-[22px] font-bold text-slate-900">{agency.name}</h1>

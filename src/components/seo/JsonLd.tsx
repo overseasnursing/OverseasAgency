@@ -8,7 +8,9 @@ export function JsonLd({ schema }: JsonLdProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      // Escape "<" so a literal "</script>" inside any interpolated string
+      // can't break out of this tag — Google's recommended defensive pattern.
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, '\\u003c') }}
     />
   )
 }

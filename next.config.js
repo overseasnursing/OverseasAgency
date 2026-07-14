@@ -69,9 +69,12 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-      // Favicon (matches favicon.ico, favicon.svg, etc.)
+      // Favicon / app icons — matches favicon.ico plus the Next.js App
+      // Router icon convention files actually served at /icon.png and
+      // /apple-icon.png (the old pattern only matched "favicon.*", which
+      // never matched the real icon.png/apple-icon.png routes)
       {
-        source: '/:file(favicon\\..*)',
+        source: '/:file((?:favicon|icon|apple-icon)\\..*)',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=86400' },
         ],

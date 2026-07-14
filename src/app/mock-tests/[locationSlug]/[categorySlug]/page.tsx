@@ -195,7 +195,7 @@ export default async function CategoryPage({ params }: PageProps) {
             rating:          r.rating,
             title:           r.review_title  ?? null,
             text:            r.review_text   ?? null,
-            date:            r.created_at?.split('T')[0] ?? '',
+            date:            r.created_at.split('T')[0],
           }))
         : [],
     }),

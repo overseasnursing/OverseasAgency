@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
 import { getAllStatesFromDb } from '@/lib/data/getAgencyLocationData'
+import { getEnabledSourceCountries } from '@/lib/db/country-settings'
 import { buildMetadata } from '@/lib/seo/metadata'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { Breadcrumb } from '@/components/seo/Breadcrumb'
@@ -8,10 +9,15 @@ import { LocationDirectoryClient } from './LocationDirectoryClient'
 
 export const revalidate = 86400
 
+// Platform default — matches DEFAULT_COUNTRY in lib/country/context.tsx. The
+// page is statically rendered for this country; the client re-fetches the
+// visitor's actual Market Context after hydration (see LocationDirectoryClient).
+const DEFAULT_SOURCE_COUNTRY = 'India'
+
 /* ── Metadata ── */
 
 export async function generateMetadata(): Promise<Metadata> {
-  const states = await getAllStatesFromDb()
+  const states = await getAllStatesFromDb(DEFAULT_SOURCE_COUNTRY)
   const totalCities = states.reduce((n, s) => n + s.cities.length, 0)
   return buildMetadata({
     title: `Browse Overseas Nursing Agency Locations — ${states.length} States & ${totalCities} Cities in India | OverseasNursing.com`,
@@ -44,7 +50,10 @@ function buildLocationDirectorySchema(states: { state: string; stateSlug: string
 /* ── Page ── */
 
 export default async function LocationsPage() {
-  const states = await getAllStatesFromDb()
+  const [states, enabledCountries] = await Promise.all([
+    getAllStatesFromDb(DEFAULT_SOURCE_COUNTRY),
+    getEnabledSourceCountries(),
+  ])
   const totalCities = states.reduce((n, s) => n + s.cities.length, 0)
   const totalAgencies = states.reduce((n, s) => n + s.agencyCount, 0)
 
@@ -90,7 +99,11 @@ export default async function LocationsPage() {
       </div>
 
       {/* ── Interactive directory ── */}
-      <LocationDirectoryClient states={states} />
+      <LocationDirectoryClient
+        states={states}
+        defaultCountry={DEFAULT_SOURCE_COUNTRY}
+        enabledCountries={enabledCountries}
+      />
     </>
   )
 }

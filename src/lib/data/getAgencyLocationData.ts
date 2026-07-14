@@ -2,9 +2,11 @@ import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { toSlug } from '@/lib/data/getLocationData'
 import { normalizeCityName, isExcludedCityName } from '@/lib/data/cityNormalization'
+import { getCurrencySymbol, getAgencyAttribution } from '@/lib/data/countryList'
+import { getEnabledSourceCountries } from '@/lib/db/country-settings'
 import type { LocationAgencyListing } from '@/types/location'
 
-const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricing_min_lakhs, pricing_max_lakhs, trust_level'
+const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricing_min_lakhs, pricing_max_lakhs, trust_level, source_country'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AgencyRow = Record<string, any>
@@ -38,12 +40,12 @@ export type StatePageData = {
 
 /* ── All states that have at least one agency (main office or branch) ── */
 
-export async function getAllStatesFromDb(): Promise<StateIndex[]> {
+export async function getAllStatesFromDb(sourceCountry: string): Promise<StateIndex[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
   const [{ data: agencyRows }, { data: branchRows }] = await Promise.all([
-    db.from('agencies').select('id, city, state, countries').eq('is_active', true).eq('source_country', 'India'),
+    db.from('agencies').select('id, city, state, countries').eq('is_active', true).eq('source_country', sourceCountry),
     db.from('branches').select('agency_id, city, state'),
   ])
 
@@ -96,6 +98,13 @@ export async function getAllStatesFromDb(): Promise<StateIndex[]> {
     .sort((a, b) => b.agencyCount - a.agencyCount || a.state.localeCompare(b.state))
 }
 
+/** Every state across every enabled source country — for generateStaticParams/sitemaps, which need one flat list regardless of country. The /locations page itself uses getAllStatesFromDb(country) directly since it filters to one country at a time. */
+export async function getAllStatesAcrossEnabledCountries(): Promise<StateIndex[]> {
+  const countries = await getEnabledSourceCountries()
+  const perCountry = await Promise.all(countries.map((c) => getAllStatesFromDb(c)))
+  return perCountry.flat()
+}
+
 /* ── Full page data for a single state ──────────────────────────────── */
 
 // cache() dedupes this within a single request — generateMetadata() and the
@@ -104,7 +113,10 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  const { data: agencyRows, error } = await db.from('agencies').select(AGENCY_COLUMNS).eq('is_active', true).eq('source_country', 'India')
+  // No source_country filter: stateSlug alone is the lookup key here (state
+  // names don't collide across source countries in practice), so this page
+  // works regardless of which country's /locations filter linked here.
+  const { data: agencyRows, error } = await db.from('agencies').select(AGENCY_COLUMNS).eq('is_active', true)
   if (error || !agencyRows?.length) return null
 
   const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)
@@ -121,6 +133,7 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
   }
 
   let stateName = ''
+  let stateSourceCountry = ''
   const matchingAgencies: LocationAgencyListing[] = []
   const cityMap = new Map<string, { city: string; ids: Set<string> }>()
   const destCount = new Map<string, number>()
@@ -133,7 +146,10 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
     const branchMatch = branches.find((b) => b.state && toSlug(b.state) === stateSlug)
     if (!hqMatch && !branchMatch) continue
 
-    if (!stateName) stateName = hqMatch ? (a.state ?? '') : (branchMatch?.state ?? '')
+    if (!stateName) {
+      stateName = hqMatch ? (a.state ?? '') : (branchMatch?.state ?? '')
+      stateSourceCountry = a.source_country ?? ''
+    }
 
     // Collect all cities in this state for this agency
     if (hqMatch && a.city && !isExcludedCityName(a.city)) {
@@ -163,7 +179,8 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
 
     const feeMin = a.pricing_min_lakhs as number | null
     const feeMax = a.pricing_max_lakhs as number | null
-    const feeRangeDisplay = feeMin && feeMax ? `₹${feeMin}L–₹${feeMax}L` : feeMin ? `From ₹${feeMin}L` : '—'
+    const currencySymbol = getCurrencySymbol(a.source_country)
+    const feeRangeDisplay = feeMin && feeMax ? `${currencySymbol}${feeMin}L–${currencySymbol}${feeMax}L` : feeMin ? `From ${currencySymbol}${feeMin}L` : '—'
     const trustLevel = (a.trust_level === 'scam-reported' ? 'unverified' : a.trust_level) as 'verified' | 'trusted' | 'unverified'
 
     matchingAgencies.push({
@@ -195,6 +212,8 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
   const count = matchingAgencies.length
   const destText = topDestinations.slice(0, 3).join(', ')
   const cityNames = cities.slice(0, 3).map((c) => c.city).join(', ')
+  const feeCurrencySymbol = getCurrencySymbol(stateSourceCountry)
+  const verifyBody = getAgencyAttribution(stateSourceCountry).sources[0]?.label ?? 'the relevant recruitment licensing authority'
 
   return {
     state: stateName,
@@ -218,12 +237,12 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
       {
         question: `What are typical nursing consultancy fees in ${stateName}?`,
         answer: feeRange.minLakhs > 0 && feeRange.maxLakhs > 0
-          ? `Nursing consultancy fees in ${stateName} range from ₹${feeRange.minLakhs}L to ₹${feeRange.maxLakhs}L depending on the destination country and services included. Always get a written breakdown of all fees before paying anything.`
+          ? `Nursing consultancy fees in ${stateName} range from ${feeCurrencySymbol}${feeRange.minLakhs}L to ${feeCurrencySymbol}${feeRange.maxLakhs}L depending on the destination country and services included. Always get a written breakdown of all fees before paying anything.`
           : `Fees vary by destination and services. Always get a full written fee structure before paying. Report any agency that refuses to provide a written agreement.`,
       },
       {
         question: `How do I verify a nursing agency in ${stateName} is legitimate?`,
-        answer: `Check the agency's MEA (Ministry of External Affairs) recruitment licence number, read verified nurse reviews on OverseasNursing.com, and confirm their trust rating. Never pay more than a registration fee without a signed agreement. Report suspicious agencies using our Scam Report tool.`,
+        answer: `Check the agency's licensing records with ${verifyBody}, read verified nurse reviews on OverseasNursing.com, and confirm their trust rating. Never pay more than a registration fee without a signed agreement. Report suspicious agencies using our Scam Report tool.`,
       },
     ],
   }

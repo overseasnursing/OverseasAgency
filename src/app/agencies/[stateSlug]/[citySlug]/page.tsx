@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getAllStatesFromDb } from '@/lib/data/getAgencyLocationData'
+import { getAllStatesAcrossEnabledCountries } from '@/lib/data/getAgencyLocationData'
 import { getLocationPageData } from '@/lib/data/getLocationData'
 import { fetchAgenciesByCity } from '@/lib/data/fetchAgencies'
 import { buildCityAgencyMetadata } from '@/lib/seo/metadata'
@@ -22,7 +22,7 @@ interface PageProps {
 /* ── Static params from DB ──────────────────────────────────────────── */
 
 export async function generateStaticParams() {
-  const states = await getAllStatesFromDb()
+  const states = await getAllStatesAcrossEnabledCountries()
   return states.flatMap((s) =>
     s.cities.map((c) => ({ stateSlug: s.stateSlug, citySlug: c.citySlug }))
   )

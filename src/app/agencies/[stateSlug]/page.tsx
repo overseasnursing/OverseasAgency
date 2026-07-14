@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 
-import { getAllStatesFromDb, getStatePageData } from '@/lib/data/getAgencyLocationData'
+import { getAllStatesAcrossEnabledCountries, getStatePageData } from '@/lib/data/getAgencyLocationData'
 import { fetchAgenciesByState } from '@/lib/data/fetchAgencies'
 import { buildStateAgencyMetadata } from '@/lib/seo/metadata'
 import { buildBreadcrumbSchema, buildFaqSchema, buildCollectionPageSchema, buildAgencyItemListSchema } from '@/lib/seo/schemas'
@@ -23,7 +23,7 @@ interface PageProps {
 /* ── Static params from DB ──────────────────────────────────────────── */
 
 export async function generateStaticParams() {
-  const states = await getAllStatesFromDb()
+  const states = await getAllStatesAcrossEnabledCountries()
   return states.map((s) => ({ stateSlug: s.stateSlug }))
 }
 

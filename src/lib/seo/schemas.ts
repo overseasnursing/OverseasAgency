@@ -2,6 +2,11 @@ const BASE_URL = 'https://overseasnursing.com'
 const SITE_NAME = 'OverseasNursing.com'
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.svg`
 
+// Minimum approved reviews required before emitting AggregateRating — avoids
+// a misleading average based on a single review. Shared by every mock-test
+// schema builder so the eligibility rule can't drift between them.
+const MIN_REVIEWS_FOR_AGGREGATE_RATING = 1
+
 function abs(path: string): string {
   return path.startsWith('http') ? path : `${BASE_URL}${path}`
 }
@@ -359,8 +364,8 @@ export function buildExamCategorySchema(page: {
 }) {
   const url = abs(page.path)
 
-  // AggregateRating only when ≥3 reviews (avoids misleading averages)
-  const aggregate = (page.reviewCount ?? 0) >= 3 && (page.avgRating ?? 0) > 0
+  // AggregateRating only when ≥MIN_REVIEWS_FOR_AGGREGATE_RATING reviews (avoids misleading averages)
+  const aggregate = (page.reviewCount ?? 0) >= MIN_REVIEWS_FOR_AGGREGATE_RATING && (page.avgRating ?? 0) > 0
     ? {
         aggregateRating: {
           '@type':      'AggregateRating',
@@ -479,16 +484,16 @@ export function buildMockTestProductSchema(page: {
 }) {
   const url = abs(page.path)
 
-  // Include AggregateRating from the first review — Google's Product rich result
-  // requires at least 1 review + visible reviews on the page.
-  const aggregate = (page.reviewCount ?? 0) >= 1 && (page.avgRating ?? 0) > 0
+  // Include AggregateRating once at least MIN_REVIEWS_FOR_AGGREGATE_RATING
+  // reviews exist — avoids a misleading average from a single review.
+  const aggregate = (page.reviewCount ?? 0) >= MIN_REVIEWS_FOR_AGGREGATE_RATING && (page.avgRating ?? 0) > 0
     ? {
         aggregateRating: {
           '@type':      'AggregateRating',
-          ratingValue:  (page.avgRating ?? 0).toFixed(1),
+          ratingValue:  Math.round((page.avgRating ?? 0) * 10) / 10,
           reviewCount:  page.reviewCount,
-          bestRating:   '5',
-          worstRating:  '1',
+          bestRating:   5,
+          worstRating:  1,
         },
       }
     : {}
@@ -530,18 +535,6 @@ export function buildMockTestProductSchema(page: {
     brand: {
       '@type': 'Brand',
       name:    'OverseasNursing',
-    },
-    offers: {
-      '@type':        'Offer',
-      price:          '0',
-      priceCurrency:  'INR',
-      availability:   'https://schema.org/InStock',
-      url,
-      priceSpecification: {
-        '@type':        'UnitPriceSpecification',
-        price:          0,
-        priceCurrency:  'INR',
-      },
     },
     ...aggregate,
     ...(reviewItems.length > 0 && { review: reviewItems }),

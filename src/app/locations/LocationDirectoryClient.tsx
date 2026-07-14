@@ -1,22 +1,56 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { MapPin, Building2, ChevronRight, ArrowLeft, Search } from 'lucide-react'
 import type { StateIndex } from '@/lib/data/getAgencyLocationData'
+import { useSourceCountry } from '@/lib/country/context'
+import { FlagIcon } from '@/components/ui/FlagIcon'
+import { getStatesForSourceCountry } from '@/app/actions/locations'
 
 interface Props {
   states: StateIndex[]
+  defaultCountry: string
+  enabledCountries: string[]
 }
 
-export function LocationDirectoryClient({ states }: Props) {
+export function LocationDirectoryClient({ states: initialStates, defaultCountry, enabledCountries }: Props) {
+  const { country, available, ready, setCountry } = useSourceCountry()
+
+  const [selectedCountry, setSelectedCountry] = useState(defaultCountry)
+  const [states, setStates] = useState(initialStates)
+  const [loadingCountry, setLoadingCountry] = useState(false)
   const [selectedState, setSelectedState] = useState<StateIndex | null>(null)
   const [query, setQuery] = useState('')
 
-  const totalCities = useMemo(
-    () => states.reduce((n, s) => n + s.cities.length, 0),
-    [states],
-  )
+  const countryOptions = available.length > 0
+    ? available
+    : enabledCountries.map((name) => ({ name, isoCode: name === defaultCountry ? 'IN' : 'XX' }))
+
+  const handleCountryChange = useCallback(async (name: string) => {
+    setLoadingCountry(true)
+    setSelectedState(null)
+    setQuery('')
+    const nextStates = await getStatesForSourceCountry(name)
+    setStates(nextStates)
+    setSelectedCountry(name)
+    setLoadingCountry(false)
+  }, [])
+
+  // Sync to the visitor's real Market Context once it resolves (e.g. a
+  // returning visitor whose cookie/profile says Philippines, even though
+  // this page server-rendered the platform default for SEO/SSG).
+  useEffect(() => {
+    if (!ready || country.name === selectedCountry) return
+    handleCountryChange(country.name)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, country.name])
+
+  function handleCountryClick(name: string) {
+    if (name === selectedCountry) return
+    handleCountryChange(name)
+    setCountry(name)
+  }
 
   function handleStateClick(state: StateIndex) {
     setSelectedState(state)
@@ -27,6 +61,11 @@ export function LocationDirectoryClient({ states }: Props) {
     setSelectedState(null)
     setQuery('')
   }
+
+  const totalCities = useMemo(
+    () => states.reduce((n, s) => n + s.cities.length, 0),
+    [states],
+  )
 
   const filteredStates = useMemo(() => {
     if (selectedState) return []
@@ -46,8 +85,34 @@ export function LocationDirectoryClient({ states }: Props) {
     return selectedState.cities.filter((c) => c.city.toLowerCase().includes(q))
   }, [query, selectedState])
 
+  const selectedCountryMeta = countryOptions.find((c) => c.name === selectedCountry)
+
   return (
     <div>
+      {/* ── Country filter ── */}
+      <div className="bg-[#F8FAFC] border-b border-slate-200">
+        <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[12px] font-semibold text-slate-400 uppercase tracking-wide mr-1">Country</span>
+            {countryOptions.map((c) => (
+              <button
+                key={c.name}
+                onClick={() => handleCountryClick(c.name)}
+                aria-pressed={c.name === selectedCountry}
+                className={`inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                  c.name === selectedCountry
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-white text-slate-600 border-slate-200 hover:border-primary/40'
+                }`}
+              >
+                <FlagIcon iso={c.isoCode.toLowerCase()} size={14} />
+                {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* ── Filter bar ── */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-4">
@@ -55,6 +120,11 @@ export function LocationDirectoryClient({ states }: Props) {
 
             {/* Breadcrumb trail */}
             <div className="flex items-center gap-2 text-[13px] min-w-0">
+              <span className="font-semibold shrink-0 text-slate-800 flex items-center gap-1.5">
+                {selectedCountryMeta && <FlagIcon iso={selectedCountryMeta.isoCode.toLowerCase()} size={13} />}
+                {selectedCountry}
+              </span>
+              <ChevronRight size={13} className="text-slate-300 shrink-0" />
               <button
                 onClick={handleBack}
                 className={`font-semibold shrink-0 transition-colors ${
@@ -111,8 +181,10 @@ export function LocationDirectoryClient({ states }: Props) {
       {/* ── Content ── */}
       <div className="max-w-content mx-auto px-5 sm:px-6 lg:px-8 py-8">
 
-        {/* ── State drill-down view ── */}
-        {selectedState ? (
+        {loadingCountry ? (
+          <div className="py-16 text-center text-[14px] text-slate-400">Loading {selectedCountry} locations…</div>
+        ) : selectedState ? (
+          /* ── State drill-down view ── */
           <section>
             <div className="flex items-center gap-3 mb-6">
               <button
@@ -190,7 +262,7 @@ export function LocationDirectoryClient({ states }: Props) {
           <section>
             {!query && (
               <div className="mb-6">
-                <h2 className="text-[22px] font-bold text-slate-800">Browse all states</h2>
+                <h2 className="text-[22px] font-bold text-slate-800">Browse all states in {selectedCountry}</h2>
                 <p className="text-[13.5px] text-slate-500 mt-1">
                   {states.length} states · {totalCities} cities — click a state to explore its cities
                 </p>
