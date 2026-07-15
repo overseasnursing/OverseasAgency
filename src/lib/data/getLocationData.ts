@@ -10,7 +10,7 @@ const BRANCH_COLUMNS = 'agency_id, city, state, address'
 type CityRow    = { city: string | null; state: string | null }
 type AgencyRow  = CityRow & { id: string; slug: string; name: string; location: string | null; countries: string[] | null; pricing_min_lakhs: number | null; pricing_max_lakhs: number | null; trust_level: string | null; source_country: string }
 type BranchRow  = CityRow & { agency_id: string; address: string | null }
-type ReviewRow  = { agency_id: string; overall_rating: number }
+type ReviewRow  = { agency_slug: string; overall_rating: number }
 
 export function toSlug(name: string): string {
   return name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
@@ -126,20 +126,24 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
   if (error || !agencyRows?.length) return null
 
   const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)
+  const agencySlugs: string[] = (agencyRows as AgencyRow[]).map((a) => a.slug)
 
   const [{ data: branchRows }, { data: reviewRows }] = await Promise.all([
     db.from('branches').select(BRANCH_COLUMNS).in('agency_id', agencyIds),
     db.from('reviews')
-      .select('agency_id, overall_rating')
-      .in('agency_id', agencyIds)
-      .eq('status', 'approved'),
+      // Public submissions only set agency_slug, never agency_id — join on
+      // slug to match every other reviews query in the codebase.
+      .select('agency_slug, overall_rating')
+      .in('agency_slug', agencySlugs)
+      .eq('status', 'approved')
+      .eq('user_disabled', false),
   ])
 
   // Build rating stats per agency
   const statsMap = new Map<string, number[]>()
   for (const r of (reviewRows ?? []) as ReviewRow[]) {
-    if (!statsMap.has(r.agency_id)) statsMap.set(r.agency_id, [])
-    statsMap.get(r.agency_id)!.push(r.overall_rating)
+    if (!statsMap.has(r.agency_slug)) statsMap.set(r.agency_slug, [])
+    statsMap.get(r.agency_slug)!.push(r.overall_rating)
   }
 
   let cityName = ''
@@ -161,7 +165,7 @@ export const getLocationPageData = cache(async (citySlug: string): Promise<Locat
       citySourceCountry = a.source_country
     }
 
-    const ratings     = statsMap.get(a.id) ?? []
+    const ratings     = statsMap.get(a.slug) ?? []
     const reviewCount = ratings.length
     const rating      = reviewCount > 0
       ? Math.round((ratings.reduce((s: number, v: number) => s + v, 0) / reviewCount) * 10) / 10

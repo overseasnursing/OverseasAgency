@@ -2,10 +2,8 @@
 
 import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertCircle, Building2 } from 'lucide-react'
-import { submitReview } from '@/app/actions/submitReview'
-import { COUNTRY_FORM_OPTIONS, getSourceCountryByName } from '@/lib/data/countryList'
-import { LocationCascade } from '@/components/ui/LocationCascade'
-import { findCountryIso, INDIA_ISO } from '@/lib/data/locationPicker'
+import { submitReview, updateReview } from '@/app/actions/submitReview'
+import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
 import { useSourceCountry } from '@/lib/country/context'
 
 type Step = 'agency' | 'financial' | 'ratings' | 'written' | 'verify'
@@ -19,14 +17,10 @@ const STEPS: { key: Step; label: string }[] = [
 ]
 
 const COUNTRIES = COUNTRY_FORM_OPTIONS
-const HOSPITAL_TYPES = ['University Hospital', 'NHS Trust', 'Public Hospital', 'Private Hospital', 'Community Hospital', 'Other']
 
 const initialForm = {
   agencyName: '',
   destinationCountry: '',
-  destinationState: '',
-  destinationCity: '',
-  hospitalType: '',
   visaReceived: '',
   timelineMonths: '',
   actualCostPaid: '',
@@ -38,12 +32,9 @@ const initialForm = {
   overallRating: 0,
   title: '',
   body: '',
-  whatSurprisedMe: '',
-  adviceForOthers: '',
   wouldRecommend: '',
+  recommendCondition: '',
   authorName: '',
-  authorState: '',
-  authorCity: '',
   authorFrom: '',
   verifyConsent: false,
 }
@@ -144,23 +135,44 @@ function Select({ className = '', children, ...props }: React.SelectHTMLAttribut
 interface ReviewSubmitFormProps {
   lockedAgencySlug?: string
   lockedAgencyName?: string
+  /** Present when editing an existing review instead of submitting a new one. */
+  editReviewId?: string
+  initialData?: Partial<typeof initialForm>
 }
 
-export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewSubmitFormProps) {
-  const { country } = useSourceCountry()
-  const authorCountryIso = getSourceCountryByName(country.name)?.isoCode ?? INDIA_ISO
+export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName, editReviewId, initialData }: ReviewSubmitFormProps) {
+  const { country, available } = useSourceCountry()
   const [step, setStep] = useState<Step>('agency')
-  const [form, setForm] = useState({ ...initialForm, agencyName: lockedAgencyName ?? '' })
+  const [form, setForm] = useState({ ...initialForm, agencyName: lockedAgencyName ?? '', ...initialData })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [existingReviewId, setExistingReviewId] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
   const set = (key: keyof typeof initialForm, value: string | number | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
+  // Mirrors each step's required (*) fields — without this, e.g. leaving
+  // Destination Country empty silently stored "Unknown" as the placement
+  // country instead of blocking progress.
+  const canProceed = (): boolean => {
+    switch (step) {
+      case 'agency':
+        return !!(lockedAgencyName || form.agencyName) && !!form.destinationCountry && !!form.visaReceived
+      case 'financial':
+        return Number(form.actualCostPaid) > 0 && Number(form.timelineMonths) > 0 && !!form.hiddenCharges
+      case 'written':
+        return !!form.title && !!form.body && !!form.wouldRecommend
+          && (form.wouldRecommend !== 'With conditions' || !!form.recommendCondition)
+      default:
+        return true
+    }
+  }
+
   const next = () => {
+    if (!canProceed()) return
     const order: Step[] = ['agency', 'financial', 'ratings', 'written', 'verify']
     const i = order.indexOf(step)
     if (i < order.length - 1) setStep(order[i + 1])
@@ -181,11 +193,11 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
 
-    const result = await submitReview({
+    const payload = {
       agencySlug,
       agencyName: form.agencyName,
       authorName: form.authorName,
-      authorFrom: form.authorFrom,
+      authorFrom: form.authorFrom || country.name,
       countryPlaced: form.destinationCountry || 'Unknown',
       timelineMonths: form.timelineMonths ? Number(form.timelineMonths) : undefined,
       actualCostPaid: form.actualCostPaid ? `₹${(Number(form.actualCostPaid) / 100000).toFixed(1)}L` : undefined,
@@ -194,11 +206,16 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
       transparencyRating: form.transparencyRating || undefined,
       speedRating: form.speedRating || undefined,
       reviewText: form.body,
-      surpriseCharges: form.whatSurprisedMe || undefined,
-      advice: form.adviceForOthers || undefined,
+      hiddenCharges: form.hiddenCharges === 'Yes',
+      hiddenChargesAmount: form.hiddenChargesAmount ? Number(form.hiddenChargesAmount) : undefined,
       placed: form.visaReceived === 'Yes',
       recommends: form.wouldRecommend !== 'No',
-    })
+      recommendCondition: form.wouldRecommend === 'With conditions' ? form.recommendCondition : undefined,
+    }
+
+    const result = editReviewId
+      ? await updateReview(editReviewId, payload)
+      : await submitReview(payload)
 
     setSubmitting(false)
     if (result.success) {
@@ -206,6 +223,7 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
       setSubmitted(true)
     } else {
       setSubmitError(result.error)
+      setExistingReviewId(result.existingReviewId ?? '')
     }
   }
 
@@ -215,12 +233,16 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
         <div className="w-16 h-16 bg-[#DCFCE7] rounded-full flex items-center justify-center mb-4">
           <CheckCircle size={32} className="text-[#166534]" />
         </div>
-        <h2 className="text-[22px] font-bold text-slate-800 mb-2">Review Submitted</h2>
+        <h2 className="text-[22px] font-bold text-slate-800 mb-2">{editReviewId ? 'Review Updated' : 'Review Submitted'}</h2>
         <p className="text-[14px] text-slate-500 max-w-md leading-relaxed mb-6">
           {successMessage || 'Thank you for sharing your experience. Our team will review it within 24–48 hours. Once verified, it will appear on the platform.'}
         </p>
         <div className="flex items-center gap-4">
-          {lockedAgencySlug && (
+          {editReviewId ? (
+            <a href="/dashboard/reviews" className="text-[14px] font-semibold text-primary hover:underline">
+              ← Back to my reviews
+            </a>
+          ) : lockedAgencySlug && (
             <a href={`/agency/${lockedAgencySlug}`} className="text-[14px] font-semibold text-primary hover:underline">
               ← Back to agency
             </a>
@@ -263,25 +285,6 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               <Select value={form.destinationCountry} onChange={(e) => set('destinationCountry', e.target.value)}>
                 <option value="">Select country</option>
                 {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </Select>
-            </div>
-            <div>
-              <FieldLabel>Destination State / Region</FieldLabel>
-              <LocationCascade
-                mode="state-city"
-                countryIsoOverride={form.destinationCountry ? findCountryIso(form.destinationCountry) : null}
-                state={form.destinationState}
-                city={form.destinationCity}
-                onStateChange={(v) => { set('destinationState', v ?? ''); set('destinationCity', '') }}
-                onCityChange={(v) => set('destinationCity', v ?? '')}
-                className="flex flex-col gap-3"
-              />
-            </div>
-            <div>
-              <FieldLabel>Hospital Type</FieldLabel>
-              <Select value={form.hospitalType} onChange={(e) => set('hospitalType', e.target.value)}>
-                <option value="">Select type</option>
-                {HOSPITAL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
               </Select>
             </div>
             <div>
@@ -394,7 +397,7 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               />
             </div>
             <div>
-              <FieldLabel required>Your experience (minimum 100 words)</FieldLabel>
+              <FieldLabel required>Your experience</FieldLabel>
               <Textarea
                 rows={7}
                 placeholder="Describe your experience in detail. What worked well? What didn't? Were fees as quoted? How was communication? What was the placement process like?"
@@ -402,24 +405,6 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
                 onChange={(e) => set('body', e.target.value)}
               />
               <p className="text-[12px] text-slate-400 mt-1">{form.body.split(' ').filter(Boolean).length} words</p>
-            </div>
-            <div>
-              <FieldLabel>What surprised you? (optional)</FieldLabel>
-              <Textarea
-                rows={3}
-                placeholder="Anything unexpected — good or bad"
-                value={form.whatSurprisedMe}
-                onChange={(e) => set('whatSurprisedMe', e.target.value)}
-              />
-            </div>
-            <div>
-              <FieldLabel>Advice for other nurses (optional)</FieldLabel>
-              <Textarea
-                rows={3}
-                placeholder="What would you tell a nurse considering this agency?"
-                value={form.adviceForOthers}
-                onChange={(e) => set('adviceForOthers', e.target.value)}
-              />
             </div>
             <div>
               <FieldLabel required>Would you recommend this agency?</FieldLabel>
@@ -440,6 +425,17 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
                 ))}
               </div>
             </div>
+            {form.wouldRecommend === 'With conditions' && (
+              <div>
+                <FieldLabel required>What conditions?</FieldLabel>
+                <Textarea
+                  rows={3}
+                  placeholder="e.g. Only if you negotiate the fee upfront, or only for UK placements"
+                  value={form.recommendCondition}
+                  onChange={(e) => set('recommendCondition', e.target.value)}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -456,24 +452,13 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               <p className="text-[12px] text-slate-400 mt-1">You can use initials for your last name</p>
             </div>
             <div>
-              <FieldLabel required>Your home location</FieldLabel>
-              <LocationCascade
-                mode="state-city"
-                country={country.name}
-                countryIsoOverride={authorCountryIso}
-                state={form.authorState}
-                city={form.authorCity}
-                onStateChange={(v) => {
-                  set('authorState', v ?? '')
-                  set('authorCity', '')
-                  set('authorFrom', v ? v : '')
-                }}
-                onCityChange={(v) => {
-                  set('authorCity', v ?? '')
-                  set('authorFrom', v && form.authorState ? `${v}, ${form.authorState}` : (form.authorState || v || ''))
-                }}
-                className="flex flex-col gap-3"
-              />
+              <FieldLabel required>Your home country</FieldLabel>
+              <Select
+                value={form.authorFrom || country.name}
+                onChange={(e) => set('authorFrom', e.target.value)}
+              >
+                {available.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </Select>
             </div>
 
             {/* Review summary */}
@@ -515,7 +500,8 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
             <button
               type="button"
               onClick={next}
-              className="flex items-center gap-1.5 h-10 px-5 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors"
+              disabled={!canProceed()}
+              className="flex items-center gap-1.5 h-10 px-5 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Continue
               <ChevronRight size={15} />
@@ -528,7 +514,7 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
               className="flex items-center gap-2 h-10 px-5 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting && <Loader2 size={15} className="animate-spin" />}
-              Submit Review
+              {editReviewId ? 'Save Changes' : 'Submit Review'}
             </button>
           )}
         </div>
@@ -536,7 +522,17 @@ export function ReviewSubmitForm({ lockedAgencySlug, lockedAgencyName }: ReviewS
         {submitError && (
           <div className="mt-4 flex items-center gap-2 text-[13px] text-red-600 bg-[#FFF5F5] border border-[#FECACA] rounded-xl px-4 py-3">
             <AlertCircle size={14} className="flex-shrink-0" />
-            {submitError}
+            <span>
+              {submitError}
+              {existingReviewId && (
+                <>
+                  {' '}
+                  <a href={`/dashboard/reviews/${existingReviewId}/edit`} className="font-semibold underline">
+                    Edit it here →
+                  </a>
+                </>
+              )}
+            </span>
           </div>
         )}
       </div>

@@ -25,6 +25,7 @@ export interface PlatformReview {
   hiddenChargesExperienced: boolean
   hiddenChargesAmount?: number
   wouldRecommend: boolean
+  recommendCondition?: string
 
   title: string
   body: string

@@ -119,10 +119,14 @@ export type Database = {
           speed_rating: number | null
           review_text: string
           surprise_charges: string | null
+          hidden_charges: boolean | null
+          hidden_charges_amount: number | null
+          recommend_condition: string | null
           advice: string | null
           placed: boolean
           recommends: boolean
           status: 'pending' | 'approved' | 'rejected'
+          user_disabled: boolean
           moderated_by: string | null
           moderated_at: string | null
           reject_reason: string | null
@@ -148,10 +152,14 @@ export type Database = {
           speed_rating?: number | null
           review_text: string
           surprise_charges?: string | null
+          hidden_charges?: boolean | null
+          hidden_charges_amount?: number | null
+          recommend_condition?: string | null
           advice?: string | null
           placed?: boolean
           recommends?: boolean
           status?: 'pending' | 'approved' | 'rejected'
+          user_disabled?: boolean
           moderated_by?: string | null
           moderated_at?: string | null
           reject_reason?: string | null
@@ -160,7 +168,25 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agency_slug?: string
+          agency_name?: string
+          author_from?: string
+          country_placed?: string
+          exam_taken?: string | null
+          timeline_months?: number | null
+          actual_cost_paid?: string | null
+          overall_rating?: number
+          communication_rating?: number | null
+          transparency_rating?: number | null
+          speed_rating?: number | null
+          review_text?: string
+          hidden_charges?: boolean | null
+          hidden_charges_amount?: number | null
+          recommend_condition?: string | null
+          placed?: boolean
+          recommends?: boolean
           status?: 'pending' | 'approved' | 'rejected'
+          user_disabled?: boolean
           moderated_by?: string | null
           moderated_at?: string | null
           reject_reason?: string | null
@@ -210,6 +236,7 @@ export type Database = {
           agency_response_text: string | null
           evidence_count: number
           status: 'pending' | 'approved' | 'rejected'
+          user_disabled: boolean
           moderated_by: string | null
           moderated_at: string | null
           reject_reason: string | null
@@ -241,6 +268,7 @@ export type Database = {
           agency_response_text?: string | null
           evidence_count?: number
           status?: 'pending' | 'approved' | 'rejected'
+          user_disabled?: boolean
           moderated_by?: string | null
           moderated_at?: string | null
           reject_reason?: string | null
@@ -248,7 +276,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agency_slug?: string
+          agency_name?: string
+          reporter_from?: string
+          category?: 'fee-fraud' | 'fake-job' | 'document-fraud' | 'visa-fraud' | 'abandonment' | 'other'
+          severity?: 'critical' | 'high' | 'moderate'
+          country_promised?: string
+          amount_lost?: number | null
+          amount_paid?: number | null
+          amount_recovered?: number | null
+          incident_date?: string | null
+          incident_text?: string
+          warning_signs_missed?: string[] | null
+          lessons_learned?: string[] | null
+          emotional_experience?: string | null
           status?: 'pending' | 'approved' | 'rejected'
+          user_disabled?: boolean
           moderated_by?: string | null
           moderated_at?: string | null
           reject_reason?: string | null

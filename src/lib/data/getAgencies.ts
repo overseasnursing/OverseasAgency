@@ -18,7 +18,7 @@ function formatCostText(raw: string | null): string {
 }
 
 type BranchDbRow = { agency_id: string; city: string | null; state: string | null }
-type ReviewDbRow = { agency_id: string; author_name: string; author_from: string | null; country_placed: string | null; overall_rating: number; recommends: boolean; surprise_charges: boolean; review_text: string; actual_cost_paid: string | null; timeline_months: number | null; created_at: string }
+type ReviewDbRow = { agency_slug: string; author_name: string; author_from: string | null; country_placed: string | null; overall_rating: number; recommends: boolean; hidden_charges: boolean; review_text: string; actual_cost_paid: string | null; timeline_months: number | null; created_at: string }
 
 export async function getAgencies(sourceCountry?: string): Promise<Agency[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,6 +45,8 @@ export async function getAgencies(sourceCountry?: string): Promise<Agency[]> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const agencyIds: string[] = agencyRows.map((a: any) => a.id as string)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const agencySlugs: string[] = agencyRows.map((a: any) => a.slug as string)
 
   // Branches and reviews are independent lookups — fetch in parallel instead
   // of adding two sequential round-trips to this listing page's TTFB.
@@ -55,9 +57,12 @@ export async function getAgencies(sourceCountry?: string): Promise<Agency[]> {
       .in('agency_id', agencyIds),
     db
       .from('reviews')
-      .select('agency_id, author_name, author_from, country_placed, overall_rating, recommends, surprise_charges, review_text, actual_cost_paid, timeline_months, created_at')
-      .in('agency_id', agencyIds)
+      // Public submissions (submitReview.ts) only set agency_slug, never
+      // agency_id — join on slug to match every other reviews query.
+      .select('agency_slug, author_name, author_from, country_placed, overall_rating, recommends, hidden_charges, review_text, actual_cost_paid, timeline_months, created_at')
+      .in('agency_slug', agencySlugs)
       .eq('status', 'approved')
+      .eq('user_disabled', false)
       .order('created_at', { ascending: false }),
   ])
 
@@ -78,19 +83,19 @@ export async function getAgencies(sourceCountry?: string): Promise<Agency[]> {
   const statsMap = new Map<string, { ratings: number[]; recommends: number; hidden: number }>()
 
   for (const r of allReviews) {
-    const id = r.agency_id
-    if (!snippetMap.has(id)) snippetMap.set(id, r)
-    if (!statsMap.has(id)) statsMap.set(id, { ratings: [], recommends: 0, hidden: 0 })
-    const s = statsMap.get(id)!
+    const slug = r.agency_slug
+    if (!snippetMap.has(slug)) snippetMap.set(slug, r)
+    if (!statsMap.has(slug)) statsMap.set(slug, { ratings: [], recommends: 0, hidden: 0 })
+    const s = statsMap.get(slug)!
     s.ratings.push(r.overall_rating)
     if (r.recommends) s.recommends++
-    if (r.surprise_charges) s.hidden++
+    if (r.hidden_charges) s.hidden++
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return agencyRows.map((a: any): Agency => {
-    const r = snippetMap.get(a.id)
-    const stats = statsMap.get(a.id)
+    const r = snippetMap.get(a.slug)
+    const stats = statsMap.get(a.slug)
     const reviewCount = stats?.ratings.length ?? 0
     const rating = reviewCount > 0
       ? Math.round((stats!.ratings.reduce((s, v) => s + v, 0) / reviewCount) * 10) / 10

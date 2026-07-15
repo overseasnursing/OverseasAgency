@@ -13,13 +13,22 @@ export default async function AgencyAdminDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  const [agencyRes, reviewRes, scamRes] = await Promise.all([
-    db.from('agencies').select('id, name, slug, city, state, trust_level, rating, is_claimed').eq('id', agencyId).single(),
-    db.from('reviews').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('status', 'approved'),
-    db.from('scam_reports').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('status', 'approved'),
-  ])
+  const agencyRes = await db
+    .from('agencies')
+    .select('id, name, slug, city, state, trust_level, rating, is_claimed')
+    .eq('id', agencyId)
+    .single()
 
-  const agency     = agencyRes.data
+  const agency = agencyRes.data
+
+  // Public submissions (submitReview.ts / submitScamReport.ts) only set
+  // agency_slug, never agency_id — join on slug to match every other
+  // reviews/scam_reports query in the codebase.
+  const [reviewRes, scamRes] = agency ? await Promise.all([
+    db.from('reviews').select('id', { count: 'exact', head: true }).eq('agency_slug', agency.slug).eq('status', 'approved').eq('user_disabled', false),
+    db.from('scam_reports').select('id', { count: 'exact', head: true }).eq('agency_slug', agency.slug).eq('status', 'approved').eq('user_disabled', false),
+  ]) : [{ count: 0 }, { count: 0 }]
+
   const reviewCount = reviewRes.count ?? 0
   const scamCount  = scamRes.count ?? 0
 

@@ -11,7 +11,7 @@ const AGENCY_COLUMNS = 'id, slug, name, location, city, state, countries, pricin
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AgencyRow = Record<string, any>
 type BranchRow = { agency_id: string; city: string | null; state: string | null; address: string | null }
-type ReviewRow = { agency_id: string; overall_rating: number }
+type ReviewRow = { agency_slug: string; overall_rating: number }
 
 export type CityEntry = {
   city: string
@@ -120,16 +120,19 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
   if (error || !agencyRows?.length) return null
 
   const agencyIds: string[] = (agencyRows as AgencyRow[]).map((a) => a.id)
+  const agencySlugs: string[] = (agencyRows as AgencyRow[]).map((a) => a.slug)
 
   const [{ data: branchRows }, { data: reviewRows }] = await Promise.all([
     db.from('branches').select('agency_id, city, state').in('agency_id', agencyIds),
-    db.from('reviews').select('agency_id, overall_rating').in('agency_id', agencyIds).eq('status', 'approved'),
+    // Public submissions only set agency_slug, never agency_id — join on
+    // slug to match every other reviews query in the codebase.
+    db.from('reviews').select('agency_slug, overall_rating').in('agency_slug', agencySlugs).eq('status', 'approved').eq('user_disabled', false),
   ])
 
   const statsMap = new Map<string, number[]>()
   for (const r of (reviewRows ?? []) as ReviewRow[]) {
-    if (!statsMap.has(r.agency_id)) statsMap.set(r.agency_id, [])
-    statsMap.get(r.agency_id)!.push(r.overall_rating)
+    if (!statsMap.has(r.agency_slug)) statsMap.set(r.agency_slug, [])
+    statsMap.get(r.agency_slug)!.push(r.overall_rating)
   }
 
   let stateName = ''
@@ -171,7 +174,7 @@ export const getStatePageData = cache(async (stateSlug: string): Promise<StatePa
     if (a.pricing_min_lakhs) feeMins.push(a.pricing_min_lakhs)
     if (a.pricing_max_lakhs) feeMaxs.push(a.pricing_max_lakhs)
 
-    const ratings = statsMap.get(a.id) ?? []
+    const ratings = statsMap.get(a.slug) ?? []
     const reviewCount = ratings.length
     const rating = reviewCount > 0
       ? Math.round((ratings.reduce((s: number, v: number) => s + v, 0) / reviewCount) * 10) / 10
