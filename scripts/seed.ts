@@ -11,6 +11,14 @@ import type { Database } from '../src/types/database.js'
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
+// Hard, non-bypassable guard: this script performs destructive deletes and
+// must never be able to run against a non-local Supabase project.
+const seedHost = new URL(SUPABASE_URL).hostname
+if (seedHost !== 'localhost' && seedHost !== '127.0.0.1') {
+  console.error(`Refusing to run: SUPABASE_URL "${SUPABASE_URL}" is not a local Supabase instance (host must be localhost or 127.0.0.1).`)
+  process.exit(1)
+}
+
 if (!SERVICE_ROLE_KEY) {
   console.error('SUPABASE_SERVICE_ROLE_KEY is required. Add it to .env.local or pass as env var.')
   process.exit(1)
