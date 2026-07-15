@@ -486,9 +486,9 @@ export default async function AgencyDetailPage({ params }: PageProps) {
                   )}
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500">Scam reports</span>
-                    <span className={`inline-flex items-center gap-1 font-semibold ${agency.hiddenChargesReported === 0 ? 'text-[#166534]' : 'text-[#B91C1C]'}`}>
-                      {agency.hiddenChargesReported > 0 && <AlertTriangle size={12} />}
-                      {agency.hiddenChargesReported === 0 ? 'None reported' : agency.hiddenChargesReported}
+                    <span className={`inline-flex items-center gap-1 font-semibold ${agency.scamReports.length === 0 ? 'text-[#166534]' : 'text-[#B91C1C]'}`}>
+                      {agency.scamReports.length > 0 && <AlertTriangle size={12} />}
+                      {agency.scamReports.length === 0 ? 'None reported' : agency.scamReports.length}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

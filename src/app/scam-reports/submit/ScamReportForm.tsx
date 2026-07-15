@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { CheckCircle, ChevronRight, Loader2, AlertTriangle, AlertCircle } from 'lucide-react'
-import { submitScamReport } from '@/app/actions/submitScamReport'
+import { submitScamReport, updateScamReport } from '@/app/actions/submitScamReport'
 import { COUNTRY_FORM_OPTIONS, getSourceCountryByName } from '@/lib/data/countryList'
 import { LocationCascade } from '@/components/ui/LocationCascade'
 import { INDIA_ISO } from '@/lib/data/locationPicker'
@@ -121,11 +121,19 @@ function Select({ className = '', children, ...props }: React.SelectHTMLAttribut
   )
 }
 
-export function ScamReportForm() {
+interface ScamReportFormProps {
+  lockedAgencySlug?: string
+  lockedAgencyName?: string
+  /** Present when editing an existing report instead of submitting a new one. */
+  editReportId?: string
+  initialData?: Partial<typeof initialForm>
+}
+
+export function ScamReportForm({ lockedAgencySlug, lockedAgencyName, editReportId, initialData }: ScamReportFormProps) {
   const { country } = useSourceCountry()
   const reporterCountryIso = getSourceCountryByName(country.name)?.isoCode ?? INDIA_ISO
   const [step, setStep] = useState<Step>('agency')
-  const [form, setForm] = useState(initialForm)
+  const [form, setForm] = useState({ ...initialForm, agencyName: lockedAgencyName ?? '', ...initialData })
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -151,7 +159,7 @@ export function ScamReportForm() {
     setSubmitting(true)
     setSubmitError('')
 
-    const agencySlug = form.agencyName
+    const agencySlug = lockedAgencySlug ?? form.agencyName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
@@ -165,13 +173,13 @@ export function ScamReportForm() {
       .map((l) => l.trim())
       .filter(Boolean)
 
-    const result = await submitScamReport({
+    const payload = {
       agencySlug,
       agencyName: form.agencyName,
       reporterName: form.reporterName,
       reporterFrom: form.reporterFrom,
       category: form.category as 'fee-fraud' | 'fake-job' | 'document-fraud' | 'visa-fraud' | 'abandonment' | 'other',
-      severity: Number(form.amountLost) >= 200000 ? 'critical' : Number(form.amountLost) >= 50000 ? 'high' : 'moderate',
+      severity: (Number(form.amountLost) >= 200000 ? 'critical' : Number(form.amountLost) >= 50000 ? 'high' : 'moderate') as 'critical' | 'high' | 'moderate',
       countryPromised: form.countryPromised,
       amountLost: form.amountLost ? Number(form.amountLost) : undefined,
       amountPaid: form.amountPaid ? Number(form.amountPaid) : undefined,
@@ -179,7 +187,11 @@ export function ScamReportForm() {
       warningSignsMissed: warningLines.length > 0 ? warningLines : undefined,
       lessonsLearned: lessonLines.length > 0 ? lessonLines : undefined,
       emotionalExperience: form.emotionalExperience || undefined,
-    })
+    }
+
+    const result = editReportId
+      ? await updateScamReport(editReportId, payload)
+      : await submitScamReport(payload)
 
     setSubmitting(false)
     if (result.success) {
@@ -196,16 +208,22 @@ export function ScamReportForm() {
         <div className="w-16 h-16 bg-[#DCFCE7] rounded-full flex items-center justify-center mb-4">
           <CheckCircle size={32} className="text-[#166534]" />
         </div>
-        <h2 className="text-[22px] font-bold text-slate-800 mb-2">Report Submitted</h2>
+        <h2 className="text-[22px] font-bold text-slate-800 mb-2">{editReportId ? 'Report Updated' : 'Report Submitted'}</h2>
         <p className="text-[14px] text-slate-500 max-w-md leading-relaxed mb-2">
           {successMessage || 'Thank you for coming forward. Your report will be reviewed within 24–72 hours. We may contact you if we need additional details.'}
         </p>
         <p className="text-[13.5px] text-slate-400 max-w-md leading-relaxed mb-6">
           Once published, your report will be visible to thousands of nurses and may prevent others from experiencing the same loss.
         </p>
-        <a href="/scam-reports" className="text-[14px] font-semibold text-[#DC2626] hover:underline">
-          Back to scam reports →
-        </a>
+        {editReportId ? (
+          <a href="/dashboard/scam-reports" className="text-[14px] font-semibold text-[#DC2626] hover:underline">
+            ← Back to my reports
+          </a>
+        ) : (
+          <a href="/scam-reports" className="text-[14px] font-semibold text-[#DC2626] hover:underline">
+            Back to scam reports →
+          </a>
+        )}
       </div>
     )
   }
@@ -222,11 +240,18 @@ export function ScamReportForm() {
             <h2 className="text-[18px] font-bold text-slate-800">Which agency?</h2>
             <div>
               <FieldLabel required>Agency name</FieldLabel>
-              <Input
-                placeholder="e.g. Heritage Medical Consultants"
-                value={form.agencyName}
-                onChange={(e) => set('agencyName', e.target.value)}
-              />
+              {lockedAgencyName ? (
+                <div className="flex items-center gap-2 h-10 px-3 bg-[#FFF5F5] border border-[#FECACA] rounded-xl">
+                  <CheckCircle size={14} className="text-[#DC2626] flex-shrink-0" />
+                  <span className="text-[14px] font-semibold text-[#DC2626]">{lockedAgencyName}</span>
+                </div>
+              ) : (
+                <Input
+                  placeholder="e.g. Heritage Medical Consultants"
+                  value={form.agencyName}
+                  onChange={(e) => set('agencyName', e.target.value)}
+                />
+              )}
             </div>
             <div>
               <FieldLabel required>Country they promised to place you in</FieldLabel>
@@ -446,7 +471,7 @@ export function ScamReportForm() {
               className="flex items-center gap-2 h-10 px-5 bg-[#DC2626] hover:bg-[#B91C1C] text-white text-[14px] font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting && <Loader2 size={15} className="animate-spin" />}
-              Submit Report
+              {editReportId ? 'Save Changes' : 'Submit Report'}
             </button>
           )}
         </div>

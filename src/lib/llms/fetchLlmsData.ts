@@ -112,13 +112,15 @@ export async function fetchLlmsData(): Promise<LlmsFullData> {
       db
         .from('reviews')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'approved'),
+        .eq('status', 'approved')
+        .eq('user_disabled', false),
 
       // Approved scam report count
       db
         .from('scam_reports')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'approved'),
+        .eq('status', 'approved')
+        .eq('user_disabled', false),
 
       // All active mock-test locations
       db

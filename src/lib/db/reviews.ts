@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAllReviews as getMockReviews } from '@/lib/data/reviews'
-import type { Tables, InsertDto } from '@/types/database'
+import type { Tables, InsertDto, UpdateDto } from '@/types/database'
 import type { PlatformReview } from '@/types/review'
 
 const SUPABASE_CONFIGURED =
@@ -21,6 +21,7 @@ export async function getApprovedReviews(): Promise<ReviewRow[]> {
     .from('reviews')
     .select('*')
     .eq('status', 'approved')
+    .eq('user_disabled', false)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('[reviews] getApprovedReviews:', error.message)
@@ -40,6 +41,7 @@ export async function getApprovedReviewsByAgency(agencySlug: string): Promise<Re
     .select('*')
     .eq('agency_slug', agencySlug)
     .eq('status', 'approved')
+    .eq('user_disabled', false)
     .order('helpful_count', { ascending: false })
   if (error) {
     console.error('[reviews] getApprovedReviewsByAgency:', error.message)
@@ -174,13 +176,97 @@ export async function deleteReview(id: string): Promise<boolean> {
   return true
 }
 
+// ── Owner self-service (caller must verify the session user first) ────────
+// Users can view, hide, or edit their own reviews — never delete them, so
+// the trust record stays intact even if they change their mind.
+
+// Used to enforce one review per user per agency — a logged-in user editing
+// an existing review should be redirected there instead of creating a duplicate.
+export async function getReviewByUserAndAgency(userId: string, agencySlug: string): Promise<ReviewRow | null> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('reviews')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('agency_slug', agencySlug)
+    .maybeSingle()
+  if (error) {
+    console.error('[reviews] getReviewByUserAndAgency:', error.message)
+    return null
+  }
+  return data
+}
+
+export async function getOwnedReview(id: string, userId: string): Promise<ReviewRow | null> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('reviews')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) {
+    console.error('[reviews] getOwnedReview:', error.message)
+    return null
+  }
+  return data
+}
+
+export async function getMyReviews(userId: string): Promise<ReviewRow[]> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('reviews')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.error('[reviews] getMyReviews:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
+// `userId` is included in the WHERE clause (not just checked by the caller)
+// as a second guard against updating a review that isn't the caller's own.
+export async function setReviewDisabled(id: string, userId: string, disabled: boolean): Promise<boolean> {
+  const db = createAdminClient()
+  const { error } = await db
+    .from('reviews')
+    .update({ user_disabled: disabled })
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[reviews] setReviewDisabled:', error.message)
+    return false
+  }
+  return true
+}
+
+export async function updateOwnedReview(
+  id: string,
+  userId: string,
+  updates: UpdateDto<'reviews'>,
+): Promise<boolean> {
+  const db = createAdminClient()
+  const { error } = await db
+    .from('reviews')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[reviews] updateOwnedReview:', error.message)
+    return false
+  }
+  return true
+}
+
 // ── Public page data (mapped to PlatformReview) ───────────────────────────
 
 function initials(name: string): string {
   return name.split(' ').slice(0, 2).map(w => w[0] ?? '').join('').toUpperCase()
 }
 
-function parseCostStr(text: string | null): number {
+export function parseCostStr(text: string | null): number {
   if (!text) return 0
   const clean = text.replace(/[₹,\s]/g, '')
   const lakh  = clean.match(/^([\d.]+)[Ll]/)
@@ -210,8 +296,10 @@ function rowToPlatformReview(row: ReviewRow, featured: boolean): PlatformReview 
     actualCostPaid:           parseCostStr(row.actual_cost_paid),
     timelineMonths:           row.timeline_months ?? 0,
     visaReceived:             row.placed,
-    hiddenChargesExperienced: !!row.surprise_charges,
+    hiddenChargesExperienced: !!row.hidden_charges,
+    hiddenChargesAmount:      row.hidden_charges_amount ?? undefined,
     wouldRecommend:           row.recommends,
+    recommendCondition:       row.recommend_condition ?? undefined,
     title:                    row.country_placed
                                 ? `Placed in ${row.country_placed}`
                                 : 'Verified Review',
@@ -230,6 +318,7 @@ export async function getPublicReviews(): Promise<PlatformReview[]> {
     .from('reviews')
     .select('*')
     .eq('status', 'approved')
+    .eq('user_disabled', false)
     .order('created_at', { ascending: false })
 
   if (error || !data?.length) return getMockReviews()
@@ -268,8 +357,9 @@ export async function getPublicReviewStats(): Promise<{
   const supabase = await createClient()
   const { data } = await supabase
     .from('reviews')
-    .select('overall_rating, placed, surprise_charges, recommends')
+    .select('overall_rating, placed, hidden_charges, recommends')
     .eq('status', 'approved')
+    .eq('user_disabled', false)
 
   if (!data?.length) return { total: 0, placed: 0, withHiddenCharges: 0, avgRating: 0, recommendPercent: 0 }
 
@@ -277,7 +367,7 @@ export async function getPublicReviewStats(): Promise<{
   return {
     total,
     placed:            data.filter(r => r.placed).length,
-    withHiddenCharges: data.filter(r => !!r.surprise_charges).length,
+    withHiddenCharges: data.filter(r => !!r.hidden_charges).length,
     avgRating:         Math.round(data.reduce((s, r) => s + r.overall_rating, 0) / total * 10) / 10,
     recommendPercent:  Math.round(data.filter(r => r.recommends).length / total * 100),
   }

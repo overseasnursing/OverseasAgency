@@ -14,6 +14,7 @@ export interface Review {
   actualCostPaid: number      // in rupees
   timelineMonths: number
   wouldRecommend: boolean
+  recommendCondition?: string
   visaReceived: boolean
   communicationRating: number // 1–5
   transparencyRating: number

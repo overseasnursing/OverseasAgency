@@ -4,7 +4,7 @@ import {
   getAllScamReports as getMockReports,
   getScamReport as getMockReport,
 } from '@/lib/data/scamReports'
-import type { Tables, InsertDto } from '@/types/database'
+import type { Tables, InsertDto, UpdateDto } from '@/types/database'
 
 const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -23,6 +23,7 @@ export async function getApprovedScamReports(): Promise<ScamReportRow[]> {
     .from('scam_reports')
     .select('*')
     .eq('status', 'approved')
+    .eq('user_disabled', false)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('[scam_reports] getApprovedScamReports:', error.message)
@@ -41,6 +42,7 @@ export async function getScamReport(slug: string): Promise<ScamReportRow | null>
     .select('*')
     .eq('slug', slug)
     .eq('status', 'approved')
+    .eq('user_disabled', false)
     .single()
   if (error) {
     if (error.code !== 'PGRST116') {
@@ -61,6 +63,7 @@ export async function getApprovedScamReportsByAgency(agencySlug: string): Promis
     .select('*')
     .eq('agency_slug', agencySlug)
     .eq('status', 'approved')
+    .eq('user_disabled', false)
     .order('created_at', { ascending: false })
   if (error) {
     console.error('[scam_reports] getApprovedScamReportsByAgency:', error.message)
@@ -163,6 +166,73 @@ export async function deleteScamReport(id: string): Promise<boolean> {
   const { error } = await db.from('scam_reports').delete().eq('id', id)
   if (error) {
     console.error('[scam_reports] deleteScamReport:', error.message)
+    return false
+  }
+  return true
+}
+
+// ── Owner self-service (caller must verify the session user first) ────────
+// Users can view, hide, or edit their own reports — never delete them, so
+// the trust record stays intact even if they change their mind.
+
+export async function getOwnedScamReport(id: string, userId: string): Promise<ScamReportRow | null> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('scam_reports')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (error) {
+    console.error('[scam_reports] getOwnedScamReport:', error.message)
+    return null
+  }
+  return data
+}
+
+export async function getMyScamReports(userId: string): Promise<ScamReportRow[]> {
+  const db = createAdminClient()
+  const { data, error } = await db
+    .from('scam_reports')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.error('[scam_reports] getMyScamReports:', error.message)
+    return []
+  }
+  return data ?? []
+}
+
+// `userId` is included in the WHERE clause (not just checked by the caller)
+// as a second guard against updating a report that isn't the caller's own.
+export async function setScamReportDisabled(id: string, userId: string, disabled: boolean): Promise<boolean> {
+  const db = createAdminClient()
+  const { error } = await db
+    .from('scam_reports')
+    .update({ user_disabled: disabled })
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[scam_reports] setScamReportDisabled:', error.message)
+    return false
+  }
+  return true
+}
+
+export async function updateOwnedScamReport(
+  id: string,
+  userId: string,
+  updates: UpdateDto<'scam_reports'>,
+): Promise<boolean> {
+  const db = createAdminClient()
+  const { error } = await db
+    .from('scam_reports')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[scam_reports] updateOwnedScamReport:', error.message)
     return false
   }
   return true

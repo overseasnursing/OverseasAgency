@@ -154,7 +154,9 @@ function ReviewCard({ review, currencySymbol }: { review: Review; currencySymbol
         {review.wouldRecommend && (
           <div className="flex items-center gap-1.5 px-3 py-2 bg-[#EFF6FF] rounded-xl">
             <ThumbsUp size={12} className="text-[#1D4ED8]" />
-            <span className="text-[13px] font-semibold text-[#1D4ED8]">Recommends</span>
+            <span className="text-[13px] font-semibold text-[#1D4ED8]">
+              {review.recommendCondition ? 'Recommends with conditions' : 'Recommends'}
+            </span>
           </div>
         )}
       </div>
@@ -165,6 +167,16 @@ function ReviewCard({ review, currencySymbol }: { review: Review; currencySymbol
           <AlertTriangle size={13} className="text-[#92400E] flex-shrink-0" />
           <span className="text-[12.5px] text-[#92400E] font-medium">
             Hidden charge of {currencySymbol}{review.hiddenChargesAmount.toLocaleString()} experienced
+          </span>
+        </div>
+      )}
+
+      {/* Recommendation conditions */}
+      {review.recommendCondition && (
+        <div className="flex items-start gap-2 px-3 py-2 bg-[#EFF6FF] rounded-xl mb-4">
+          <ThumbsUp size={13} className="text-[#1D4ED8] flex-shrink-0 mt-0.5" />
+          <span className="text-[12.5px] text-[#1D4ED8] font-medium">
+            Conditions: {review.recommendCondition}
           </span>
         </div>
       )}

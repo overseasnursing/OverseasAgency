@@ -79,13 +79,20 @@ export const getAgencyDetail = cache(async (slug: string): Promise<AgencyDetail 
       .order('sort_order'),
     db.from('reviews')
       .select('*')
-      .eq('agency_id', a.id)
+      // Public submissions (submitReview.ts) only set agency_slug, never
+      // agency_id — join on slug here to match every other reviews query
+      // in the codebase (getApprovedReviewsByAgency, moderate.ts, etc.).
+      .eq('agency_slug', slug)
       .eq('status', 'approved')
+      .eq('user_disabled', false)
       .order('created_at', { ascending: false }),
     db.from('scam_reports')
       .select('*')
-      .eq('agency_id', a.id)
+      // Same reasoning as reviews above — submitScamReport.ts only sets
+      // agency_slug.
+      .eq('agency_slug', slug)
       .eq('status', 'approved')
+      .eq('user_disabled', false)
       .order('created_at', { ascending: false }),
   ])
 
@@ -100,7 +107,7 @@ export const getAgencyDetail = cache(async (slug: string): Promise<AgencyDetail 
     ? Math.round((approvedReviews.filter(r => r.recommends).length / approvedReviews.length) * 100)
     : 0
   // hidden charges: count reviews that reported surprise charges
-  const computedHiddenCharges = approvedReviews.filter(r => r.surprise_charges).length
+  const computedHiddenCharges = approvedReviews.filter(r => r.hidden_charges).length
 
   return {
     id:                   a.id,
@@ -208,12 +215,13 @@ export const getAgencyDetail = cache(async (slug: string): Promise<AgencyDetail 
       actualCostPaid:   parseCost(r.actual_cost_paid),
       timelineMonths:   r.timeline_months ?? 0,
       wouldRecommend:   r.recommends,
+      recommendCondition: r.recommend_condition ?? undefined,
       visaReceived:     r.placed,
       communicationRating: r.communication_rating ?? r.overall_rating,
       transparencyRating:  r.transparency_rating  ?? r.overall_rating,
       speedRating:         r.speed_rating          ?? r.overall_rating,
-      hiddenChargesExperienced: !!r.surprise_charges,
-      hiddenChargesAmount: undefined,
+      hiddenChargesExperienced: !!r.hidden_charges,
+      hiddenChargesAmount: r.hidden_charges_amount ?? undefined,
       helpful:          r.helpful_count,
     })),
 

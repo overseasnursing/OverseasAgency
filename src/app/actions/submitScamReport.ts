@@ -1,7 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { insertScamReport } from '@/lib/db/scam-reports'
+import { insertScamReport, updateOwnedScamReport } from '@/lib/db/scam-reports'
+import type { InsertDto } from '@/types/database'
 
 export type ScamReportFormData = {
   agencySlug: string
@@ -51,78 +52,58 @@ function generateSlug(agencyName: string, category: string): string {
   return `${base}-${cat}-${ts}`
 }
 
-export async function submitScamReport(
-  data: ScamReportFormData,
-): Promise<SubmitScamReportResult> {
-  // ── Presence & format checks ───────────────────────────────────────────
-  if (!data.agencySlug || !SLUG_RE.test(data.agencySlug))
-    return { success: false, error: 'Invalid agency.' }
-  if (!strRange(data.agencyName, 2, 150))
-    return { success: false, error: 'Agency name must be 2–150 characters.' }
-  if (!strRange(data.reporterName, 2, 100))
-    return { success: false, error: 'Your name must be 2–100 characters.' }
-  if (!strRange(data.reporterFrom, 2, 100))
-    return { success: false, error: 'Your location must be 2–100 characters.' }
-  if (!strRange(data.countryPromised, 2, 100))
-    return { success: false, error: 'Country promised must be 2–100 characters.' }
-  if (!strRange(data.incidentText, 100, 10_000))
-    return { success: false, error: 'Please describe the incident in 100–10,000 characters.' }
-  if (!ALLOWED_CATEGORIES.has(data.category))
-    return { success: false, error: 'Invalid category.' }
-  if (!ALLOWED_SEVERITIES.has(data.severity))
-    return { success: false, error: 'Invalid severity.' }
+// Shared by submitScamReport (new) and updateScamReport (edit) — same
+// content rules apply either way.
+function validateScamReportData(data: ScamReportFormData): string | null {
+  if (!data.agencySlug || !SLUG_RE.test(data.agencySlug)) return 'Invalid agency.'
+  if (!strRange(data.agencyName, 2, 150)) return 'Agency name must be 2–150 characters.'
+  if (!strRange(data.reporterName, 2, 100)) return 'Your name must be 2–100 characters.'
+  if (!strRange(data.reporterFrom, 2, 100)) return 'Your location must be 2–100 characters.'
+  if (!strRange(data.countryPromised, 2, 100)) return 'Country promised must be 2–100 characters.'
+  if (!strRange(data.incidentText, 100, 10_000)) return 'Please describe the incident in 100–10,000 characters.'
+  if (!ALLOWED_CATEGORIES.has(data.category)) return 'Invalid category.'
+  if (!ALLOWED_SEVERITIES.has(data.severity)) return 'Invalid severity.'
 
-  // ── Optional field validation ──────────────────────────────────────────
   if (data.emotionalExperience !== undefined && !strRange(data.emotionalExperience, 0, 2000))
-    return { success: false, error: 'Emotional experience field must be under 2,000 characters.' }
+    return 'Emotional experience field must be under 2,000 characters.'
 
   if (data.incidentDate !== undefined && data.incidentDate !== '') {
-    if (!DATE_RE.test(data.incidentDate))
-      return { success: false, error: 'Invalid date format.' }
+    if (!DATE_RE.test(data.incidentDate)) return 'Invalid date format.'
     const d = new Date(data.incidentDate)
-    if (isNaN(d.getTime()) || d > new Date())
-      return { success: false, error: 'Incident date must be in the past.' }
+    if (isNaN(d.getTime()) || d > new Date()) return 'Incident date must be in the past.'
   }
 
   const checkAmount = (n: number | undefined, label: string) => {
     if (n === undefined) return null
-    if (!Number.isFinite(n) || n < 0 || n > MAX_AMOUNT)
-      return { success: false as const, error: `${label} must be between 0 and ₹1 crore.` }
+    if (!Number.isFinite(n) || n < 0 || n > MAX_AMOUNT) return `${label} must be between 0 and ₹1 crore.`
     return null
   }
-  const amtErrors = [
+  for (const e of [
     checkAmount(data.amountLost,      'Amount lost'),
     checkAmount(data.amountPaid,      'Amount paid'),
     checkAmount(data.amountRecovered, 'Amount recovered'),
-  ]
-  for (const e of amtErrors) if (e) return e
+  ]) if (e) return e
 
-  // Array fields — max 20 items, each max 200 chars
   if (data.warningSignsMissed !== undefined) {
     if (!Array.isArray(data.warningSignsMissed) || data.warningSignsMissed.length > 20)
-      return { success: false, error: 'Too many warning signs (max 20).' }
+      return 'Too many warning signs (max 20).'
     if (data.warningSignsMissed.some((s) => typeof s !== 'string' || s.length > 200))
-      return { success: false, error: 'Each warning sign must be under 200 characters.' }
+      return 'Each warning sign must be under 200 characters.'
   }
   if (data.lessonsLearned !== undefined) {
     if (!Array.isArray(data.lessonsLearned) || data.lessonsLearned.length > 20)
-      return { success: false, error: 'Too many lessons learned (max 20).' }
+      return 'Too many lessons learned (max 20).'
     if (data.lessonsLearned.some((s) => typeof s !== 'string' || s.length > 200))
-      return { success: false, error: 'Each lesson must be under 200 characters.' }
+      return 'Each lesson must be under 200 characters.'
   }
 
-  // ── Get Supabase user (optional — anonymous submissions allowed) ───────
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  return null
+}
 
-  const slug = generateSlug(data.agencyName, data.category)
-
-  // ── Insert (admin client bypasses RLS — inputs fully validated above) ──
-  const result = await insertScamReport({
-    slug,
-    agency_slug:           data.agencySlug,
-    agency_name:           sanitize(data.agencyName),
-    user_id:               user?.id ?? null,
+function buildScamReportFields(
+  data: ScamReportFormData,
+): Omit<InsertDto<'scam_reports'>, 'agency_slug' | 'agency_name' | 'user_id' | 'slug'> {
+  return {
     reporter_name:         sanitize(data.reporterName),
     reporter_from:         sanitize(data.reporterFrom),
     category:              data.category,
@@ -136,6 +117,28 @@ export async function submitScamReport(
     warning_signs_missed:  data.warningSignsMissed?.map(sanitize) ?? null,
     lessons_learned:       data.lessonsLearned?.map(sanitize) ?? null,
     emotional_experience:  data.emotionalExperience ? sanitize(data.emotionalExperience) : null,
+  }
+}
+
+export async function submitScamReport(
+  data: ScamReportFormData,
+): Promise<SubmitScamReportResult> {
+  const validationError = validateScamReportData(data)
+  if (validationError) return { success: false, error: validationError }
+
+  // ── Get Supabase user (optional — anonymous submissions allowed) ───────
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const slug = generateSlug(data.agencyName, data.category)
+
+  // ── Insert (admin client bypasses RLS — inputs fully validated above) ──
+  const result = await insertScamReport({
+    slug,
+    agency_slug: data.agencySlug,
+    agency_name: sanitize(data.agencyName),
+    user_id:     user?.id ?? null,
+    ...buildScamReportFields(data),
   })
 
   if (!result) {
@@ -145,5 +148,31 @@ export async function submitScamReport(
   return {
     success: true,
     message: 'Your report has been submitted for review. Our team will verify and publish it within 48 hours. Thank you for protecting other nurses.',
+  }
+}
+
+// Editing resets status to pending — edited content must be re-moderated
+// before it's public again, same as any new submission.
+export async function updateScamReport(reportId: string, data: ScamReportFormData): Promise<SubmitScamReportResult> {
+  const validationError = validateScamReportData(data)
+  if (validationError) return { success: false, error: validationError }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'You must be signed in to edit a report.' }
+
+  const ok = await updateOwnedScamReport(reportId, user.id, {
+    ...buildScamReportFields(data),
+    status:        'pending',
+    moderated_by:  null,
+    moderated_at:  null,
+    reject_reason: null,
+  })
+
+  if (!ok) return { success: false, error: 'Failed to update report. Please try again.' }
+
+  return {
+    success: true,
+    message: 'Your report has been updated and is pending re-verification.',
   }
 }
