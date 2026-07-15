@@ -91,7 +91,7 @@ function JobCardImpl({ job }: { job: ActiveJobListing }) {
 
       {/* CTA */}
       <Link
-        href={`/jobs/${job.slug}`}
+        href={`/jobs/listing/${job.slug}`}
         className="flex items-center justify-center gap-1 h-9 bg-primary hover:bg-primary-hover text-white text-[13px] font-semibold rounded-xl transition-colors mt-auto"
       >
         View Job <ChevronRight size={14} />

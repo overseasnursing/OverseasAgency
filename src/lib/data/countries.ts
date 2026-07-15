@@ -837,7 +837,7 @@ export function getAllCountries(): CountryDetail[] {
   return Object.values(COUNTRY_MAP)
 }
 
-// Maps normalizeCountry() keys (src/app/jobs/[slug]/_data/countryMappings.ts)
+// Maps normalizeCountry() keys (src/app/jobs/_data/countryMappings.ts)
 // to the country page slugs that actually exist in COUNTRY_MAP.
 const COUNTRY_KEY_TO_PAGE_SLUG: Record<string, string> = {
   'uae':       'dubai',

@@ -21,7 +21,7 @@ async function requireAgencyAdmin(): Promise<{ userId: string; agencyId: string 
 function revalidateJob(id: string, slug: string, country: string, city: string | null, jobType: string) {
   revalidatePath('/agency-admin/jobs')
   revalidatePath('/jobs')
-  revalidatePath(`/jobs/${slug}`)
+  revalidatePath(`/jobs/listing/${slug}`)
   for (const path of getJobDestinationPaths(country, city, jobType)) revalidatePath(path)
 }
 

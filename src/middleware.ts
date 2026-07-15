@@ -79,7 +79,13 @@ export async function middleware(request: NextRequest) {
 
   // Refresh session — do not remove
   try {
-    await supabase.auth.getUser()
+    // getUser() resolves with { error } for API-level failures (e.g. a stale
+    // refresh token after a local `supabase db reset`) rather than throwing —
+    // the catch below only covers network-level failures.
+    const { error } = await supabase.auth.getUser()
+    if (error && isRefreshTokenNotFoundError(error)) {
+      clearSupabaseAuthCookies(request, supabaseResponse)
+    }
   } catch (error) {
     if (isRefreshTokenNotFoundError(error)) {
       clearSupabaseAuthCookies(request, supabaseResponse)

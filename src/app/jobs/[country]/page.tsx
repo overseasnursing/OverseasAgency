@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildJobsCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
-import { getActiveJobsByDestination, getActiveJobCountries } from '@/lib/db/jobs'
-import { normalizeCountry } from '../[slug]/_data/countryMappings'
+import { getActiveJobsByDestination, getActiveJobCountries, getJobBySlugPublic } from '@/lib/db/jobs'
+import { normalizeCountry } from '../_data/countryMappings'
 import { JOB_COUNTRIES } from '@/lib/jobConstants'
 import { DestinationJobsView } from '../_components/DestinationJobsView'
 
@@ -48,7 +48,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function JobsByCountryPage({ params }: PageProps) {
   const { country } = await params
   const countryValue = COUNTRY_SLUG_TO_VALUE[country]
-  if (!countryValue) notFound()
+
+  if (!countryValue) {
+    // Not a recognized destination slug — this segment used to be a job
+    // detail page (/jobs/[slug]) before job listings moved to
+    // /jobs/listing/[slug]. Next.js disallows two dynamic routes with
+    // different param names at the same URL depth, so old job-slug URLs
+    // are resolved and 308-redirected here instead of living in their own
+    // folder, to keep those indexed links working.
+    const job = await getJobBySlugPublic(country)
+    if (job) permanentRedirect(`/jobs/listing/${country}`)
+    notFound()
+  }
 
   // Canonical — every approved, unexpired job for this destination, for
   // every visitor and crawler. Never filtered by source country.

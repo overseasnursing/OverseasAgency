@@ -14,11 +14,11 @@ import { getMockTestLinksForCountry } from '@/lib/data/getMockTestData'
 import { getCountryGuideLinks } from '@/lib/data/countries'
 import { buildBreadcrumbSchema, buildJobPostingSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
-import { JobCard } from '../_components/JobCard'
-import { JobEligibilityBadge } from '../_components/JobEligibilityBadge'
+import { JobCard } from '../../_components/JobCard'
+import { JobEligibilityBadge } from '../../_components/JobEligibilityBadge'
 import { ApplySection } from './ApplySection'
 import type { Agency } from '@/types/agency'
-import { normalizeCountry, type CountryLink } from './_data/countryMappings'
+import { normalizeCountry, type CountryLink } from '../../_data/countryMappings'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -31,14 +31,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${job.title} - ${job.country} Nursing Job`,
     description: `Apply for ${job.title} nursing opportunities in ${job.country}.`,
-    alternates: { canonical: `/jobs/${slug}` },
+    alternates: { canonical: `/jobs/listing/${slug}` },
     // Expired postings stay live at their URL (candidates/agencies may still
     // reference it) but shouldn't accumulate as stale indexed content.
     ...(job.status === 'expired' && { robots: { index: false, follow: true } }),
     openGraph: {
       title: `${job.title} - ${job.country} Nursing Job`,
       description: `Apply for ${job.title} nursing opportunities in ${job.country}.`,
-      url: `https://overseasnursing.com/jobs/${slug}`,
+      url: `https://overseasnursing.com/jobs/listing/${slug}`,
       images: [`/api/og?type=default&title=${encodeURIComponent(job.title)}`],
     },
   }
@@ -133,7 +133,7 @@ export default async function JobDetailPage({ params }: PageProps) {
   const breadcrumbs  = buildBreadcrumbSchema([
     { name: 'Home',    href: '/' },
     { name: 'Jobs',    href: '/jobs' },
-    { name: job.title, href: `/jobs/${slug}` },
+    { name: job.title, href: `/jobs/listing/${slug}` },
   ])
 
   const jobPosting = buildJobPostingSchema({

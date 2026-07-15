@@ -213,7 +213,7 @@ export function ApplySection({
   if (!isLoggedIn) {
     return (
       <a
-        href={`/auth/login?next=/jobs/${jobSlug}`}
+        href={`/auth/login?next=/jobs/listing/${jobSlug}`}
         className="w-full flex items-center justify-center gap-2 h-11 bg-primary hover:bg-primary-hover text-white text-[14px] font-semibold rounded-xl transition-colors"
       >
         <LogIn size={15} />

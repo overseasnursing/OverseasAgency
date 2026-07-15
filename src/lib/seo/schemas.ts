@@ -894,7 +894,7 @@ export function buildJobPostingSchema(job: {
   expiry_date?:     string | null
   agency_name?:     string | null
 }) {
-  const pageUrl      = `${BASE_URL}/jobs/${job.slug}`
+  const pageUrl      = `${BASE_URL}/jobs/listing/${job.slug}`
   const countryCode  = JOB_COUNTRY_CODE[job.country] ?? job.country
   // Omit employmentType rather than guessing FULL_TIME for unmapped values
   // (e.g. "locum", "per-diem") — a wrong enum value misrepresents the posting.
