@@ -1,0 +1,5 @@
+Contact: mailto:hello@overseasnursing.com
+Expires: 2027-07-15T00:00:00.000Z
+Canonical: https://overseasnursing.com/.well-known/security.txt
+Policy: https://overseasnursing.com/security-policy
+Preferred-Languages: en
