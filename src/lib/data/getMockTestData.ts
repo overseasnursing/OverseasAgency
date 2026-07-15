@@ -106,7 +106,7 @@ export async function getMockTestLocationWithCategories(locationSlug: string): P
   return { location: loc, categories }
 }
 
-// Maps normalizeCountry() keys (src/app/jobs/[slug]/_data/countryMappings.ts)
+// Maps normalizeCountry() keys (src/app/jobs/_data/countryMappings.ts)
 // to the country_slug values actually stored on mock_test_locations rows.
 const COUNTRY_KEY_TO_LOCATION_COUNTRY_SLUG: Record<string, string> = {
   'uae':          'dubai',

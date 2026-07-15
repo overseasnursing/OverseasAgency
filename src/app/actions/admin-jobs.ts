@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache'
 function revalidateJob(id: string, slug: string, country: string, city: string | null, jobType: string) {
   revalidatePath('/admin/jobs')
   revalidatePath('/jobs')
-  revalidatePath(`/jobs/${slug}`)
+  revalidatePath(`/jobs/listing/${slug}`)
   for (const path of getJobDestinationPaths(country, city, jobType)) revalidatePath(path)
 }
 

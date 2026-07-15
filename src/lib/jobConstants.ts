@@ -1,7 +1,7 @@
-import { normalizeCountry } from '@/app/jobs/[slug]/_data/countryMappings'
+import { normalizeCountry } from '@/app/jobs/_data/countryMappings'
 
 // Country list for job posting forms — matches the keys used by
-// normalizeCountry() in src/app/jobs/[slug]/_data/countryMappings.ts so
+// normalizeCountry() in src/app/jobs/_data/countryMappings.ts so
 // related exams/guides resolve correctly. India has no exam/guide mapping
 // yet, so those sections simply render empty for India-based jobs.
 export const JOB_COUNTRIES = [

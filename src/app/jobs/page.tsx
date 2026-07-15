@@ -3,7 +3,7 @@ import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildJobsCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { getActiveJobs } from '@/lib/db/jobs'
 import { JobsClient } from './JobsClient'
-import { normalizeCountry } from './[slug]/_data/countryMappings'
+import { normalizeCountry } from './_data/countryMappings'
 
 export const revalidate = 1800
 

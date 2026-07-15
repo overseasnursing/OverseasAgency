@@ -52,7 +52,7 @@ export default async function MyApplicationsPage() {
                 <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-5 py-4">
                     <a
-                      href={`/jobs/${app.job_slug}`}
+                      href={`/jobs/listing/${app.job_slug}`}
                       className="font-medium text-slate-800 hover:text-primary transition-colors line-clamp-1"
                     >
                       {app.job_title}

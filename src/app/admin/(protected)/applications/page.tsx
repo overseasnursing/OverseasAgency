@@ -63,7 +63,7 @@ export default async function AdminApplicationsPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <a
-                      href={`/jobs/${app.job_slug}`}
+                      href={`/jobs/listing/${app.job_slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-slate-700 hover:text-primary transition-colors line-clamp-1 max-w-[180px] block"

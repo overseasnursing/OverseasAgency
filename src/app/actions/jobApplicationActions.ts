@@ -78,7 +78,7 @@ export async function submitApplication(
     return { error: error.message }
   }
 
-  if (jobSlug) revalidatePath(`/jobs/${jobSlug}`)
+  if (jobSlug) revalidatePath(`/jobs/listing/${jobSlug}`)
   revalidatePath('/dashboard/applications')
   return { error: null }
 }

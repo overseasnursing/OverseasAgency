@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildJobsCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/seo/schemas'
 import { getActiveJobsByDestination } from '@/lib/db/jobs'
-import { normalizeCountry } from '../../[slug]/_data/countryMappings'
+import { normalizeCountry } from '../../_data/countryMappings'
 import { JOB_COUNTRIES, slugify } from '@/lib/jobConstants'
 import { DestinationJobsView } from '../../_components/DestinationJobsView'
 

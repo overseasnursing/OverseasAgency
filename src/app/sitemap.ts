@@ -10,7 +10,7 @@ import { getAllSalarySlugs }   from '@/lib/data/salaries'
 import { getAllExamSlugs }     from '@/lib/data/exams'
 import { getAllGuideSlugs }    from '@/lib/data/guides'
 import { getActiveJobs }       from '@/lib/db/jobs'
-import { normalizeCountry }    from '@/app/jobs/[slug]/_data/countryMappings'
+import { normalizeCountry }    from '@/app/jobs/_data/countryMappings'
 import { getAllAuthors }       from '@/lib/authors/data'
 import { getAllReviewers }     from '@/lib/reviewers/data'
 import { STATIC_SITEMAP_ENTRIES } from '@/lib/seo/sitemap'
@@ -200,7 +200,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   /* ── Job posting pages — time-sensitive, needs frequent recrawl ── */
   const jobPages: MetadataRoute.Sitemap = activeJobs.map(j => ({
-    url: url(`/jobs/${j.slug}`),
+    url: url(`/jobs/listing/${j.slug}`),
     lastModified: new Date(j.created_at),
     changeFrequency: 'daily' as const,
     priority: 0.7,
