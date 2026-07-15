@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AgencyJobForm } from '../_components/AgencyJobForm'
 import type { JobRow } from '@/lib/db/jobs'
+import { getJobEligibility, getAgencyLicensedCountries } from '@/lib/db/jobs'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -34,6 +35,11 @@ export default async function EditAgencyJobPage({ params }: PageProps) {
   // Strict ownership check — not found if job belongs to another agency
   if (!job || job.agency_id !== agencyId) notFound()
 
+  const [eligibility, availableCountries] = await Promise.all([
+    getJobEligibility(id),
+    getAgencyLicensedCountries(agencyId),
+  ])
+
   const badge = STATUS_BADGE[job.status] ?? STATUS_BADGE.pending
 
   return (
@@ -59,7 +65,7 @@ export default async function EditAgencyJobPage({ params }: PageProps) {
         )}
       </div>
 
-      <AgencyJobForm initialData={job as JobRow} />
+      <AgencyJobForm initialData={job as JobRow} availableCountries={availableCountries} initialEligibility={eligibility} />
     </div>
   )
 }

@@ -21,7 +21,7 @@ import { FeaturedAgenciesSection } from '@/components/home/FeaturedAgenciesSecti
 import { FeaturedJobsSection } from '@/components/home/FeaturedJobsSection'
 import { HeroCopy } from '@/components/home/HeroCopy'
 import { RecommendedExams } from '@/components/home/RecommendedExams'
-import { getActiveJobsAdmin } from '@/lib/db/jobs'
+import { getActiveJobs } from '@/lib/db/jobs'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { buildWebPageSchema, buildBreadcrumbSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 
@@ -326,7 +326,7 @@ export default async function HomePage() {
   const [featuredAgencies, searchAgenciesRaw, featuredJobs] = await Promise.all([
     fetchFeaturedAgencies(6),
     fetchAgenciesForSearch(100),
-    getActiveJobsAdmin().then(jobs => jobs.slice(0, 6)),
+    getActiveJobs().then(jobs => jobs.slice(0, 6)),
   ])
 
   const featuredReviews  = PLATFORM_REVIEWS.filter((r) => r.featured).slice(0, 6)

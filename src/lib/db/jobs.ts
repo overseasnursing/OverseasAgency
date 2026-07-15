@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Tables, InsertDto, UpdateDto } from '@/types/database'
@@ -71,15 +72,22 @@ export type JobDetailRow = JobRow & {
   // this job (not the visitor's), so the canonical /jobs/[slug] page never
   // has to read the visitor's Market Context to render correctly.
   agency_source_country: string | null
+  // Eligibility (Phase 6) — informational only. Never used to hide this page;
+  // the canonical detail page always renders for any approved/expired job.
+  eligibility_mode: JobEligibilityMode
+  eligible_countries: string[]
 }
 
-export async function getJobBySlugPublic(slug: string): Promise<JobDetailRow | null> {
+// cache() dedupes this within a single request — generateMetadata() and the
+// page component both call it for the same slug; without this it ran twice
+// per request (Phase 9).
+export const getJobBySlugPublic = cache(async (slug: string): Promise<JobDetailRow | null> => {
   if (!SUPABASE_CONFIGURED) return null
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('jobs')
-    .select('*, agencies(name, slug, logo_url, rating, review_count, google_rating, google_review_count, source_country)')
+    .select('*, agencies(name, slug, logo_url, rating, review_count, google_rating, google_review_count, source_country), job_eligible_countries(country)')
     .eq('slug', slug)
     .in('status', ['approved', 'expired'])
     .single()
@@ -100,8 +108,11 @@ export async function getJobBySlugPublic(slug: string): Promise<JobDetailRow | n
     agency_google_rating:        row.agencies?.google_rating ?? null,
     agency_google_review_count:  row.agencies?.google_review_count ?? null,
     agency_source_country:       row.agencies?.source_country ?? null,
+    eligibility_mode:            (row.eligibility_mode as JobEligibilityMode) ?? 'worldwide',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    eligible_countries:          (row.job_eligible_countries ?? []).map((r: any) => r.country as string),
   }
-}
+})
 
 /**
  * Jobs in the same destination country. Pass `agencySourceCountry` (the
@@ -114,27 +125,21 @@ export async function getSimilarJobs(
   country: string,
   excludeId: string,
   limit = 6,
-  agencySourceCountry?: string | null,
+  _agencySourceCountry?: string | null,
 ): Promise<ActiveJobListing[]> {
   if (!SUPABASE_CONFIGURED) return []
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase as any)
+  const { data, error } = await (supabase as any)
     .from('jobs')
-    .select(
-      agencySourceCountry
-        ? 'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies!inner(name, source_country)'
-        : 'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies(name, source_country)',
-    )
+    .select(ACTIVE_JOB_LISTING_COLUMNS)
     .eq('status', 'approved')
     .gte('expiry_date', new Date().toISOString())
     .eq('country', country)
     .neq('id', excludeId)
     .order('created_at', { ascending: false })
     .limit(limit)
-  if (agencySourceCountry) query = query.eq('agencies.source_country', agencySourceCountry)
 
-  const { data, error } = await query
   if (error) {
     console.error('[jobs] getSimilarJobs:', error.message)
     return []
@@ -164,36 +169,106 @@ export type ActiveJobListing = {
   // card's subtle Source Country indicator (Phase 6). Null if the job has
   // no agency or the agency predates source_country.
   agency_source_country: string | null
+  // Eligibility (Phase 6) — informational only, never used to exclude a job
+  // from a canonical listing; drives badges/highlighting client-side only.
+  eligibility_mode: JobEligibilityMode
+  eligible_countries: string[]
 }
 
 /**
- * Active job listings. Pass `sourceCountry` to scope to jobs posted by
- * agencies recruiting from that country — omitted callers (sitemap.ts, which
- * needs every job URL for indexing) are unaffected and keep seeing every
- * active job regardless of source country.
+ * Active job listings — every approved, unexpired job, regardless of
+ * visitor/agency source country. Canonical query: source-country used to
+ * exclude jobs here (Phase 1 hotfix — see jobs module migration notes);
+ * `_sourceCountry` is kept only so existing call sites don't need to change
+ * and is intentionally unused until personalization is reintroduced as a
+ * non-exclusionary signal in a later phase.
+ *
+ * Service-role client, not the cookie-aware one (Phase 9) — nothing here
+ * has read the visitor's cookies since the Phase 1 hotfix removed
+ * source-country filtering, so there was no remaining reason for this to
+ * force dynamic rendering on every caller (including /jobs itself, and
+ * sitemap.ts). This used to be split into this function plus a separate
+ * getActiveJobsAdmin with an identical body just to get the service-role
+ * client — now that this one no longer needs cookies, that duplicate no
+ * longer has a reason to exist and has been removed; callers that used it
+ * now call this instead.
  */
-export async function getActiveJobs(sourceCountry?: string): Promise<ActiveJobListing[]> {
+export async function getActiveJobs(_sourceCountry?: string): Promise<ActiveJobListing[]> {
   if (!SUPABASE_CONFIGURED) return []
-  const supabase = await createClient()
+  const db = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (supabase as any)
+  const { data, error } = await (db as any)
     .from('jobs')
-    .select(
-      sourceCountry
-        ? 'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies!inner(name, source_country)'
-        : 'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies(name, source_country)',
-    )
+    .select(ACTIVE_JOB_LISTING_COLUMNS)
     .eq('status', 'approved')
     .gte('expiry_date', new Date().toISOString())
     .order('created_at', { ascending: false })
-  if (sourceCountry) query = query.eq('agencies.source_country', sourceCountry)
 
-  const { data, error } = await query
   if (error) {
     console.error('[jobs] getActiveJobs:', error.message)
     return []
   }
   return (data ?? []).map(mapActiveJobRow)
+}
+
+/**
+ * Active jobs scoped to a destination (Phase 7 — canonical destination-first
+ * routes). Country/city/jobType are exact-match filters on the job's own
+ * fields — never on source country, which stays a personalization-only
+ * signal (see getActiveJobs). Omit a filter to not constrain that level.
+ *
+ * Service-role client — same reasoning as getActiveJobs: these routes are
+ * meant to be statically generated/ISR-cached for SEO, and reading cookies
+ * would force dynamic rendering regardless of `revalidate`.
+ *
+ * cache()-wrapped (Phase 9) — the [city] and [specialty] destination pages
+ * each call this once in generateMetadata() and again in the page component
+ * with identical arguments; without this it ran twice per request.
+ */
+export const getActiveJobsByDestination = cache(async (filters: {
+  country?: string
+  city?: string
+  jobType?: string
+}): Promise<ActiveJobListing[]> => {
+  if (!SUPABASE_CONFIGURED) return []
+  const db = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query = (db as any)
+    .from('jobs')
+    .select(ACTIVE_JOB_LISTING_COLUMNS)
+    .eq('status', 'approved')
+    .gte('expiry_date', new Date().toISOString())
+    .order('created_at', { ascending: false })
+  if (filters.country) query = query.eq('country', filters.country)
+  if (filters.city)    query = query.eq('city', filters.city)
+  if (filters.jobType) query = query.eq('job_type', filters.jobType)
+
+  const { data, error } = await query
+  if (error) {
+    console.error('[jobs] getActiveJobsByDestination:', error.message)
+    return []
+  }
+  return (data ?? []).map(mapActiveJobRow)
+})
+
+/** Distinct destination countries with ≥1 approved, unexpired job — for
+ * generateStaticParams. Service-role client, same reasoning as above. */
+export async function getActiveJobCountries(): Promise<string[]> {
+  if (!SUPABASE_CONFIGURED) return []
+  const db = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (db as any)
+    .from('jobs')
+    .select('country')
+    .eq('status', 'approved')
+    .gte('expiry_date', new Date().toISOString())
+  if (error) {
+    console.error('[jobs] getActiveJobCountries:', error.message)
+    return []
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const countries: string[] = (data ?? []).map((r: any) => r.country as string)
+  return [...new Set(countries)]
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -216,41 +291,14 @@ function mapActiveJobRow(row: any): ActiveJobListing {
     agency_id:        row.agency_id ?? null,
     agency_name:      row.agencies?.name ?? null,
     agency_source_country: row.agencies?.source_country ?? null,
+    eligibility_mode:   (row.eligibility_mode as JobEligibilityMode) ?? 'worldwide',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    eligible_countries: (row.job_eligible_countries ?? []).map((r: any) => r.country as string),
   }
 }
 
-const ACTIVE_JOB_LISTING_COLUMNS_UNFILTERED =
-  'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies(name, source_country)'
-const ACTIVE_JOB_LISTING_COLUMNS_BY_COUNTRY =
-  'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, agencies!inner(name, source_country)'
-
-/**
- * Same active-job listing as getActiveJobs(), but via the service-role
- * client instead of the cookie-aware one — for callers that must not read
- * the visitor's cookies (e.g. the static homepage's initial/default render;
- * see FeaturedJobsSection). jobs RLS already permits public reads of
- * approved listings, matching how agencies/reviews are fetched for public
- * pages elsewhere in this codebase.
- */
-export async function getActiveJobsAdmin(sourceCountry?: string): Promise<ActiveJobListing[]> {
-  if (!SUPABASE_CONFIGURED) return []
-  const db = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = (db as any)
-    .from('jobs')
-    .select(sourceCountry ? ACTIVE_JOB_LISTING_COLUMNS_BY_COUNTRY : ACTIVE_JOB_LISTING_COLUMNS_UNFILTERED)
-    .eq('status', 'approved')
-    .gte('expiry_date', new Date().toISOString())
-    .order('created_at', { ascending: false })
-  if (sourceCountry) query = query.eq('agencies.source_country', sourceCountry)
-
-  const { data, error } = await query
-  if (error) {
-    console.error('[jobs] getActiveJobsAdmin:', error.message)
-    return []
-  }
-  return (data ?? []).map(mapActiveJobRow)
-}
+const ACTIVE_JOB_LISTING_COLUMNS =
+  'id, title, slug, country, state, city, job_type, experience_years, salary_currency, salary_amount, logo_url, description, created_at, expiry_date, agency_id, eligibility_mode, agencies(name, source_country), job_eligible_countries(country)'
 
 // ── Authenticated user reads (own jobs, any status) ───────────────────────────
 
@@ -383,6 +431,80 @@ export async function deleteJob(id: string): Promise<boolean> {
   if (error) {
     console.error('[jobs] deleteJob:', error.message)
     return false
+  }
+  return true
+}
+
+// ── Eligibility (Phase 5 — posting workflow only, not read by public queries yet) ─
+
+export type JobEligibilityMode = 'specific_countries' | 'worldwide'
+
+export type JobEligibility = {
+  mode: JobEligibilityMode
+  countries: string[]
+}
+
+/** Countries this agency is licensed to recruit from (agency_licensed_countries). */
+export async function getAgencyLicensedCountries(agencyId: string): Promise<string[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { data, error } = await db
+    .from('agency_licensed_countries')
+    .select('country')
+    .eq('agency_id', agencyId)
+    .order('country')
+  if (error) {
+    console.error('[jobs] getAgencyLicensedCountries:', error.message)
+    return []
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((r: any) => r.country as string)
+}
+
+/** A job's current eligibility_mode + eligible_countries, for form prefill. */
+export async function getJobEligibility(jobId: string): Promise<JobEligibility> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const [{ data: job }, { data: countries }] = await Promise.all([
+    db.from('jobs').select('eligibility_mode').eq('id', jobId).single(),
+    db.from('job_eligible_countries').select('country').eq('job_id', jobId).order('country'),
+  ])
+  return {
+    mode: (job?.eligibility_mode as JobEligibilityMode) ?? 'specific_countries',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    countries: (countries ?? []).map((r: any) => r.country as string),
+  }
+}
+
+/** Sets a job's eligibility_mode and replaces its job_eligible_countries rows. */
+export async function saveJobEligibility(
+  jobId: string,
+  mode: JobEligibilityMode,
+  countries: string[],
+): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+
+  const { error: modeError } = await db.from('jobs').update({ eligibility_mode: mode }).eq('id', jobId)
+  if (modeError) {
+    console.error('[jobs] saveJobEligibility (mode):', modeError.message)
+    return false
+  }
+
+  const { error: clearError } = await db.from('job_eligible_countries').delete().eq('job_id', jobId)
+  if (clearError) {
+    console.error('[jobs] saveJobEligibility (clear):', clearError.message)
+    return false
+  }
+
+  if (mode === 'specific_countries' && countries.length > 0) {
+    const { error: insertError } = await db
+      .from('job_eligible_countries')
+      .insert(countries.map(country => ({ job_id: jobId, country })))
+    if (insertError) {
+      console.error('[jobs] saveJobEligibility (insert):', insertError.message)
+      return false
+    }
   }
   return true
 }

@@ -6,24 +6,19 @@ import { Loader2, Save, AlertCircle, CheckCircle, Upload, X } from 'lucide-react
 import { saveJob } from '@/app/actions/admin-jobs'
 import { uploadJobLogo } from '@/app/actions/job-upload'
 import type { JobRow } from '@/lib/db/jobs'
-import { JOB_COUNTRIES, JOB_CURRENCIES } from '@/lib/jobConstants'
+import { JOB_COUNTRIES, JOB_CURRENCIES, slugify } from '@/lib/jobConstants'
 import { TiptapEditor } from '@/components/admin/TiptapEditor'
 
 const inputCls = 'w-full px-3 py-2 border border-slate-200 rounded-lg text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all bg-white'
 const labelCls = 'block text-[12px] font-semibold text-slate-600 mb-1'
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+type Props = {
+  initialData: JobRow | null
+  availableCountries: string[]
+  initialEligibility?: { mode: 'specific_countries' | 'worldwide'; countries: string[] }
 }
 
-type Props = { initialData: JobRow | null }
-
-export function JobForm({ initialData }: Props) {
+export function JobForm({ initialData, availableCountries, initialEligibility }: Props) {
   const isEdit  = !!initialData
   const router  = useRouter()
   const [pending, startSave] = useTransition()
@@ -35,6 +30,12 @@ export function JobForm({ initialData }: Props) {
   const [logoUploading, startLogoUpload] = useTransition()
   const logoFileRef = useRef<HTMLInputElement>(null)
   const [applyType, setApplyType] = useState<'direct' | 'redirect'>(initialData?.apply_type ?? 'direct')
+  const [eligibilityMode, setEligibilityMode] = useState<'specific_countries' | 'worldwide' | ''>(initialEligibility?.mode ?? '')
+  const [eligibleCountries, setEligibleCountries] = useState<string[]>(initialEligibility?.countries ?? [])
+
+  function toggleCountry(c: string) {
+    setEligibleCountries(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
+  }
 
   function handleTitleChange(v: string) {
     setTitle(v)
@@ -293,6 +294,71 @@ export function JobForm({ initialData }: Props) {
             />
           )}
         </div>
+      </div>
+
+      {/* ── Eligibility ── */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col gap-4">
+        <h2 className="text-[13px] font-bold text-slate-700 uppercase tracking-wide">Eligibility</h2>
+
+        <div>
+          <label className={labelCls}>Who can apply? *</label>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-[13px] text-slate-700 cursor-pointer">
+              <input
+                type="radio"
+                name="eligibility_mode"
+                value="specific_countries"
+                required
+                checked={eligibilityMode === 'specific_countries'}
+                onChange={() => setEligibilityMode('specific_countries')}
+              />
+              Specific countries
+            </label>
+            <label className="flex items-center gap-2 text-[13px] text-slate-700 cursor-pointer">
+              <input
+                type="radio"
+                name="eligibility_mode"
+                value="worldwide"
+                required
+                checked={eligibilityMode === 'worldwide'}
+                onChange={() => setEligibilityMode('worldwide')}
+              />
+              Worldwide — open to nurses from any country
+            </label>
+          </div>
+        </div>
+
+        {eligibilityMode === 'specific_countries' && (
+          <div>
+            <label className={labelCls}>Eligible Source Countries *</label>
+            {availableCountries.length === 0 ? (
+              <p className="text-[12.5px] text-slate-400">No enabled source countries configured.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availableCountries.map(c => (
+                  <label
+                    key={c}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] rounded-lg border cursor-pointer transition-colors ${
+                      eligibleCountries.includes(c)
+                        ? 'bg-primary/10 border-primary text-primary font-semibold'
+                        : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      name="eligible_countries"
+                      value={c}
+                      checked={eligibleCountries.includes(c)}
+                      onChange={() => toggleCountry(c)}
+                      className="hidden"
+                    />
+                    {c}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Actions ── */}

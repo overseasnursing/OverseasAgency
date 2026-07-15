@@ -1,6 +1,6 @@
 'use server'
 
-import { getActiveJobsAdmin, type ActiveJobListing } from '@/lib/db/jobs'
+import { getActiveJobs, type ActiveJobListing } from '@/lib/db/jobs'
 
 /**
  * Client-callable wrapper for homepage progressive enhancement (see
@@ -9,6 +9,6 @@ import { getActiveJobsAdmin, type ActiveJobListing } from '@/lib/db/jobs'
  * would force it out of static generation.
  */
 export async function getFeaturedJobsForCountry(name: string, limit = 6): Promise<ActiveJobListing[]> {
-  const jobs = await getActiveJobsAdmin(name)
+  const jobs = await getActiveJobs(name)
   return jobs.slice(0, limit)
 }

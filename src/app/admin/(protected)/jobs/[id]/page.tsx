@@ -4,6 +4,8 @@ import { requirePermission } from '@/lib/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { JobForm } from '../_components/JobForm'
 import type { JobRow } from '@/lib/db/jobs'
+import { getJobEligibility } from '@/lib/db/jobs'
+import { getEnabledSourceCountries } from '@/lib/db/country-settings'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -26,6 +28,11 @@ export default async function EditJobPage({ params }: PageProps) {
   const { data: job } = await db.from('jobs').select('*').eq('id', id).single()
   if (!job) notFound()
 
+  const [eligibility, availableCountries] = await Promise.all([
+    getJobEligibility(id),
+    getEnabledSourceCountries(),
+  ])
+
   const badge = STATUS_BADGE[job.status] ?? STATUS_BADGE.pending
 
   return (
@@ -45,7 +52,7 @@ export default async function EditJobPage({ params }: PageProps) {
           </span>
         </div>
       </div>
-      <JobForm initialData={job as JobRow} />
+      <JobForm initialData={job as JobRow} availableCountries={availableCountries} initialEligibility={eligibility} />
     </div>
   )
 }

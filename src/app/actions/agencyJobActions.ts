@@ -2,6 +2,8 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { getAgencyLicensedCountries, saveJobEligibility, type JobEligibilityMode } from '@/lib/db/jobs'
+import { slugify, getJobDestinationPaths } from '@/lib/jobConstants'
 import { revalidatePath } from 'next/cache'
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
@@ -16,15 +18,11 @@ async function requireAgencyAdmin(): Promise<{ userId: string; agencyId: string 
   return { userId: user.id, agencyId }
 }
 
-// ── Slug helper ───────────────────────────────────────────────────────────────
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
+function revalidateJob(id: string, slug: string, country: string, city: string | null, jobType: string) {
+  revalidatePath('/agency-admin/jobs')
+  revalidatePath('/jobs')
+  revalidatePath(`/jobs/${slug}`)
+  for (const path of getJobDestinationPaths(country, city, jobType)) revalidatePath(path)
 }
 
 // ── Save job (create or edit) ─────────────────────────────────────────────────
@@ -57,6 +55,8 @@ export async function saveAgencyJob(
   const description         = (formData.get('description') as string ?? '').trim()
   const expiry_date_raw     = (formData.get('expiry_date') as string ?? '').trim()
   const slug_raw            = (formData.get('slug') as string ?? '').trim()
+  const eligibility_mode    = (formData.get('eligibility_mode') as string ?? '').trim()
+  const eligible_countries  = formData.getAll('eligible_countries').map(v => String(v))
 
   if (!title || !country || !job_type || !description || !expiry_date_raw) {
     return { error: 'Required fields are missing.' }
@@ -67,15 +67,32 @@ export async function saveAgencyJob(
   if (salary_amount_raw && (Number.isNaN(salary_amount) || (salary_amount as number) < 0)) {
     return { error: 'Salary amount must be a positive number.' }
   }
+  if (eligibility_mode !== 'specific_countries' && eligibility_mode !== 'worldwide') {
+    return { error: 'Please select who is eligible to apply.' }
+  }
+  if (eligibility_mode === 'specific_countries') {
+    if (eligible_countries.length === 0) {
+      return { error: 'Select at least one eligible country, or choose Worldwide.' }
+    }
+    // Server-side, not just client UI — agencies may only select their own
+    // licensed markets regardless of what the submitted form data claims.
+    const licensed = await getAgencyLicensedCountries(agencyId)
+    if (eligible_countries.some(c => !licensed.includes(c))) {
+      return { error: 'You can only select countries from your licensed markets.' }
+    }
+  }
 
   const slug        = slug_raw || slugify(title)
   const expiry_date = new Date(expiry_date_raw + 'T23:59:59.000Z').toISOString()
 
   if (id) {
-    // Edit: verify ownership before touching anything
+    // Edit: verify ownership before touching anything. Also carries the
+    // pre-update country/city/job_type so, if they changed, the OLD
+    // destination pages get revalidated too — reusing this one query
+    // rather than adding a second read just for that.
     const { data: existing } = await db
       .from('jobs')
-      .select('agency_id')
+      .select('agency_id, country, city, job_type')
       .eq('id', id)
       .single()
 
@@ -103,10 +120,11 @@ export async function saveAgencyJob(
       .eq('id', id)
 
     if (error) return { error: error.message }
-    revalidatePath('/agency-admin/jobs')
+    const eligibilitySaved = await saveJobEligibility(id, eligibility_mode as JobEligibilityMode, eligible_countries)
+    if (!eligibilitySaved) return { error: 'Job saved, but eligibility could not be updated.' }
     revalidatePath(`/agency-admin/jobs/${id}`)
-    revalidatePath('/jobs')
-    revalidatePath(`/jobs/${slug}`)
+    revalidateJob(id, slug, country, city, job_type)
+    revalidateJob(id, slug, existing.country, existing.city, existing.job_type)
     return { error: null, id }
   }
 
@@ -133,8 +151,8 @@ export async function saveAgencyJob(
     .single()
 
   if (error) return { error: error.message }
-  revalidatePath('/agency-admin/jobs')
-  revalidatePath('/jobs')
-  revalidatePath(`/jobs/${slug}`)
+  const eligibilitySaved = await saveJobEligibility(data.id, eligibility_mode as JobEligibilityMode, eligible_countries)
+  if (!eligibilitySaved) return { error: 'Job submitted, but eligibility could not be saved. Please edit it to set eligibility.' }
+  revalidateJob(data.id, slug, country, city, job_type)
   return { error: null, id: data.id }
 }
