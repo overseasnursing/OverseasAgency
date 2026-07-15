@@ -4,6 +4,7 @@ import { MapPin, Building2, Calendar, ChevronRight } from 'lucide-react'
 import type { ActiveJobListing } from '@/lib/db/jobs'
 import { FlagIcon } from '@/components/ui/FlagIcon'
 import { getSourceCountryByName } from '@/lib/data/countryList'
+import { JobEligibilityBadge } from './JobEligibilityBadge'
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text
@@ -79,6 +80,9 @@ function JobCardImpl({ job }: { job: ActiveJobListing }) {
           )}
         </div>
       )}
+
+      {/* Eligibility — informational, never hides the card */}
+      <JobEligibilityBadge mode={job.eligibility_mode} countries={job.eligible_countries} />
 
       {/* Description */}
       <p className="text-[12.5px] text-slate-500 leading-relaxed flex-1">

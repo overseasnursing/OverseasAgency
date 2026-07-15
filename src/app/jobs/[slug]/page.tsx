@@ -15,6 +15,7 @@ import { getCountryGuideLinks } from '@/lib/data/countries'
 import { buildBreadcrumbSchema, buildJobPostingSchema, buildOrganizationSchema } from '@/lib/seo/schemas'
 import { MultiJsonLd } from '@/components/seo/JsonLd'
 import { JobCard } from '../_components/JobCard'
+import { JobEligibilityBadge } from '../_components/JobEligibilityBadge'
 import { ApplySection } from './ApplySection'
 import type { Agency } from '@/types/agency'
 import { normalizeCountry, type CountryLink } from './_data/countryMappings'
@@ -215,6 +216,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                         Expired
                       </span>
                     )}
+                    <JobEligibilityBadge mode={job.eligibility_mode} countries={job.eligible_countries} />
                   </div>
                 </div>
 
@@ -388,7 +390,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                   </p>
                 </div>
                 <a
-                  href={`/jobs?country=${encodeURIComponent(job.country)}`}
+                  href={`/jobs/${normalizeCountry(job.country)}`}
                   className="text-[13px] font-semibold text-primary hover:text-primary-hover flex items-center gap-1 transition-colors flex-shrink-0"
                 >
                   View all <ArrowRight size={13} />

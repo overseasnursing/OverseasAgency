@@ -10,6 +10,7 @@ import { getAllSalarySlugs }   from '@/lib/data/salaries'
 import { getAllExamSlugs }     from '@/lib/data/exams'
 import { getAllGuideSlugs }    from '@/lib/data/guides'
 import { getActiveJobs }       from '@/lib/db/jobs'
+import { normalizeCountry }    from '@/app/jobs/[slug]/_data/countryMappings'
 import { getAllAuthors }       from '@/lib/authors/data'
 import { getAllReviewers }     from '@/lib/reviewers/data'
 import { STATIC_SITEMAP_ENTRIES } from '@/lib/seo/sitemap'
@@ -205,6 +206,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
+  /* ── Destination hierarchy — country level only (Phase 7). City/specialty
+     pages are rendered + cached on-demand rather than pre-listed, so they
+     only get indexed once they've accumulated real content — reached via
+     internal links from the country page down, not forced into the sitemap
+     while thin. Derived from the same activeJobs fetch above, no new query. */
+  const jobCountrySlugs = [...new Set(activeJobs.map(j => normalizeCountry(j.country)))]
+  const jobCountryPages: MetadataRoute.Sitemap = jobCountrySlugs.map(slug => ({
+    url: url(`/jobs/${slug}`),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }))
+
   /* ── Author / reviewer bio pages (EEAT) ── */
   const authorPages: MetadataRoute.Sitemap = authors.map(a => ({
     url: url(`/authors/${a.slug}`),
@@ -233,6 +246,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...mockLocationPages,
     ...mockCategoryPages,
     ...jobPages,
+    ...jobCountryPages,
     ...authorPages,
     ...reviewerPages,
   ]

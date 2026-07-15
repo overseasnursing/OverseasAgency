@@ -3,7 +3,8 @@ import { requirePermission } from '@/lib/require-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPagination } from '@/components/admin/AdminPagination'
 import { approveJob, holdJob, rejectJob } from '@/app/actions/admin-jobs'
-import { CheckCircle, XCircle, Clock, Plus } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Plus, AlertTriangle } from 'lucide-react'
+import { getJobExpiryStatus } from '@/lib/jobConstants'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +22,27 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   hold:     { label: 'Hold',     className: 'bg-[#FEF3C7] text-[#92400E]' },
   rejected: { label: 'Rejected', className: 'bg-[#FEE2E2] text-[#B91C1C]' },
   expired:  { label: 'Expired',  className: 'bg-slate-100 text-slate-500' },
+}
+
+const EXPIRY_BADGE: Record<'expired' | 'expiring_soon', { label: string; className: string }> = {
+  expired:       { label: 'Expired',      className: 'bg-[#FEE2E2] text-[#B91C1C]' },
+  expiring_soon: { label: 'Expiring soon', className: 'bg-[#FEF3C7] text-[#92400E]' },
+}
+
+function ExpiryCell({ expiryDate }: { expiryDate: string }) {
+  const expiryStatus = getJobExpiryStatus(expiryDate)
+  const formatted = new Date(expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  const badge = expiryStatus !== 'active' ? EXPIRY_BADGE[expiryStatus] : null
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-slate-500">{formatted}</span>
+      {badge && (
+        <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10.5px] font-semibold rounded-full ${badge.className}`}>
+          <AlertTriangle size={9} /> {badge.label}
+        </span>
+      )}
+    </div>
+  )
 }
 
 interface PageProps {
@@ -129,6 +151,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
                 <th className="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide">Country</th>
                 <th className="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide">Posted By</th>
                 <th className="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide whitespace-nowrap">Created</th>
+                <th className="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide whitespace-nowrap">Expires</th>
                 <th className="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide">Status</th>
                 <th className="px-5 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wide">Actions</th>
               </tr>
@@ -158,6 +181,9 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
                       {new Date(job.created_at).toLocaleDateString('en-IN', {
                         day: 'numeric', month: 'short', year: 'numeric',
                       })}
+                    </td>
+                    <td className="px-5 py-3.5 text-[12px] whitespace-nowrap">
+                      <ExpiryCell expiryDate={job.expiry_date} />
                     </td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex px-2 py-0.5 text-[11px] font-semibold rounded-full ${badge.className}`}>

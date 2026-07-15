@@ -37,7 +37,30 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 3. Use `get_affected_flows` to understand impact.
 4. Use `query_graph` pattern="tests_for" to check coverage.
 
+---
 
+# Database Safety Rules (NON-NEGOTIABLE)
+
+Production holds real, live user data. Treat it as valuable and irreplaceable.
+
+Never, under any circumstances, without explicit user approval in that exact conversation:
+
+* Run `supabase db reset` (in any form).
+* Run `supabase db reset --linked`.
+* Run destructive SQL — `DROP`, `TRUNCATE`, or a `DELETE`/`UPDATE` without a narrow `WHERE` — against the linked/production database.
+* Apply migrations to production (`supabase db push` or equivalent) automatically or as a side effect of another task.
+* Modify, seed, or overwrite production data.
+
+Always:
+
+* Assume the linked/remote Supabase project is production unless told otherwise.
+* Ask the user before executing any destructive or production-affecting database operation, and state exactly what will run.
+* Prefer `--local` for any reset, seed, or destructive testing operation.
+* Default to read-only verification (`supabase migration list`, `supabase db query --linked` for SELECTs) when checking production state.
+
+If a task seems to require a destructive or production database operation, stop and ask — do not infer approval from unrelated instructions.
+
+---
 
 # OverseasNursing.com — Advanced Claude Instructions
 

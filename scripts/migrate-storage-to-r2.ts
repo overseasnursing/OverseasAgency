@@ -11,6 +11,7 @@
 import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { createInterface } from 'node:readline/promises'
 
 /* ── Config ──────────────────────────────────────────────────────────── */
 
@@ -176,6 +177,17 @@ async function updateDbUrls(
   }
 }
 
+async function confirmTargetProject(): Promise<void> {
+  console.log(`\n⚠  This migration will read from and write to Supabase project:\n\n    ${SUPABASE_URL}\n`)
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  const answer = await rl.question('Type "yes" to confirm this is the intended project and continue: ')
+  rl.close()
+  if (answer.trim().toLowerCase() !== 'yes') {
+    console.error('❌ Not confirmed. Aborting migration.')
+    process.exit(1)
+  }
+}
+
 async function run() {
   console.log('🚀 Starting Supabase → R2 storage migration\n')
 
@@ -186,6 +198,8 @@ async function run() {
     console.error('❌ Missing env vars:', missing.join(', '))
     process.exit(1)
   }
+
+  await confirmTargetProject()
 
   for (const { name, publicUrl } of BUCKETS) {
     const { supabaseBase, r2Base } = await migrateBucket(name, publicUrl)

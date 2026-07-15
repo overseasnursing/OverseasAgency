@@ -1,0 +1,7 @@
+# Critical infrastructure files — require review from the repository owner.
+supabase/migrations/** @overseasnursing
+src/lib/db/** @overseasnursing
+src/app/actions/** @overseasnursing
+scripts/** @overseasnursing
+vercel.json @overseasnursing
+CLAUDE.md @overseasnursing

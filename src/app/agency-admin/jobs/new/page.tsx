@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AgencyJobForm } from '../_components/AgencyJobForm'
+import { getAgencyLicensedCountries } from '@/lib/db/jobs'
 
 export default async function NewAgencyJobPage() {
   const supabase = await createClient()
@@ -10,6 +11,8 @@ export default async function NewAgencyJobPage() {
   const role     = user.app_metadata?.role as string | undefined
   const agencyId = user.app_metadata?.agency_id as string | undefined
   if (role !== 'agency_admin' || !agencyId) redirect('/?error=unauthorized')
+
+  const availableCountries = await getAgencyLicensedCountries(agencyId)
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,7 +26,7 @@ export default async function NewAgencyJobPage() {
           Your job will be reviewed by our team before going live.
         </p>
       </div>
-      <AgencyJobForm initialData={null} />
+      <AgencyJobForm initialData={null} availableCountries={availableCountries} />
     </div>
   )
 }

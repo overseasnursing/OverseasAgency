@@ -723,6 +723,34 @@ export function buildCollectionPageSchema(page: {
   }
 }
 
+// ─── CollectionPage (Jobs destination hierarchy) ──────────────────────────────
+// Separate from buildCollectionPageSchema above (agency-location naming
+// doesn't fit jobs — "agencyCount" would be misleading for a job listing)
+// but same established pattern: CollectionPage is the correct, more specific
+// type for a page whose content is a listing, so this replaces WebPage on
+// these pages rather than being added alongside it (avoids duplicate schema).
+
+export function buildJobsCollectionPageSchema(page: {
+  name: string
+  description: string
+  path: string
+  jobCount: number
+  placeName?: string
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: page.name,
+    description: page.description,
+    url: abs(page.path),
+    '@id': `${abs(page.path)}#webpage`,
+    isPartOf: { '@type': 'WebSite', name: SITE_NAME, url: BASE_URL },
+    ...(page.placeName && { about: { '@type': 'Place', name: page.placeName } }),
+    numberOfItems: page.jobCount,
+    inLanguage: 'en',
+  }
+}
+
 // ─── ItemList (agency listings on location pages) ─────────────────────────────
 
 export function buildAgencyItemListSchema(agencies: Array<{
