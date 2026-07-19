@@ -103,7 +103,7 @@ const config: Config = {
     'bg-[#FCE7F3]', 'text-[#9D174D]',
     'bg-[#E0F2FE]', 'text-[#075985]',
   ],
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
 }
 
 export default config
