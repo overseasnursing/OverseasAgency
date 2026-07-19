@@ -178,6 +178,37 @@ textarea:focus-visible {
 .blog-content blockquote { margin: 1.5rem 0; }
 
 /* ─────────────────────────────────────────────────────────────────
+   Tiptap editor — table grid lines and resize handle
+   (Tiptap's table plugin renders bare cells with no CSS of its own;
+   these rules are editor-only so the public blog page keeps the
+   plain @tailwindcss/typography table look.)
+───────────────────────────────────────────────────────────────── */
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.ProseMirror td,
+.ProseMirror th {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  position: relative;
+  vertical-align: top;
+}
+.ProseMirror th { background-color: #f8fafc; font-weight: 600; }
+.ProseMirror .selectedCell {
+  background-color: rgba(15, 76, 129, 0.08);
+}
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--color-primary, #0F4C81);
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────
    Accessibility
 ───────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
