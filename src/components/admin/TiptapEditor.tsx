@@ -70,13 +70,17 @@ export function TiptapEditor({ value, onChange }: Props) {
     if (!file || !editor) return
     e.target.value = ''
     startUpload(async () => {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await uploadBlogImage(fd)
-      if (res.url) {
-        editor.chain().focus().setImage({ src: res.url, alt: file.name }).run()
-      } else {
-        alert(res.error ?? 'Upload failed')
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await uploadBlogImage(fd)
+        if (res.url) {
+          editor.chain().focus().setImage({ src: res.url, alt: file.name }).run()
+        } else {
+          alert(res.error ?? 'Upload failed')
+        }
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Upload failed')
       }
     })
   }
@@ -97,7 +101,7 @@ export function TiptapEditor({ value, onChange }: Props) {
     <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
 
       {/* ── Toolbar ── */}
-      <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-slate-200 bg-slate-50">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-slate-200 bg-slate-50">
 
         <button type="button" title="Undo" className={btn()} onClick={() => editor.chain().focus().undo().run()}><Undo size={14} /></button>
         <button type="button" title="Redo" className={btn()} onClick={() => editor.chain().focus().redo().run()}><Redo size={14} /></button>

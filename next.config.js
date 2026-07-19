@@ -44,6 +44,12 @@ const nextConfig = {
     optimizePackageImports: [
       'lucide-react',
     ],
+    // Default Server Actions body limit is 1 MB. uploadBlogImage/uploadToR2
+    // allow files up to 5 MB (see MAX_BYTES in blog-upload.ts), so anything
+    // over 1 MB was rejected by the framework before that check ever ran.
+    serverActions: {
+      bodySizeLimit: '6mb',
+    },
   },
 
   images: {

@@ -45,13 +45,17 @@ export function BlogForm({ initial }: Props) {
     if (!file) return
     e.target.value = ''
     startCoverUpload(async () => {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await uploadBlogImage(fd)
-      if (res.url) {
-        setCoverUrl(res.url)
-      } else {
-        setNotice({ type: 'err', msg: res.error ?? 'Cover image upload failed' })
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await uploadBlogImage(fd)
+        if (res.url) {
+          setCoverUrl(res.url)
+        } else {
+          setNotice({ type: 'err', msg: res.error ?? 'Cover image upload failed' })
+        }
+      } catch (err) {
+        setNotice({ type: 'err', msg: err instanceof Error ? err.message : 'Cover image upload failed' })
       }
     })
   }
