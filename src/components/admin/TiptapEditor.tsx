@@ -8,10 +8,15 @@ import LinkExt from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Heading } from '@tiptap/extension-heading'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableCell } from '@tiptap/extension-table-cell'
 import { uploadBlogImage } from '@/app/actions/blog-upload'
 import {
   Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Link2, Image as ImageIcon, Undo, Redo, Loader2,
+  Table as TableIcon, Columns, Trash2,
 } from 'lucide-react'
 
 type Props = {
@@ -41,6 +46,10 @@ export function TiptapEditor({ value, onChange }: Props) {
       LinkExt.configure({ openOnClick: false }),
       Underline,
       Placeholder.configure({ placeholder: 'Start writing your blog post…' }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value || '',
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -110,6 +119,16 @@ export function TiptapEditor({ value, onChange }: Props) {
         <button type="button" title="Bullet list"   className={btn(editor.isActive('bulletList'))}  onClick={() => editor.chain().focus().toggleBulletList().run()}><List size={15} /></button>
         <button type="button" title="Numbered list" className={btn(editor.isActive('orderedList'))} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered size={15} /></button>
         <button type="button" title="Blockquote"    className={btn(editor.isActive('blockquote'))}  onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote size={14} /></button>
+
+        <Sep />
+
+        <button type="button" title="Insert table" className={btn(editor.isActive('table'))} onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}><TableIcon size={14} /></button>
+        {editor.isActive('table') && (
+          <>
+            <button type="button" title="Add column" className={btn()} onClick={() => editor.chain().focus().addColumnAfter().run()}><Columns size={14} /></button>
+            <button type="button" title="Delete table" className={btn()} onClick={() => editor.chain().focus().deleteTable().run()}><Trash2 size={14} /></button>
+          </>
+        )}
 
         <Sep />
 
