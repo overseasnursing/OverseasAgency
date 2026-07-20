@@ -62,35 +62,34 @@ export default async function AttemptPage({ params }: PageProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = createAdminClient() as any
 
-  // Load test metadata + category + location
-  const { data: test } = await db
-    .from('mock_tests')
-    .select(`
-      id, name, duration_minutes, total_questions, passing_percentage, instructions,
-      mock_test_categories ( name, slug, mock_test_locations ( name, slug ) )
-    `)
-    .eq('id', attempt.mock_test_id)
-    .single()
+  // Test metadata, questions, and existing answers are independent queries —
+  // run them in parallel instead of three sequential round-trips.
+  const [{ data: test }, { data: rawQuestions }, { data: rawAnswers }] = await Promise.all([
+    db
+      .from('mock_tests')
+      .select(`
+        id, name, duration_minutes, total_questions, passing_percentage, instructions,
+        mock_test_categories ( name, slug, mock_test_locations ( name, slug ) )
+      `)
+      .eq('id', attempt.mock_test_id)
+      .single(),
+    db
+      .from('mock_test_questions')
+      .select('id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, image_url, marks, difficulty, randomize_options')
+      .eq('mock_test_id', attempt.mock_test_id)
+      .eq('is_active', true),
+    db
+      .from('mock_test_answers')
+      .select('question_id, selected_answer')
+      .eq('attempt_id', attemptId),
+  ])
 
   if (!test) notFound()
-
-  // Load all active questions for this test
-  const { data: rawQuestions } = await db
-    .from('mock_test_questions')
-    .select('id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, image_url, marks, difficulty, randomize_options')
-    .eq('mock_test_id', attempt.mock_test_id)
-    .eq('is_active', true)
 
   // Build a map from questionId → question data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const questionMap = new Map<string, any>()
   ;(rawQuestions ?? []).forEach((q: { id: string }) => questionMap.set(q.id, q))
-
-  // Load existing answers for this attempt
-  const { data: rawAnswers } = await db
-    .from('mock_test_answers')
-    .select('question_id, selected_answer')
-    .eq('attempt_id', attemptId)
 
   const answerMap = new Map<string, 'A' | 'B' | 'C' | 'D' | null>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

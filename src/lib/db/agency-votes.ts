@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 
 export type VoteCounts = {
   thumbsUp: number
@@ -26,18 +25,3 @@ export async function getVoteCounts(agencyId: string): Promise<VoteCounts> {
   return { thumbsUp, thumbsDown, userVote: null, isLoggedIn: false }
 }
 
-export async function getVoteCountsWithUserVote(agencyId: string): Promise<VoteCounts> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const db = createAdminClient()
-  const [{ thumbsUp, thumbsDown }, mine] = await Promise.all([
-    countVotes(agencyId),
-    user
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? (db as any).from('agency_votes').select('vote').eq('agency_id', agencyId).eq('user_id', user.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ])
-
-  return { thumbsUp, thumbsDown, userVote: mine?.data?.vote ?? null, isLoggedIn: !!user }
-}

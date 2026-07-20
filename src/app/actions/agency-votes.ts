@@ -46,6 +46,28 @@ async function getVoteCounts(db: any, agencyId: string) {
   return { thumbsUp: up.count ?? 0, thumbsDown: down.count ?? 0 }
 }
 
+// Called client-side (on mount) by AgencyVote to hydrate the signed-in
+// user's own vote + login state, since the page itself no longer reads
+// cookies()/auth during render (that would force it out of ISR — see
+// page.tsx).
+export async function getMyVote(agencyId: string): Promise<{ userVote: boolean | null; isLoggedIn: boolean }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) return { userVote: null, isLoggedIn: false }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = createAdminClient() as any
+  const { data } = await db
+    .from('agency_votes')
+    .select('vote')
+    .eq('agency_id', agencyId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  return { userVote: data?.vote ?? null, isLoggedIn: true }
+}
+
 export async function removeVote(agencyId: string, agencySlug: string): Promise<VoteResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
