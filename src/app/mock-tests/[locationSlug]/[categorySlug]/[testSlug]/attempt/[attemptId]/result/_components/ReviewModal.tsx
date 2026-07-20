@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Star, X, CheckCircle, Globe } from 'lucide-react'
+import { Star, CheckCircle } from 'lucide-react'
 import { submitMockTestReview } from '@/app/actions/submitMockTestReview'
 
 type Props = {
@@ -11,42 +11,29 @@ type Props = {
   onDone:     () => void
 }
 
-const DIFF_CONFIG = {
-  easy:   { label: 'Easy',   base: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100', active: 'bg-emerald-100 border-emerald-500 text-emerald-700 ring-2 ring-emerald-300' },
-  medium: { label: 'Medium', base: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',         active: 'bg-amber-100 border-amber-500 text-amber-700 ring-2 ring-amber-300' },
-  hard:   { label: 'Hard',   base: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100',                 active: 'bg-red-100 border-red-500 text-red-700 ring-2 ring-red-300' },
-}
-
 const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent']
 
 const inputCls = 'w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-[13.5px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/60 transition-colors'
 
 export function ReviewModal({ categoryId, testId, examName, onDone }: Props) {
-  const [rating,          setRating]    = useState(0)
-  const [hover,           setHover]     = useState(0)
-  const [difficulty,      setDiff]      = useState<'easy' | 'medium' | 'hard' | null>(null)
-  const [reviewTitle,     setTitle]     = useState('')
-  const [reviewText,      setText]      = useState('')
-  const [reviewerCountry, setCountry]   = useState('')
-  const [error,           setError]     = useState('')
-  const [submitted,       setSubmitted] = useState(false)
-  const [pending,         start]        = useTransition()
+  const [rating,    setRating]    = useState(0)
+  const [hover,      setHover]     = useState(0)
+  const [reviewText, setText]     = useState('')
+  const [error,      setError]    = useState('')
+  const [submitted,  setSubmitted] = useState(false)
+  const [pending,    start]        = useTransition()
 
   const displayRating = hover || rating
 
   function handleSubmit() {
     if (rating === 0) { setError('Please select a star rating.'); return }
-    if (!difficulty)  { setError('Please select a difficulty level.'); return }
     setError('')
     start(async () => {
       const result = await submitMockTestReview({
         categoryId,
         testId,
         rating,
-        difficulty,
-        reviewTitle:     reviewTitle.trim()     || undefined,
-        reviewText:      reviewText.trim()      || undefined,
-        reviewerCountry: reviewerCountry.trim() || undefined,
+        reviewText: reviewText.trim() || undefined,
       })
       if (!result.success) { setError(result.error); return }
       setSubmitted(true)
@@ -74,23 +61,13 @@ export function ReviewModal({ categoryId, testId, examName, onDone }: Props) {
           <>
             {/* ── Header (fixed) ──────────────────────────────────── */}
             <div className="bg-gradient-to-br from-primary/8 to-primary/4 px-6 pt-6 pb-5 flex-shrink-0">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10.5px] font-bold text-primary uppercase tracking-widest mb-1.5">
-                    Quick Review
-                  </p>
-                  <h2 className="text-[19px] font-bold text-slate-800 leading-tight">How was the exam?</h2>
-                  <p className="text-[13px] text-slate-500 mt-1">
-                    Rate <span className="font-medium text-slate-700">{examName}</span>
-                  </p>
-                </div>
-                <button
-                  onClick={onDone}
-                  className="text-slate-400 hover:text-slate-600 transition-colors p-1 -mr-1 -mt-1 flex-shrink-0"
-                >
-                  <X size={18} />
-                </button>
-              </div>
+              <p className="text-[10.5px] font-bold text-primary uppercase tracking-widest mb-1.5">
+                Quick Review
+              </p>
+              <h2 className="text-[19px] font-bold text-slate-800 leading-tight">How was the exam?</h2>
+              <p className="text-[13px] text-slate-500 mt-1">
+                Rate <span className="font-medium text-slate-700">{examName}</span> to view your report
+              </p>
             </div>
 
             {/* ── Scrollable body ─────────────────────────────────── */}
@@ -125,45 +102,6 @@ export function ReviewModal({ categoryId, testId, examName, onDone }: Props) {
                 </div>
               </div>
 
-              {/* Difficulty */}
-              <div>
-                <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-3">Exam Difficulty</p>
-                <div className="flex gap-2.5">
-                  {(['easy', 'medium', 'hard'] as const).map(d => {
-                    const cfg = DIFF_CONFIG[d]
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setDiff(d)}
-                        className={`flex-1 py-2.5 text-[13.5px] font-semibold rounded-xl border transition-all ${difficulty === d ? cfg.active : cfg.base}`}
-                      >
-                        {cfg.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* Review title */}
-              <div>
-                <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  Review Title{' '}
-                  <span className="text-slate-400 font-normal normal-case">(optional)</span>
-                </p>
-                <input
-                  type="text"
-                  className={inputCls}
-                  maxLength={120}
-                  placeholder='e.g. "Very similar to actual DHA exam"'
-                  value={reviewTitle}
-                  onChange={e => setTitle(e.target.value)}
-                />
-                {reviewTitle.length > 80 && (
-                  <p className="text-[11px] text-slate-400 mt-1 text-right">{reviewTitle.length}/120</p>
-                )}
-              </div>
-
               {/* Review text */}
               <div>
                 <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
@@ -181,25 +119,6 @@ export function ReviewModal({ categoryId, testId, examName, onDone }: Props) {
                 {reviewText.length > 0 && (
                   <p className="text-[11px] text-slate-400 mt-1 text-right">{reviewText.length}/2000</p>
                 )}
-              </div>
-
-              {/* Reviewer country */}
-              <div>
-                <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  Your Country{' '}
-                  <span className="text-slate-400 font-normal normal-case">(optional)</span>
-                </p>
-                <div className="relative">
-                  <Globe size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    className={`${inputCls} pl-9`}
-                    maxLength={100}
-                    placeholder="e.g. Philippines, India, Nepal…"
-                    value={reviewerCountry}
-                    onChange={e => setCountry(e.target.value)}
-                  />
-                </div>
               </div>
 
               {/* Error */}
@@ -225,13 +144,6 @@ export function ReviewModal({ categoryId, testId, examName, onDone }: Props) {
                   ) : (
                     'Submit & View Your Report'
                   )}
-                </button>
-                <button
-                  type="button"
-                  onClick={onDone}
-                  className="w-full text-[13px] text-slate-400 hover:text-slate-600 transition-colors py-1.5"
-                >
-                  Skip for now
                 </button>
               </div>
             </div>

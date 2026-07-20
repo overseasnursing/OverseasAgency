@@ -135,7 +135,7 @@ export default async function CategoryPage({ params }: PageProps) {
   // Fetched once here and passed down to MockTestReviews so it doesn't re-query the same rows.
   const { data: reviewRows, error: reviewErr } = await db
     .from('mock_test_reviews')
-    .select('id, reviewer_name, reviewer_country, rating, difficulty, review_title, review_text, created_at, mock_tests(name)')
+    .select('id, reviewer_name, reviewer_country, rating, review_title, review_text, created_at, mock_tests(name)')
     .eq('category_id', category.id)
     .eq('status', 'approved')
     .order('created_at', { ascending: false })
@@ -147,7 +147,7 @@ export default async function CategoryPage({ params }: PageProps) {
   if (reviewErr || !reviewRows) {
     const { data: fb } = await db
       .from('mock_test_reviews')
-      .select('id, reviewer_name, rating, difficulty, review_text, created_at')
+      .select('id, reviewer_name, rating, review_text, created_at')
       .eq('category_id', category.id)
       .eq('status', 'approved')
       .order('created_at', { ascending: false })

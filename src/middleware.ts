@@ -43,13 +43,15 @@ function isRefreshTokenNotFoundError(error: unknown): boolean {
   return (candidate.message ?? '').toLowerCase().includes('invalid refresh token')
 }
 
-function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
-  const authCookieNames = request.cookies
+function authCookieNames(request: NextRequest): string[] {
+  return request.cookies
     .getAll()
     .map((c) => c.name)
     .filter((name) => name.startsWith('sb-') && name.includes('-auth-token'))
+}
 
-  authCookieNames.forEach((name) => {
+function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) {
+  authCookieNames(request).forEach((name) => {
     request.cookies.delete(name)
     response.cookies.delete(name)
   })
@@ -58,42 +60,48 @@ function clearSupabaseAuthCookies(request: NextRequest, response: NextResponse) 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
-          )
+  // Skip the Supabase round-trip entirely for guests — with no auth cookie
+  // present, getUser() is guaranteed to report "no session" anyway. This is
+  // the overwhelming majority of requests on an SEO-traffic site and avoids
+  // paying a network round-trip to Supabase's Auth server on every one of them.
+  if (authCookieNames(request).length > 0) {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({ request })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options),
+            )
+          },
         },
       },
-    },
-  )
+    )
 
-  // Refresh session — do not remove
-  try {
-    // getUser() resolves with { error } for API-level failures (e.g. a stale
-    // refresh token after a local `supabase db reset`) rather than throwing —
-    // the catch below only covers network-level failures.
-    const { error } = await supabase.auth.getUser()
-    if (error && isRefreshTokenNotFoundError(error)) {
-      clearSupabaseAuthCookies(request, supabaseResponse)
-    }
-  } catch (error) {
-    if (isRefreshTokenNotFoundError(error)) {
-      clearSupabaseAuthCookies(request, supabaseResponse)
-    } else {
-      console.error('[middleware] Supabase getUser failed; continuing request', {
-        path: request.nextUrl.pathname,
-        message: error instanceof Error ? error.message : String(error),
-      })
+    // Refresh session — do not remove
+    try {
+      // getUser() resolves with { error } for API-level failures (e.g. a stale
+      // refresh token after a local `supabase db reset`) rather than throwing —
+      // the catch below only covers network-level failures.
+      const { error } = await supabase.auth.getUser()
+      if (error && isRefreshTokenNotFoundError(error)) {
+        clearSupabaseAuthCookies(request, supabaseResponse)
+      }
+    } catch (error) {
+      if (isRefreshTokenNotFoundError(error)) {
+        clearSupabaseAuthCookies(request, supabaseResponse)
+      } else {
+        console.error('[middleware] Supabase getUser failed; continuing request', {
+          path: request.nextUrl.pathname,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      }
     }
   }
 
@@ -104,6 +112,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // /api routes handle their own auth via createClient()/createAdminClient()
+    // and don't rely on middleware-refreshed cookies (only /api/og and
+    // /api/cron/expire-jobs exist, and neither reads a session); sitemap.xml
+    // is crawler-only traffic with no session to refresh.
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

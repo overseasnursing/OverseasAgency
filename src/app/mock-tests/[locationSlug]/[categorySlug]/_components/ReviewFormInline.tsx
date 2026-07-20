@@ -1,28 +1,15 @@
 'use client'
 
 import { useState, useEffect, useTransition } from 'react'
-import { Star, Globe, CheckCircle, PenLine, ChevronDown, LogIn, User } from 'lucide-react'
+import { Star, CheckCircle, PenLine, ChevronDown, LogIn, User } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { submitMockTestReview } from '@/app/actions/submitMockTestReview'
-import { FormSelect } from '@/components/ui/FormSelect'
-import { COUNTRY_FORM_OPTIONS } from '@/lib/data/countryList'
-
-// Avoids pulling in `country-state-city` (a ~2MB-gzipped world dataset) just
-// for a short destination-country dropdown — this form only ever needs the
-// site's own destination list, same one used by review/scam-report forms.
-const COUNTRY_OPTIONS = COUNTRY_FORM_OPTIONS.map((name) => ({ label: name, value: name }))
 
 type TestOption = { id: string; name: string }
 
 type Props = {
   categoryId: string
   tests:      TestOption[]
-}
-
-const DIFF_CONFIG = {
-  easy:   { label: 'Easy',   base: 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100', active: 'bg-emerald-100 border-emerald-500 text-emerald-700 ring-2 ring-emerald-300' },
-  medium: { label: 'Medium', base: 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100',         active: 'bg-amber-100 border-amber-500 text-amber-700 ring-2 ring-amber-300' },
-  hard:   { label: 'Hard',   base: 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100',                 active: 'bg-red-100 border-red-500 text-red-700 ring-2 ring-red-300' },
 }
 
 const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent']
@@ -51,10 +38,7 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
   const [selectedTestId, setSelectedTestId]= useState('')
   const [rating,         setRating]        = useState(0)
   const [hover,          setHover]         = useState(0)
-  const [difficulty,     setDiff]          = useState<'easy' | 'medium' | 'hard' | null>(null)
-  const [reviewTitle,    setTitle]         = useState('')
   const [reviewText,     setText]          = useState('')
-  const [reviewerCountry,setCountry]       = useState('')
   const [error,          setError]         = useState('')
   const [submitted,      setSubmitted]     = useState(false)
   const [pending,        start]            = useTransition()
@@ -89,17 +73,13 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
     if (auth.status !== 'authenticated') return
     if (!selectedTestId)  { setError('Please select a test.'); return }
     if (rating === 0)     { setError('Please select a star rating.'); return }
-    if (!difficulty)      { setError('Please select a difficulty level.'); return }
     setError('')
     start(async () => {
       const result = await submitMockTestReview({
         categoryId,
-        testId:          selectedTestId,
+        testId:     selectedTestId,
         rating,
-        difficulty,
-        reviewTitle:     reviewTitle.trim()     || undefined,
-        reviewText:      reviewText.trim()      || undefined,
-        reviewerCountry: reviewerCountry.trim() || undefined,
+        reviewText: reviewText.trim() || undefined,
       })
       if (!result.success) { setError(result.error); return }
       localStorage.setItem(`reviewed_test_${selectedTestId}`, '1')
@@ -109,7 +89,7 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
       const nextTest = tests.find(t => !updated.has(t.id))
       setTimeout(() => {
         setSubmitted(false)
-        setRating(0); setDiff(null); setTitle(''); setText(''); setCountry('')
+        setRating(0); setText('')
         if (nextTest) setSelectedTestId(nextTest.id)
       }, 3000)
     })
@@ -241,114 +221,51 @@ export function ReviewFormInline({ categoryId, tests }: Props) {
               </div>
             </div>
 
-            {/* Two-column layout on md+ */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-              {/* Left column */}
-              <div className="flex flex-col gap-5">
-
-                {/* Stars */}
-                <div>
-                  <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">Your Rating</p>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <button
-                        key={i}
-                        type="button"
-                        onMouseEnter={() => setHover(i)}
-                        onMouseLeave={() => setHover(0)}
-                        onClick={() => setRating(i)}
-                        className="transition-transform hover:scale-110 active:scale-95 p-0.5"
-                      >
-                        <Star
-                          size={30}
-                          fill={i <= displayRating ? '#F59E0B' : 'none'}
-                          className={i <= displayRating ? 'text-amber-400' : 'text-slate-200'}
-                          strokeWidth={1.5}
-                        />
-                      </button>
-                    ))}
-                    {displayRating > 0 && (
-                      <span className="text-[13px] font-semibold text-slate-600 ml-2">
-                        {RATING_LABELS[displayRating]}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Difficulty */}
-                <div>
-                  <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">Exam Difficulty</p>
-                  <div className="flex gap-2">
-                    {(['easy', 'medium', 'hard'] as const).map(d => {
-                      const cfg = DIFF_CONFIG[d]
-                      return (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => setDiff(d)}
-                          className={`flex-1 py-2 text-[13px] font-semibold rounded-xl border transition-all ${difficulty === d ? cfg.active : cfg.base}`}
-                        >
-                          {cfg.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Country */}
-                <div>
-                  <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
-                    Your Country <span className="text-slate-400 font-normal normal-case">(optional)</span>
-                  </p>
-                  <FormSelect
-                    options={COUNTRY_OPTIONS}
-                    value={reviewerCountry || null}
-                    onChange={(label) => setCountry(label ?? '')}
-                    placeholder="Select your country…"
-                  />
-                </div>
+            {/* Stars */}
+            <div>
+              <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">Your Rating</p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <button
+                    key={i}
+                    type="button"
+                    onMouseEnter={() => setHover(i)}
+                    onMouseLeave={() => setHover(0)}
+                    onClick={() => setRating(i)}
+                    className="transition-transform hover:scale-110 active:scale-95 p-0.5"
+                  >
+                    <Star
+                      size={30}
+                      fill={i <= displayRating ? '#F59E0B' : 'none'}
+                      className={i <= displayRating ? 'text-amber-400' : 'text-slate-200'}
+                      strokeWidth={1.5}
+                    />
+                  </button>
+                ))}
+                {displayRating > 0 && (
+                  <span className="text-[13px] font-semibold text-slate-600 ml-2">
+                    {RATING_LABELS[displayRating]}
+                  </span>
+                )}
               </div>
+            </div>
 
-              {/* Right column */}
-              <div className="flex flex-col gap-5">
-
-                {/* Title */}
-                <div>
-                  <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
-                    Review Title <span className="text-slate-400 font-normal normal-case">(optional)</span>
-                  </p>
-                  <input
-                    type="text"
-                    className={inputCls}
-                    maxLength={120}
-                    placeholder='e.g. "Very close to the real DHA exam"'
-                    value={reviewTitle}
-                    onChange={e => setTitle(e.target.value)}
-                  />
-                  {reviewTitle.length > 80 && (
-                    <p className="text-[11px] text-slate-400 mt-1 text-right">{reviewTitle.length}/120</p>
-                  )}
-                </div>
-
-                {/* Review text */}
-                <div className="flex-1 flex flex-col">
-                  <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
-                    Detailed Review <span className="text-slate-400 font-normal normal-case">(optional)</span>
-                  </p>
-                  <textarea
-                    className={`${inputCls} resize-none leading-relaxed flex-1`}
-                    rows={6}
-                    maxLength={2000}
-                    placeholder="Tips for others — topics to focus on, question patterns, time management…"
-                    value={reviewText}
-                    onChange={e => setText(e.target.value)}
-                  />
-                  {reviewText.length > 0 && (
-                    <p className="text-[11px] text-slate-400 mt-1 text-right">{reviewText.length}/2000</p>
-                  )}
-                </div>
-              </div>
+            {/* Review text */}
+            <div>
+              <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-wide mb-2">
+                Detailed Review <span className="text-slate-400 font-normal normal-case">(optional)</span>
+              </p>
+              <textarea
+                className={`${inputCls} resize-none leading-relaxed`}
+                rows={6}
+                maxLength={2000}
+                placeholder="Tips for others — topics to focus on, question patterns, time management…"
+                value={reviewText}
+                onChange={e => setText(e.target.value)}
+              />
+              {reviewText.length > 0 && (
+                <p className="text-[11px] text-slate-400 mt-1 text-right">{reviewText.length}/2000</p>
+              )}
             </div>
 
             {/* Error */}
