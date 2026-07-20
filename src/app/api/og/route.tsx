@@ -217,5 +217,13 @@ export function GET(req: NextRequest) {
     content = <DefaultOg title={title} />
   }
 
-  return new ImageResponse(content, { width: W, height: H })
+  // Image is a pure function of the query params — cache it so repeated
+  // link-unfurl crawls (WhatsApp/Twitter/Facebook) don't re-render on the edge.
+  return new ImageResponse(content, {
+    width: W,
+    height: H,
+    headers: {
+      'Cache-Control': 'public, immutable, no-transform, max-age=31536000',
+    },
+  })
 }

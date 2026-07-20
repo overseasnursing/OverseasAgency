@@ -10,7 +10,7 @@ import { ShieldCheck, Building2, BookOpen, Instagram, Facebook, Youtube, Linkedi
 import { getAgencyDetail } from '@/lib/data/getAgencyDetail'
 
 import { AgencyVote } from './components/AgencyVote'
-import { getVoteCountsWithUserVote } from '@/lib/db/agency-votes'
+import { getVoteCounts } from '@/lib/db/agency-votes'
 import { AgencyHero } from './components/AgencyHero'
 import { TrustSummaryStrip } from './components/TrustSummaryStrip'
 import { PricingSection } from './components/PricingSection'
@@ -91,9 +91,14 @@ export default async function AgencyDetailPage({ params }: PageProps) {
 
   // Independent queries — run in parallel instead of adding two sequential
   // round-trips to TTFB on this high-traffic page type.
+  // Uses getVoteCounts (no auth/cookies() call) rather than
+  // getVoteCountsWithUserVote so this page stays statically cacheable under
+  // ISR — reading cookies() during render would force Next.js to dynamic-
+  // render on every request, defeating `revalidate` above. The signed-in
+  // user's own vote is fetched client-side by AgencyVote instead.
   const [attribution, votes] = await Promise.all([
     getAttributionProfiles(),
-    getVoteCountsWithUserVote(agency.id),
+    getVoteCounts(agency.id),
   ])
   const voteTotal = votes.thumbsUp + votes.thumbsDown
   const liveRecommendPercent = voteTotal === 0 ? 100 : Math.round((votes.thumbsUp / voteTotal) * 100)

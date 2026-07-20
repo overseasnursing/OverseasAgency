@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useState, useEffect, useTransition } from 'react'
 import { ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react'
-import { submitVote, removeVote } from '@/app/actions/agency-votes'
+import { submitVote, removeVote, getMyVote } from '@/app/actions/agency-votes'
 
 interface Props {
   agencyId: string
@@ -19,14 +19,27 @@ export function AgencyVote({
   initialThumbsUp,
   initialThumbsDown,
   initialUserVote,
-  isLoggedIn,
+  isLoggedIn: initialIsLoggedIn,
 }: Props) {
   const [thumbsUp,     setThumbsUp]     = useState(initialThumbsUp)
   const [thumbsDown,   setThumbsDown]   = useState(initialThumbsDown)
   const [userVote,     setUserVote]     = useState<boolean | null>(initialUserVote)
+  const [isLoggedIn,   setIsLoggedIn]   = useState(initialIsLoggedIn)
   const [loginWarning, setLoginWarning] = useState(false)
   const [error,        setError]        = useState('')
   const [isPending,    startTransition] = useTransition()
+
+  // The page renders statically (ISR) with no auth info, so the signed-in
+  // user's own vote is hydrated here after mount instead.
+  useEffect(() => {
+    let cancelled = false
+    getMyVote(agencyId).then(({ userVote, isLoggedIn }) => {
+      if (cancelled) return
+      setUserVote(userVote)
+      setIsLoggedIn(isLoggedIn)
+    })
+    return () => { cancelled = true }
+  }, [agencyId])
 
   const total   = thumbsUp + thumbsDown
   const percent = total === 0 ? 100 : Math.round((thumbsUp / total) * 100)
