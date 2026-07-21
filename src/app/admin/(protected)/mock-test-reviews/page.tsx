@@ -18,12 +18,6 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   rejected: { label: 'Rejected', className: 'bg-[#FEE2E2] text-[#B91C1C]' },
 }
 
-const DIFF_BADGE: Record<string, string> = {
-  easy:   'bg-emerald-50 text-emerald-700 border-emerald-200',
-  medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  hard:   'bg-red-50 text-red-700 border-red-200',
-}
-
 // ── Server actions ────────────────────────────────────────────────────────
 
 async function setStatus(id: string, status: string, locationSlug: string, categorySlug: string) {
@@ -61,7 +55,7 @@ export default async function MockTestReviewsAdmin({ searchParams }: PageProps) 
   const query = db
     .from('mock_test_reviews')
     .select(`
-      id, reviewer_name, reviewer_country, rating, difficulty,
+      id, reviewer_name, reviewer_country, rating,
       review_title, review_text, status, created_at,
       mock_test_categories!inner (
         id, name, slug,
@@ -128,7 +122,6 @@ export default async function MockTestReviewsAdmin({ searchParams }: PageProps) 
         <div className="flex flex-col gap-4">
           {reviews.map((review) => {
             const badge   = STATUS_BADGE[review.status] ?? STATUS_BADGE.pending
-            const diffCls = DIFF_BADGE[review.difficulty] ?? DIFF_BADGE.medium
             const cat     = review.mock_test_categories
             const locSlug = cat?.mock_test_locations?.slug ?? ''
             const catSlug = cat?.slug ?? ''
@@ -170,9 +163,6 @@ export default async function MockTestReviewsAdmin({ searchParams }: PageProps) 
                           ))}
                         </div>
                         <span className="text-[11.5px] text-slate-400">{review.rating}/5</span>
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border capitalize ${diffCls}`}>
-                          {review.difficulty}
-                        </span>
                       </div>
                     </div>
                   </div>

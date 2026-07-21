@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useTransition } from 'react'
+import React, { useState, useEffect, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   X, Clock, HelpCircle, Target, Play, Info,
@@ -399,10 +399,28 @@ export function CategoryPageClient({
   const [startingId, setStartingId]           = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser]                       = useState<any>(null)
+  const autoStartedRef                        = useRef(false)
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data: { user } }) => setUser(user))
   }, [])
+
+  // Resume the test the user picked before being sent off-site for Google
+  // sign-in — signInWithOAuth does a full-page redirect, so the pending
+  // selection (held only in this component's state) doesn't survive the
+  // round trip through /auth/callback. It's re-encoded into the callback's
+  // `next` URL instead (see authReturnPath below) and picked back up here.
+  useEffect(() => {
+    if (autoStartedRef.current || !user) return
+    const startTestId = new URLSearchParams(window.location.search).get('startTest')
+    if (!startTestId) return
+    const test = tests.find(t => t.id === startTestId)
+    if (!test) return
+    autoStartedRef.current = true
+    setStartingId(test.id)
+    launchSession(test)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, tests])
 
   async function launchSession(test: PublicTest) {
     setStartError(null)
@@ -437,6 +455,10 @@ export function CategoryPageClient({
   }
 
   const currentPath = `/mock-tests/${locationSlug}/${categorySlug}`
+  // Carries the pending test through the Google OAuth round trip (see the
+  // auto-start effect above) — irrelevant for email/password login, which
+  // resumes via onAuthSuccess without ever leaving the page.
+  const authReturnPath = pendingTest ? `${currentPath}?startTest=${pendingTest.id}` : currentPath
 
   return (
     <>
@@ -450,7 +472,7 @@ export function CategoryPageClient({
       {showAuthModal && (
         <AuthModal
           onSuccess={onAuthSuccess}
-          returnPath={currentPath}
+          returnPath={authReturnPath}
           onClose={() => { setShowAuthModal(false); setPendingTest(null) }}
         />
       )}
